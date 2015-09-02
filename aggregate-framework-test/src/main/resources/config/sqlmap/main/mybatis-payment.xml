@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.test.dao.PaymentDao">
+    <resultMap id="result"
+               type="org.aggregateframework.test.command.domain.entity.Payment">
+        <result property="id" javaType="java.lang.Integer" column="PAYMENT_ID"/>
+        <result property="amount" column="AMOUNT"/>
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		PAYMENT_ID,
+		AMOUNT
+		FROM
+		CQRS_PAYMENT
+	</sql>
+
+    <select id="findById" resultMap="result">
+        <include refid="sql_select"/>
+        <![CDATA[
+		WHERE PAYMENT_ID=#id#
+		]]>
+    </select>
+
+    <select id="find" resultMap="result">
+        <include refid="sql_select"/>
+        limit 1;
+        <!--<![CDATA[-->
+        <!--WHERE PAYMENT_ID=#id#-->
+        <!--]]>-->
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE PAYMENT_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="insert" parameterType="org.aggregateframework.test.command.domain.entity.Payment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="PAYMENT_ID"
+            >
+        <![CDATA[
+		INSERT INTO CQRS_PAYMENT
+		(AMOUNT)
+		VALUES
+		(#{amount})
+		]]>
+
+        <selectKey resultType="java.lang.Integer" keyProperty="id">
+            SELECT @@IDENTITY AS id
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="org.aggregateframework.test.command.domain.entity.Payment">
+		DELETE FROM
+		CQRS_PAYMENT WHERE PAYMENT_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+	</delete>
+
+    <update id="update" parameterType="org.aggregateframework.test.command.domain.entity.Payment">
+		UPDATE
+		CQRS_PAYMENT
+		SET
+		AMOUNT=#{amount}
+		WHERE
+		PAYMENT_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+	</update>
+
+</mapper>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.test.dao.SeatAvailabilityDao">
+    <resultMap id="result"
+               type="org.aggregateframework.test.command.domain.entity.SeatAvailability">
+        <result property="id" javaType="java.lang.Integer" column="SEAT_AVAILABILITY_ID"/>
+        <result property="order.id" javaType="java.lang.Integer" column="ORDER_ID"/>
+        <result property="quantity" column="QUANTITY"/>
+        <result property="payment.id" javaType="java.lang.Integer" column="PAYMENT_ID"/>
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		SEAT_AVAILABILITY_ID,
+		ORDER_ID,
+		QUANTITY,
+		PAYMENT_ID
+		FROM
+		CQRS_SEAT_AVAILABILITY
+	</sql>
+
+    <select id="findById" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE SEAT_AVAILABILITY_ID=#id#
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE SEAT_AVAILABILITY_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="findByOrderId" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID=#{orderId}
+    </select>
+
+    <select id="findByOrderIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="insert" parameterType="org.aggregateframework.test.command.domain.entity.SeatAvailability">
+        <![CDATA[
+		INSERT INTO CQRS_SEAT_AVAILABILITY
+		(ORDER_ID,QUANTITY,PAYMENT_ID)
+		VALUES
+		(#{order.id,javaType=java.lang.Integer,jdbcType=INTEGER},#{quantity},#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER})
+		]]>
+
+        <selectKey resultType="java.lang.Integer" keyProperty="id">
+            SELECT @@IDENTITY AS id
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="org.aggregateframework.test.command.domain.entity.SeatAvailability">
+		DELETE FROM
+		CQRS_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+	</delete>
+
+    <update id="update" parameterType="org.aggregateframework.test.command.domain.entity.SeatAvailability">
+		UPDATE
+		CQRS_SEAT_AVAILABILITY
+		SET
+		ORDER_ID=#{order.id,javaType=java.lang.Integer,jdbcType=INTEGER},
+		QUANTITY=#{quantity},
+		PAYMENT_ID=#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER}
+		WHERE
+		SEAT_AVAILABILITY_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+	</update>
+
+</mapper>

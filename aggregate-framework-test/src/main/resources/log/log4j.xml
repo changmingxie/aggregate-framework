@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//log4j/log4j Configuration//EN" "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/"
+	threshold="null" debug="null">
+
+
+	<appender name="mailAppender" class="org.apache.log4j.net.SMTPAppender">
+		<param name="Threshold" value="ERROR" />
+		<param name="BufferSize" value="1" />
+		<param name="SMTPHost" value="mail.51ping.com" />
+		<param name="Subject" value="【系统异常】请重视，过滤者死" />
+		<param name="SMTPUsername" value="bajob@51ping.com" />
+		<param name="SMTPPassword" value="job.dianping.0410" />
+		<param name="From" value="error@bs.ba" />
+		<param name="To" value="bs.ba@dianping.com" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[aggregate-framework]%d %-5p [%c] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[aggregate-framework]%d %-5p [%c] %m%n" />
+		</layout>
+	</appender>
+
+
+
+	<appender name="appAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<!-- <param name="Threshold" value="INFO" /> -->
+		<param name="File" value="/data/applogs/aggregate-framework/logs/app.log" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[aggregate-framework]%d %-5p [%c] %m%n" />
+		</layout>
+	</appender>
+
+
+
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="appAppender" />
+		<!-- <appender-ref ref="mailAppender" /> -->
+	</root>
+
+</log4j:configuration>
