@@ -1,5 +1,7 @@
 package org.aggregateframework.test.command.domainevents;
 
+import org.aggregateframework.test.command.domain.entity.CompositeId;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Administrator
@@ -9,11 +11,11 @@ package org.aggregateframework.test.command.domainevents;
  */
 public class OrderUpdatedEvent {
 
-    private Integer id;
+    private CompositeId id;
 
     private String content;
 
-    public OrderUpdatedEvent(Integer id, String content) {
+    public OrderUpdatedEvent(CompositeId id, String content) {
         this.id = id;
         this.content = content;
     }
@@ -22,7 +24,7 @@ public class OrderUpdatedEvent {
         return content;
     }
 
-    public Integer getId() {
+    public CompositeId getId() {
         return id;
     }
 }

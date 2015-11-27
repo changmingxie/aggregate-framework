@@ -9,7 +9,11 @@ import org.aggregateframework.test.command.domainevents.OrderUpdatedEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Order extends AbstractSimpleAggregateRoot<Integer> {
+public class Order extends AbstractSimpleAggregateRoot<CompositeId> {
+
+    public boolean isNew() {
+       return this.getId().getId() == 0;
+    }
 
     private String content;
 

@@ -2,6 +2,7 @@ package org.aggregateframework.repositories;
 
 import org.aggregateframework.context.DomainObjectUtils;
 import org.aggregateframework.test.AbstractTestCase;
+import org.aggregateframework.test.command.domain.entity.CompositeId;
 import org.aggregateframework.test.command.domain.entity.Order;
 import org.aggregateframework.test.command.domain.entity.Payment;
 import org.aggregateframework.test.command.domain.entity.SeatAvailability;
@@ -27,29 +28,32 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
     private Order buildOrder() {
         Order order = new Order();
+        CompositeId id = new CompositeId();
+        id.setUserId(100);
+        order.setId(id);
         order.updateContent("test");
         Payment payment = new Payment();
         payment.setAmount(new BigDecimal(100));
         order.updatePayment(payment);
 
-        SeatAvailability seatAvailability = new SeatAvailability();
-
-        seatAvailability.setQuantity(1000);
-        seatAvailability.setPayment(payment);
-        order.getSeatAvailabilities().add(seatAvailability);
-        seatAvailability.setOrder(order);
-
-        SeatAvailability seatAvailability2 = new SeatAvailability();
-        seatAvailability2.setQuantity(2000);
-        seatAvailability2.setPayment(payment);
-        order.getSeatAvailabilities().add(seatAvailability2);
-        seatAvailability2.setOrder(order);
+//        SeatAvailability seatAvailability = new SeatAvailability();
+//
+//        seatAvailability.setQuantity(1000);
+//        seatAvailability.setPayment(payment);
+//        order.getSeatAvailabilities().add(seatAvailability);
+//        seatAvailability.setOrder(order);
+//
+//        SeatAvailability seatAvailability2 = new SeatAvailability();
+//        seatAvailability2.setQuantity(2000);
+//        seatAvailability2.setPayment(payment);
+//        order.getSeatAvailabilities().add(seatAvailability2);
+//        seatAvailability2.setOrder(order);
 
         return order;
     }
 
     @Test
-    @Transactional
+//    @Transactional
     public void given_a_persisted_order_when_update_component_then_the_version_of_root_increment() {
 
         //given
