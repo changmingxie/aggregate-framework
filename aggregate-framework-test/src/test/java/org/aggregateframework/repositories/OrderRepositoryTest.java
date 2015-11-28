@@ -36,24 +36,24 @@ public class OrderRepositoryTest extends AbstractTestCase {
         payment.setAmount(new BigDecimal(100));
         order.updatePayment(payment);
 
-//        SeatAvailability seatAvailability = new SeatAvailability();
-//
-//        seatAvailability.setQuantity(1000);
-//        seatAvailability.setPayment(payment);
-//        order.getSeatAvailabilities().add(seatAvailability);
-//        seatAvailability.setOrder(order);
-//
-//        SeatAvailability seatAvailability2 = new SeatAvailability();
-//        seatAvailability2.setQuantity(2000);
-//        seatAvailability2.setPayment(payment);
-//        order.getSeatAvailabilities().add(seatAvailability2);
-//        seatAvailability2.setOrder(order);
+        SeatAvailability seatAvailability = new SeatAvailability();
+
+        seatAvailability.setQuantity(1000);
+        seatAvailability.setPayment(payment);
+        order.getSeatAvailabilities().add(seatAvailability);
+        seatAvailability.setOrder(order);
+
+        SeatAvailability seatAvailability2 = new SeatAvailability();
+        seatAvailability2.setQuantity(2000);
+        seatAvailability2.setPayment(payment);
+        order.getSeatAvailabilities().add(seatAvailability2);
+        seatAvailability2.setOrder(order);
 
         return order;
     }
 
     @Test
-//    @Transactional
+    @Transactional
     public void given_a_persisted_order_when_update_component_then_the_version_of_root_increment() {
 
         //given
@@ -326,6 +326,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
     public void given_a_persisted_order_when_update_root_then_returned_object_is_the_same_with_orignal() {
         //given
         Order order = new Order();
+        order.setId(new CompositeId(100));
         order.updateContent("test");
         Payment payment = new Payment();
         payment.setAmount(new BigDecimal(100));
@@ -347,6 +348,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
     public void given_a_persisted_order_when_update_content_then_application_event_fired() {
         //given
         Order order = new Order();
+        order.setId(new CompositeId(100));
         Order savedOrder = orderRepository.save(order);
 
         //when

@@ -11,6 +11,14 @@ public class CompositeId implements Serializable {
 
     private int userId;
 
+    public CompositeId() {
+
+    }
+
+    public CompositeId(int userId) {
+        this.userId = userId;
+    }
+
 
     @Override
     public boolean equals(Object obj) {

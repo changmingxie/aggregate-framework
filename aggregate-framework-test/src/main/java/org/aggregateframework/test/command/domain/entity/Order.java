@@ -12,7 +12,7 @@ import java.util.List;
 public class Order extends AbstractSimpleAggregateRoot<CompositeId> {
 
     public boolean isNew() {
-       return this.getId().getId() == 0;
+       return this.getId() == null || this.getId().getId() == 0;
     }
 
     private String content;
