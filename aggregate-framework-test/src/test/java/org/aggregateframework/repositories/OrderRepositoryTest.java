@@ -2,14 +2,15 @@ package org.aggregateframework.repositories;
 
 import org.aggregateframework.context.DomainObjectUtils;
 import org.aggregateframework.test.AbstractTestCase;
-import org.aggregateframework.test.command.domain.entity.CompositeId;
 import org.aggregateframework.test.command.domain.entity.Order;
 import org.aggregateframework.test.command.domain.entity.Payment;
 import org.aggregateframework.test.command.domain.entity.SeatAvailability;
+import org.aggregateframework.test.command.domain.entity.UserShardingId;
 import org.aggregateframework.test.command.domain.repository.JpaOrderRepository;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -28,9 +29,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
     private Order buildOrder() {
         Order order = new Order();
-        CompositeId id = new CompositeId();
-        id.setUserId(100);
-        order.setId(id);
+        order.setId(new UserShardingId(100));
         order.updateContent("test");
         Payment payment = new Payment();
         payment.setAmount(new BigDecimal(100));
@@ -75,6 +74,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
     @Test
     @Transactional
+    @Rollback(false)
     public void given_a_new_order_when_transactional_save_and_flush_then_the_id_generated() {
 
         //given
@@ -86,6 +86,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
         //then
         Assert.assertTrue(order.getId() != null);
+
     }
 
 
@@ -326,7 +327,6 @@ public class OrderRepositoryTest extends AbstractTestCase {
     public void given_a_persisted_order_when_update_root_then_returned_object_is_the_same_with_orignal() {
         //given
         Order order = new Order();
-        order.setId(new CompositeId(100));
         order.updateContent("test");
         Payment payment = new Payment();
         payment.setAmount(new BigDecimal(100));
@@ -348,7 +348,6 @@ public class OrderRepositoryTest extends AbstractTestCase {
     public void given_a_persisted_order_when_update_content_then_application_event_fired() {
         //given
         Order order = new Order();
-        order.setId(new CompositeId(100));
         Order savedOrder = orderRepository.save(order);
 
         //when

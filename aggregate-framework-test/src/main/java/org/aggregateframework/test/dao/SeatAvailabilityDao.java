@@ -1,8 +1,8 @@
 package org.aggregateframework.test.dao;
 
-import org.aggregateframework.test.command.domain.entity.CompositeId;
 import org.aggregateframework.test.command.domain.entity.SeatAvailability;
 import org.aggregateframework.dao.DomainObjectDao;
+import org.aggregateframework.test.command.domain.entity.UserShardingId;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +16,6 @@ import java.util.List;
  */
 public interface SeatAvailabilityDao extends DomainObjectDao<SeatAvailability, Integer> {
 
-    List<SeatAvailability> findByOrderIds(Collection<CompositeId> orderIds);
-    List<SeatAvailability> findByOrderId(CompositeId orderId);
+    List<SeatAvailability> findByOrderIds(Collection<UserShardingId> orderIds);
+    List<SeatAvailability> findByOrderId(UserShardingId orderId);
 }

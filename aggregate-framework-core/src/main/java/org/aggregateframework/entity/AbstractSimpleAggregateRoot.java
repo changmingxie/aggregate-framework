@@ -1,10 +1,8 @@
 package org.aggregateframework.entity;
 
 import org.aggregateframework.eventhandling.EventContainer;
-import org.aggregateframework.eventhandling.EventMessage;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -23,9 +21,6 @@ public abstract class AbstractSimpleAggregateRoot<ID extends Serializable> exten
     @Transient
     private transient EventContainer domainEventContainer;
 
-    @Transient
-    private transient EventContainer applicationEventContainer;
-
     @Override
     public ID getId() {
         return id;
@@ -42,16 +37,9 @@ public abstract class AbstractSimpleAggregateRoot<ID extends Serializable> exten
     }
 
     @Override
-    public EventContainer getApplicationEventContainer() {
-        ensureApplicationEventContainerInitialized();
-        return applicationEventContainer;
-    }
-
-    @Override
     public long getVersion() {
         return version;
     }
-
 
 
     @Override
@@ -67,13 +55,6 @@ public abstract class AbstractSimpleAggregateRoot<ID extends Serializable> exten
     private void ensureDomainEventContainerInitialized() {
         if (domainEventContainer == null) {
             domainEventContainer = new EventContainer();
-        }
-    }
-
-
-    private void ensureApplicationEventContainerInitialized() {
-        if (applicationEventContainer == null) {
-            applicationEventContainer = new EventContainer();
         }
     }
 }

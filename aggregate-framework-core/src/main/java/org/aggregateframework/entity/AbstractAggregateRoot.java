@@ -17,22 +17,13 @@ public abstract class AbstractAggregateRoot<ID extends Serializable> extends Abs
 
     private boolean isDeleted = false;
 
-    protected void applyDomainEvent(Object eventPayload) {
+    protected void apply(Object eventPayload) {
         getDomainEventContainer().addEvent(eventPayload);
-    }
-
-    protected void applyApplicationEvent(Object eventPayload) {
-        getApplicationEventContainer().addEvent(eventPayload);
     }
 
     @Override
     public Collection<? extends EventMessage> getUncommittedDomainEvents() {
         return getDomainEventContainer().getEvents();
-    }
-
-    @Override
-    public Collection<? extends EventMessage> getUncommittedApplicationEvents() {
-        return getApplicationEventContainer().getEvents();
     }
 
     @Override
@@ -50,17 +41,5 @@ public abstract class AbstractAggregateRoot<ID extends Serializable> extends Abs
         getDomainEventContainer().clear();
     }
 
-    @Override
-    public void commitApplicationEvents() {
-        getApplicationEventContainer().commit();
-    }
-
-    @Override
-    public void clearApplicationEvents() {
-        getApplicationEventContainer().clear();
-    }
-
     public abstract EventContainer getDomainEventContainer();
-
-    public abstract EventContainer getApplicationEventContainer();
 }

@@ -12,6 +12,8 @@ public interface DomainObject<ID extends Serializable> extends Serializable {
 
     ID getId();
 
+    void setId(ID id);
+
     boolean isNew();
 
     Date getCreateTime();

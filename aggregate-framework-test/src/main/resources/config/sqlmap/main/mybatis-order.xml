@@ -13,7 +13,7 @@
         <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
         <!--<result property="id.id" javaType="java.lang.Integer" column="ORDER_ID"/>-->
         <!--<result property="id.userId" javaType="java.lang.Integer" column="USER_ID"/>-->
-        <association property="id" javaType="org.aggregateframework.test.command.domain.entity.CompositeId">
+        <association property="id" javaType="org.aggregateframework.test.command.domain.entity.UserShardingId">
             <result property="id" javaType="java.lang.Integer" column="ORDER_ID"/>
             <result property="userId" javaType="java.lang.Integer" column="USER_ID"/>
         </association>

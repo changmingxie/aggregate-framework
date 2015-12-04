@@ -3,6 +3,7 @@ package org.aggregateframework.session;
 import org.aggregateframework.entity.AggregateRoot;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 
 /**
  * User: changming.xie
@@ -31,4 +32,5 @@ public interface ClientSession {
     public <T extends AggregateRoot<ID>,ID extends Serializable>  T findOriginalCopy(Class<T> aggregateType, ID identifier);
 
 
+    void addPostInvoker(EventInvokerEntry eventInvokerEntry);
 }

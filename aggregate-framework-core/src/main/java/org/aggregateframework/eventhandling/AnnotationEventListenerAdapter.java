@@ -1,8 +1,8 @@
 package org.aggregateframework.eventhandling;
 
-import org.aggregateframework.SystemException;
+import org.aggregateframework.session.EventInvokerEntry;
+import org.aggregateframework.session.LocalSessionFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,7 +31,7 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
             methods.addAll(Arrays.asList(currentClazz.getDeclaredMethods()));
             addMethodsOnDeclaredInterfaces(currentClazz, methods);
             currentClazz = currentClazz.getSuperclass();
-        } while (currentClazz != null);
+        } while (currentClazz != null && !currentClazz.equals(Object.class));
         return Collections.unmodifiableList(methods);
     }
 
@@ -50,34 +50,22 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
     @Override
     public void handle(EventMessage event) {
 
-        Method foundMethod = null;
         for (Method method : methods) {
 
             Class<?>[] classes = method.getParameterTypes();
             if (classes != null && classes.length > 0) {
                 for (Class<?> clazz : classes) {
                     if (clazz.equals(event.getPayloadType())) {
-                        foundMethod = method;
+
+
+                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(method, this.target, event.getPayload());
+                        handle(eventInvokerEntry);
+
                         break;
                     }
                 }
-
-                if (foundMethod != null) {
-                    break;
-                }
             }
         }
-
-        if (foundMethod != null) {
-            try {
-                foundMethod.invoke(this.target, event.getPayload());
-            } catch (IllegalAccessException e) {
-                throw new SystemException(e);
-            } catch (InvocationTargetException e) {
-                throw new SystemException(e);
-            }
-        }
-
     }
 
     @Override
@@ -110,4 +98,12 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
     }
 
 
+    private void handle(EventInvokerEntry eventInvokerEntry) {
+        EventHandler eventHandler = eventInvokerEntry.getMethod().getAnnotation(EventHandler.class);
+        if (eventHandler.postAfterTransaction()) {
+            LocalSessionFactory.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
+        } else {
+            EventHandlerInvoker.invoke(eventInvokerEntry);
+        }
+    }
 }

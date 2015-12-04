@@ -285,7 +285,7 @@ public abstract class ReflectionUtils {
      * InvocationTargetException with such a root cause. Throws an
      * IllegalStateException with an appropriate message else.
      *
-     * @param ex the reflection exception to handle
+     * @param ex the reflection exception to invoke
      */
     public static void handleReflectionException(Exception ex) {
         if (ex instanceof NoSuchMethodException) {
@@ -309,7 +309,7 @@ public abstract class ReflectionUtils {
      * <p>Throws the underlying RuntimeException or Error in case of such
      * a root cause. Throws an IllegalStateException else.
      *
-     * @param ex the invocation target exception to handle
+     * @param ex the invocation target exception to invoke
      */
     public static void handleInvocationTargetException(InvocationTargetException ex) {
         rethrowRuntimeException(ex.getTargetException());
@@ -506,7 +506,7 @@ public abstract class ReflectionUtils {
      *
      * @param targetClass class to start looking at
      * @param mc          the callback to invoke for each method
-     * @param mf          the filter that determines the methods to applyDomainEvent the callback to
+     * @param mf          the filter that determines the methods to apply the callback to
      */
     public static void doWithMethods(Class targetClass, MethodCallback mc, MethodFilter mf)
             throws IllegalArgumentException {
@@ -562,7 +562,7 @@ public abstract class ReflectionUtils {
      *
      * @param targetClass the target class to analyze
      * @param fc          the callback to invoke for each field
-     * @param ff          the filter that determines the fields to applyDomainEvent the callback to
+     * @param ff          the filter that determines the fields to apply the callback to
      */
     public static void doWithFields(Class targetClass, FieldCallback fc, FieldFilter ff)
             throws IllegalArgumentException {

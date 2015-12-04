@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.aggregateframework</groupId>
     <artifactId>aggregate-framework</artifactId>
-    <version>2.4.2</version>
+    <version>2.6.1</version>
 
     <packaging>pom</packaging>
     <name>aggregate-framework</name>
@@ -261,6 +261,12 @@
                 <version>1.2.1</version>
             </dependency>
             <!-- end of jakarta coommons -->
+
+            <dependency>
+                <groupId>com.lmax</groupId>
+                <artifactId>disruptor</artifactId>
+                <version>3.3.2</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -562,7 +568,7 @@
     <repositories>
         <repository>
             <id>aggregateframework-internal-snapshots</id>
-            <name>Dian Ping internal repository for snapshots artifacts</name>
+            <name>internal repository for snapshots artifacts</name>
             <url>${repo.internal.snapshots.url}</url>
             <snapshots>
                 <enabled>true</enabled>
@@ -573,7 +579,7 @@
         </repository>
         <repository>
             <id>aggregateframework-internal-releases</id>
-            <name>Dian Ping internal repository for released artifacts</name>
+            <name>internal repository for released artifacts</name>
             <url>${repo.internal.releases.url}</url>
             <snapshots>
                 <enabled>false</enabled>
@@ -585,7 +591,7 @@
         <!-- no snapshot allowed for external repositories! -->
         <repository>
             <id>aggregateframework-third-party</id>
-            <name>Dian Ping cache server for external repositories</name>
+            <name>cache server for external repositories</name>
             <url>${repo.external.url}</url>
             <snapshots>
                 <enabled>false</enabled>
@@ -593,7 +599,7 @@
         </repository>
         <repository>
             <id>central</id>
-            <name>Dian Ping proxy server for external repositories</name>
+            <name>proxy server for external repositories</name>
             <url>${repo.proxy.url}</url>
             <snapshots>
                 <enabled>false</enabled>
@@ -603,7 +609,7 @@
     <pluginRepositories>
         <pluginRepository>
             <id>aggregateframework-internal-snapshots</id>
-            <name>Dian Ping internal repository for snapshots artifacts</name>
+            <name>internal repository for snapshots artifacts</name>
             <url>${repo.internal.snapshots.url}</url>
             <snapshots>
                 <enabled>true</enabled>
@@ -614,7 +620,7 @@
         </pluginRepository>
         <pluginRepository>
             <id>aggregateframework-internal-releases</id>
-            <name>Dian Ping internal repository for released artifacts</name>
+            <name>internal repository for released artifacts</name>
             <url>${repo.internal.releases.url}</url>
             <snapshots>
                 <enabled>false</enabled>
@@ -626,7 +632,7 @@
         <!-- no snapshot allowed for external repositories -->
         <pluginRepository>
             <id>aggregateframework-central-cache</id>
-            <name>Dian Ping cache to external repositories</name>
+            <name>cache to external repositories</name>
             <url>${repo.external.url}</url>
             <snapshots>
                 <enabled>false</enabled>

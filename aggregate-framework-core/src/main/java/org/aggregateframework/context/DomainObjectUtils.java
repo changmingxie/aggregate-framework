@@ -4,9 +4,9 @@
 package org.aggregateframework.context;
 
 
+import org.aggregateframework.SystemException;
 import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.entity.Transient;
-import org.aggregateframework.SystemException;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -30,6 +30,49 @@ public class DomainObjectUtils {
     private static Map<Class<? extends DomainObject>, List<Field>> oneToOneFieldMap = new ConcurrentHashMap<Class<? extends DomainObject>, List<Field>>();
 
     private static Map<Class<? extends DomainObject>, List<Field>> oneToManyFieldMap = new ConcurrentHashMap<Class<? extends DomainObject>, List<Field>>();
+
+
+    public static Class getIdClass(Class entityClass) {
+
+        Class currentClass = entityClass;
+
+        while (currentClass != null && !currentClass.equals(Object.class)) {
+
+            Type type = currentClass.getGenericSuperclass();
+            if (type instanceof ParameterizedType) {
+                Type idType = null;
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                if (parameterizedType.getActualTypeArguments().length > 0) {
+                    idType = parameterizedType.getActualTypeArguments()[0];
+
+                    if (idType instanceof Class) {
+                        return (Class) idType;
+                    }
+                }
+                break;
+            }
+
+            currentClass = currentClass.getSuperclass();
+        }
+
+        return null;
+    }
+
+    private static boolean isTransientField(Field field) {
+        Annotation[] annotations = field.getAnnotations();
+
+        boolean isTransient = false;
+        if (annotations != null) {
+            for (Annotation annotation : annotations) {
+                if (ReflectionUtils.getSimpleClassName(annotation.annotationType().getName())
+                        .equals(ReflectionUtils.getSimpleClassName(Transient.class.getName()))) {
+                    isTransient = true;
+                    break;
+                }
+            }
+        }
+        return isTransient;
+    }
 
     public static void setField(DomainObject entity, String fieldName, Object value) {
         Field idField = ReflectionUtils.findField(entity.getClass(), fieldName);
@@ -144,22 +187,6 @@ public class DomainObjectUtils {
         oneToManyFieldMap.put(entityClass, fields);
 
         return fields;
-    }
-
-    private static boolean isTransientField(Field field) {
-        Annotation[] annotations = field.getAnnotations();
-
-        boolean isTransient = false;
-        if (annotations != null) {
-            for (Annotation annotation : annotations) {
-                if (ReflectionUtils.getSimpleClassName(annotation.annotationType().getName())
-                        .equals(ReflectionUtils.getSimpleClassName(Transient.class.getName()))) {
-                    isTransient = true;
-                    break;
-                }
-            }
-        }
-        return isTransient;
     }
 
     public static <E extends DomainObject<I>, I extends Serializable> List<Field> getOneToOneFields(Class<E> entityClass) {

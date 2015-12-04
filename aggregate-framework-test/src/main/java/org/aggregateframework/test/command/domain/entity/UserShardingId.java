@@ -1,24 +1,44 @@
 package org.aggregateframework.test.command.domain.entity;
 
-import java.io.Serializable;
+import org.aggregateframework.entity.CompositeId;
 
 /**
- * Created by changmingxie on 11/27/15.
+ * Created by changmingxie on 11/30/15.
  */
-public class CompositeId implements Serializable {
+public class UserShardingId implements CompositeId {
 
     private int id;
 
     private int userId;
 
-    public CompositeId() {
+    public UserShardingId() {
 
     }
 
-    public CompositeId(int userId) {
+    public UserShardingId(int userId) {
         this.userId = userId;
     }
 
+    @Override
+    public boolean isNewId() {
+        return !(id > 0 && userId > 0);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -35,7 +55,7 @@ public class CompositeId implements Serializable {
             return false;
         }
 
-        CompositeId that = (CompositeId) obj;
+        UserShardingId that = (UserShardingId) obj;
 
         if (this.id == that.id && this.userId == that.userId) {
             return true;
@@ -54,22 +74,5 @@ public class CompositeId implements Serializable {
         hashCode += this.userId * 31;
 
         return hashCode;
-    }
-
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
     }
 }

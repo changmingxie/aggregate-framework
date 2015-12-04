@@ -1,8 +1,8 @@
 package org.aggregateframework.test.dao;
 
-import org.aggregateframework.test.command.domain.entity.CompositeId;
-import org.aggregateframework.dao.AggregateRootDao;
 import org.aggregateframework.test.command.domain.entity.Order;
+import org.aggregateframework.dao.AggregateRootDao;
+import org.aggregateframework.test.command.domain.entity.UserShardingId;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,6 +11,6 @@ import org.aggregateframework.test.command.domain.entity.Order;
  * Time: 下午4:14
  * To change this template use File | Settings | File Templates.
  */
-public interface OrderDao extends AggregateRootDao<Order, CompositeId> {
+public interface OrderDao extends AggregateRootDao<Order, UserShardingId> {
 
 }

@@ -8,7 +8,7 @@
         <!--<result property="order.id.userId" javaType="java.lang.Integer" column="USER_ID"/>-->
         <result property="quantity" column="QUANTITY"/>
         <result property="payment.id" javaType="java.lang.Integer" column="PAYMENT_ID"/>
-        <association property="order.id" javaType="org.aggregateframework.test.command.domain.entity.CompositeId">
+        <association property="order.id" javaType="org.aggregateframework.test.command.domain.entity.UserShardingId">
             <result property="id" javaType="java.lang.Integer" column="ORDER_ID"/>
             <result property="userId" javaType="java.lang.Integer" column="USER_ID"/>
         </association>

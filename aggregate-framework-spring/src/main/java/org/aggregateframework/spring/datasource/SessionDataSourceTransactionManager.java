@@ -50,10 +50,8 @@ public class SessionDataSourceTransactionManager extends DataSourceTransactionMa
 
     @Override
     protected void doCommit(DefaultTransactionStatus status) {
-
         sessionFactory.requireClientSession().commit();
         super.doCommit(status);
-
     }
 
     @Override
@@ -61,7 +59,6 @@ public class SessionDataSourceTransactionManager extends DataSourceTransactionMa
 
         sessionFactory.requireClientSession().rollback();
         super.doRollback(status);
-
     }
 
     @Override

@@ -6,10 +6,7 @@ import org.aggregateframework.context.CollectionUtils;
 import org.aggregateframework.context.DomainObjectUtils;
 import org.aggregateframework.context.IdentifiedEntityMap;
 import org.aggregateframework.context.ReflectionUtils;
-import org.aggregateframework.entity.AbstractAggregateRoot;
-import org.aggregateframework.entity.AbstractDomainObject;
-import org.aggregateframework.entity.AggregateRoot;
-import org.aggregateframework.entity.DomainObject;
+import org.aggregateframework.entity.*;
 import org.aggregateframework.session.AggregateContext;
 
 import java.io.Serializable;
@@ -30,6 +27,17 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
     @Override
     protected T doSave(T entity) {
+
+        Class idClass = DomainObjectUtils.getIdClass(this.aggregateType);
+
+        if (CompositeId.class.isAssignableFrom(idClass) && entity.getId() == null) {
+            try {
+                entity.setId((ID) idClass.newInstance());
+            } catch (Throwable e) {
+                throw new SystemException("new Instance of Composite Id failed. class:" + idClass.getCanonicalName());
+            }
+        }
+
         if (entity.isNew()) {
             AggregateContext aggregateContext = new AggregateContext();
             insertDomainObject(entity, aggregateContext);
@@ -212,14 +220,13 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         insertOneToOneAttributes(entity, aggregateContext);
 
         if (entity instanceof AbstractDomainObject) {
+            AbstractDomainObject abstractDomainObject = (AbstractDomainObject) entity;
 
-            if (entity.getCreateTime() == null) {
+            if (abstractDomainObject.getCreateTime() == null) {
                 DomainObjectUtils.setField(entity, DomainObjectUtils.CREATE_TIME, new Date());
             }
 
-            if (entity.getLastUpdateTime() == null) {
-                DomainObjectUtils.setField(entity, DomainObjectUtils.LAST_UPDATE_TIME, new Date());
-            }
+            DomainObjectUtils.setField(entity, DomainObjectUtils.LAST_UPDATE_TIME, new Date());
         }
 
         I id = doInsert(entity);

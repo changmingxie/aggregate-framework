@@ -2,10 +2,9 @@ package org.aggregateframework.eventhandling;
 
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: changming.xie
@@ -14,7 +13,7 @@ import java.util.Set;
  */
 public class EventContainer implements Serializable {
 
-    private final Map<Object, EventMessage> eventMessageMap = new HashMap<Object, EventMessage>();
+    private final Map<Object, EventMessage> eventMessageMap = new LinkedHashMap<Object, EventMessage>();
 
     public <T> void addEvent(T payload) {
 
@@ -24,8 +23,8 @@ public class EventContainer implements Serializable {
         }
     }
 
-    public Set<EventMessage> getEvents() {
-        return new HashSet<EventMessage>(eventMessageMap.values());
+    public Collection<EventMessage> getEvents() {
+        return eventMessageMap.values();
     }
 
     public void commit() {

@@ -1,6 +1,6 @@
 package org.aggregateframework.test.command.domainevents;
 
-import org.aggregateframework.test.command.domain.entity.CompositeId;
+import org.aggregateframework.test.command.domain.entity.UserShardingId;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,11 +11,11 @@ import org.aggregateframework.test.command.domain.entity.CompositeId;
  */
 public class OrderUpdatedEvent {
 
-    private CompositeId id;
+    private UserShardingId id;
 
     private String content;
 
-    public OrderUpdatedEvent(CompositeId id, String content) {
+    public OrderUpdatedEvent(UserShardingId id, String content) {
         this.id = id;
         this.content = content;
     }
@@ -24,7 +24,7 @@ public class OrderUpdatedEvent {
         return content;
     }
 
-    public CompositeId getId() {
+    public UserShardingId getId() {
         return id;
     }
 }

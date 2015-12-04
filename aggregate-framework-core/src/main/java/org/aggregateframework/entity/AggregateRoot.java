@@ -14,8 +14,6 @@ public interface AggregateRoot<ID extends Serializable> extends DomainObject<ID>
 
     Collection<? extends EventMessage> getUncommittedDomainEvents();
 
-    Collection<? extends EventMessage> getUncommittedApplicationEvents();
-
     long getVersion();
 
     boolean isDeleted();
@@ -23,8 +21,4 @@ public interface AggregateRoot<ID extends Serializable> extends DomainObject<ID>
     void commitDomainEvents();
 
     void clearDomainEvents();
-
-    void commitApplicationEvents();
-
-    void clearApplicationEvents();
 }
