@@ -1,6 +1,7 @@
 package org.aggregateframework.session;
 
 import org.aggregateframework.context.IdentifiedEntityMap;
+import org.aggregateframework.eventhandling.EventHandlerInvoker;
 import org.aggregateframework.eventhandling.EventMessage;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public abstract class AbstractClientSession implements ClientSession {
 
     protected Queue<AggregateEntry> currentAggregateQueue = new ConcurrentLinkedQueue<AggregateEntry>();
 
-    protected Queue<AggregateEntry> applicationEventQueue = new ConcurrentLinkedQueue<AggregateEntry>();
+    protected Queue<EventInvokerEntry> eventInvokerEntryQueue = new ConcurrentLinkedQueue<EventInvokerEntry>();
 
     protected final IdentifiedEntityMap localCacheIdentifiedEntityMap = new IdentifiedEntityMap();
     protected final IdentifiedEntityMap originalCopyIdentifiedEntityMap = new IdentifiedEntityMap();
@@ -42,19 +43,14 @@ public abstract class AbstractClientSession implements ClientSession {
         doRollback();
     }
 
+    public void addPostInvoker(EventInvokerEntry eventInvokerEntry) {
+        eventInvokerEntryQueue.add(eventInvokerEntry);
+    }
+
     @Override
     public void postHandle() {
-
-        while (!applicationEventQueue.isEmpty()) {
-
-            AggregateEntry aggregateEntry = applicationEventQueue.poll();
-
-            List<EventMessage> messageList = new ArrayList<EventMessage>(aggregateEntry.getAggregateRoot().getUncommittedApplicationEvents());
-
-            aggregateEntry.getAggregateRoot().commitApplicationEvents();
-
-            EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
-            aggregateEntry.getEventBus().publish(messages);
+        while (!eventInvokerEntryQueue.isEmpty()) {
+            EventHandlerInvoker.invoke(eventInvokerEntryQueue.poll());
         }
     }
 
@@ -82,8 +78,6 @@ public abstract class AbstractClientSession implements ClientSession {
             EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
             aggregateEntry.getEventBus().publish(messages);
 
-            applicationEventQueue.add(aggregateEntry);
-
             recursiveCommit();
 
             currentAggregateQueue = thisAggregateQueue;
@@ -92,7 +86,7 @@ public abstract class AbstractClientSession implements ClientSession {
 
     private void doRollback() {
         currentAggregateQueue.clear();
-        applicationEventQueue.clear();
+        eventInvokerEntryQueue.clear();
         localCacheIdentifiedEntityMap.clear();
     }
 

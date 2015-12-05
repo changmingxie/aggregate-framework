@@ -12,7 +12,18 @@ public abstract class AbstractDomainObject<ID extends Serializable> implements D
 
     @Override
     public boolean isNew() {
-        return null == getId();
+
+        ID id = getId();
+
+        if (id == null) {
+            return true;
+        }
+
+        if (id instanceof CompositeId) {
+            return ((CompositeId) id).isNewId();
+        }
+
+        return false;
     }
 
     @Override

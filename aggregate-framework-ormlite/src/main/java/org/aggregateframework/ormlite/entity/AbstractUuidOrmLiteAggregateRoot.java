@@ -35,12 +35,6 @@ public class AbstractUuidOrmLiteAggregateRoot extends AbstractAggregateRoot<UUID
         return domainEventContainer;
     }
 
-    @Override
-    public EventContainer getApplicationEventContainer() {
-        return applicationEventContainer;
-    }
-
-
     public UUID getId() {
         return id;
     }

@@ -5,17 +5,24 @@
 
     <resultMap id="result"
                type="org.aggregateframework.test.command.domain.entity.Order">
-        <result property="id" javaType="java.lang.Integer" column="ORDER_ID"/>
+
         <result property="content" column="CONTENT"/>
         <result property="payment.id" javaType="java.lang.Integer" column="PAYMENT_ID"/>
         <result property="version" column="VERSION"/>
         <result property="createTime" column="CREATE_TIME"/>
         <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+        <!--<result property="id.id" javaType="java.lang.Integer" column="ORDER_ID"/>-->
+        <!--<result property="id.userId" javaType="java.lang.Integer" column="USER_ID"/>-->
+        <association property="id" javaType="org.aggregateframework.test.command.domain.entity.UserShardingId">
+            <result property="id" javaType="java.lang.Integer" column="ORDER_ID"/>
+            <result property="userId" javaType="java.lang.Integer" column="USER_ID"/>
+        </association>
     </resultMap>
 
     <sql id="sql_select">
 		SELECT
 		ORDER_ID,
+		USER_ID,
 		CONTENT,
 		PAYMENT_ID,
 		VERSION,
@@ -32,7 +39,7 @@
     <select id="findById" resultMap="result">
         <include refid="sql_select"/>
         <![CDATA[
-		WHERE ORDER_ID=#id#
+		WHERE ORDER_ID=#{id.id,javaType=java.lang.Integer,jdbcType=INTEGER} AND USER_ID = #{id.userId,javaType=java.lang.Integer,jdbcType=INTEGER}
 		]]>
     </select>
 
@@ -41,26 +48,27 @@
         WHERE ORDER_ID IN
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
-            #{item}
+            #{item.id,javaType=java.lang.Integer,jdbcType=INTEGER}
         </foreach>
     </select>
 
     <insert id="insert" parameterType="org.aggregateframework.test.command.domain.entity.Order"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ORDER_ID"
+            useGeneratedKeys="true" keyProperty="id.id" keyColumn="ORDER_ID"
             >
         INSERT INTO CQRS_ORDER
-        (PAYMENT_ID,CONTENT,VERSION)
+        (USER_ID,PAYMENT_ID,CONTENT,VERSION)
         VALUES
-        (#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER},#{content},#{version})
+        (#{id.userId,javaType=java.lang.Integer,jdbcType=INTEGER},#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER},#{content},#{version})
 
-        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id.id">
             SELECT @@IDENTITY AS id
         </selectKey>
     </insert>
 
     <delete id="delete" parameterType="org.aggregateframework.test.command.domain.entity.Order">
 		DELETE FROM
-		CQRS_ORDER WHERE ORDER_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+		CQRS_ORDER WHERE ORDER_ID=#{id.id,javaType=java.lang.Integer,jdbcType=INTEGER}
+		AND USER_ID = #{id.userId,javaType=java.lang.Integer,jdbcType=INTEGER}
 	</delete>
 
     <update id="update" parameterType="org.aggregateframework.test.command.domain.entity.Order">
@@ -71,7 +79,8 @@
 		PAYMENT_ID=#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER},
 		VERSION=VERSION+1
 		WHERE
-		ORDER_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER} and VERSION = #{version}
+		ORDER_ID=#{id.id,javaType=java.lang.Integer,jdbcType=INTEGER} and VERSION = #{version}
+		AND USER_ID=#{id.userId,javaType=java.lang.Integer,jdbcType=INTEGER}
 	</update>
 
 </mapper>

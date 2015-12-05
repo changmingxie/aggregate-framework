@@ -3,13 +3,12 @@ package org.aggregateframework.test.command.domain.entity;
 import org.aggregateframework.entity.AbstractSimpleAggregateRoot;
 import org.aggregateframework.spring.entity.DaoAwareQuery;
 import org.aggregateframework.test.command.domainevents.OrderCreatedEvent;
-import org.aggregateframework.test.command.domainevents.OrderUpdatedApplicationEvent;
 import org.aggregateframework.test.command.domainevents.OrderUpdatedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Order extends AbstractSimpleAggregateRoot<Integer> {
+public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
 
     private String content;
 
@@ -19,7 +18,7 @@ public class Order extends AbstractSimpleAggregateRoot<Integer> {
     private Payment payment;
 
     public Order() {
-        applyDomainEvent(new OrderCreatedEvent(this));
+        apply(new OrderCreatedEvent(this));
     }
 
     public String getContent() {
@@ -28,8 +27,7 @@ public class Order extends AbstractSimpleAggregateRoot<Integer> {
 
     public void updateContent(String content) {
         this.content = content;
-        this.applyDomainEvent(new OrderUpdatedEvent(this.getId(), content));
-        this.applyApplicationEvent(new OrderUpdatedApplicationEvent(this.getId(), content));
+        this.apply(new OrderUpdatedEvent(this.getId(), content));
     }
 
     public Payment getPayment() {

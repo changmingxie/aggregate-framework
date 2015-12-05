@@ -5,10 +5,12 @@ import org.aggregateframework.test.AbstractTestCase;
 import org.aggregateframework.test.command.domain.entity.Order;
 import org.aggregateframework.test.command.domain.entity.Payment;
 import org.aggregateframework.test.command.domain.entity.SeatAvailability;
+import org.aggregateframework.test.command.domain.entity.UserShardingId;
 import org.aggregateframework.test.command.domain.repository.JpaOrderRepository;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -27,6 +29,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
     private Order buildOrder() {
         Order order = new Order();
+        order.setId(new UserShardingId(100));
         order.updateContent("test");
         Payment payment = new Payment();
         payment.setAmount(new BigDecimal(100));
@@ -71,6 +74,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
     @Test
     @Transactional
+    @Rollback(false)
     public void given_a_new_order_when_transactional_save_and_flush_then_the_id_generated() {
 
         //given
@@ -82,6 +86,7 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
         //then
         Assert.assertTrue(order.getId() != null);
+
     }
 
 

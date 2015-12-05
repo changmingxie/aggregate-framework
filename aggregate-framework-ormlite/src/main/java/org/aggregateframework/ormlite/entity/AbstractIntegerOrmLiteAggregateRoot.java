@@ -1,18 +1,18 @@
 package org.aggregateframework.ormlite.entity;
 
+import com.j256.ormlite.field.DatabaseField;
 import org.aggregateframework.entity.AbstractAggregateRoot;
 import org.aggregateframework.entity.Transient;
 import org.aggregateframework.eventhandling.EventContainer;
-import com.j256.ormlite.field.DatabaseField;
 
 import java.util.Date;
 
 /**
  * Created by changming.xie on 2014/7/27.
  */
-public  class AbstractIntegerOrmLiteAggregateRoot extends AbstractAggregateRoot<Integer> {
+public class AbstractIntegerOrmLiteAggregateRoot extends AbstractAggregateRoot<Integer> {
 
-    @DatabaseField(columnName = "ID",generatedId = true,allowGeneratedIdInsert = true)
+    @DatabaseField(columnName = "ID", generatedId = true, allowGeneratedIdInsert = true)
     private Integer id;
 
     @DatabaseField(columnName = "VERSION")
@@ -34,12 +34,6 @@ public  class AbstractIntegerOrmLiteAggregateRoot extends AbstractAggregateRoot<
     public EventContainer getDomainEventContainer() {
         return domainEventContainer;
     }
-
-    @Override
-    public EventContainer getApplicationEventContainer() {
-        return applicationEventContainer;
-    }
-
 
     @Override
     public long getVersion() {

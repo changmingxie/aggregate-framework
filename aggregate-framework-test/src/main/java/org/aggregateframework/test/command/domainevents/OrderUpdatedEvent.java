@@ -1,5 +1,7 @@
 package org.aggregateframework.test.command.domainevents;
 
+import org.aggregateframework.test.command.domain.entity.UserShardingId;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Administrator
@@ -9,11 +11,11 @@ package org.aggregateframework.test.command.domainevents;
  */
 public class OrderUpdatedEvent {
 
-    private Integer id;
+    private UserShardingId id;
 
     private String content;
 
-    public OrderUpdatedEvent(Integer id, String content) {
+    public OrderUpdatedEvent(UserShardingId id, String content) {
         this.id = id;
         this.content = content;
     }
@@ -22,7 +24,7 @@ public class OrderUpdatedEvent {
         return content;
     }
 
-    public Integer getId() {
+    public UserShardingId getId() {
         return id;
     }
 }

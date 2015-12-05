@@ -1,7 +1,7 @@
 package org.aggregateframework.ormlite.entity;
 
-import org.aggregateframework.entity.AbstractDomainObject;
 import com.j256.ormlite.field.DatabaseField;
+import org.aggregateframework.entity.AbstractDomainObject;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,14 +11,24 @@ import java.util.Date;
  */
 public class AbstractGenericOrmLiteDomainObject<ID extends Serializable> extends AbstractDomainObject<ID> {
 
-    @DatabaseField(columnName = "ID", generatedId = true )
-    private Integer id;
+    @DatabaseField(columnName = "ID", generatedId = true)
+    private ID id;
 
     @DatabaseField(columnName = "CREATE_TIME")
     private Date createTime;
 
     @DatabaseField(columnName = "LAST_UPDATE_TIME")
     private Date lastUpdateTime;
+
+    @Override
+    public ID getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(ID id) {
+        this.id = id;
+    }
 
     @Override
     public Date getCreateTime() {
@@ -30,8 +40,5 @@ public class AbstractGenericOrmLiteDomainObject<ID extends Serializable> extends
         return lastUpdateTime;
     }
 
-    @Override
-    public ID getId() {
-        return null;
-    }
+
 }
