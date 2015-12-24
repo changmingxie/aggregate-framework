@@ -16,6 +16,7 @@
 
 package org.aggregateframework.context;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,13 +29,17 @@ import java.util.List;
  */
 public abstract class ReflectionUtils {
 
-    /** The string used to separator packages */
+    public static final String CGLIB_SUB_CLASS_IDENTIFIER = "CGLIB";
+
+    /**
+     * The string used to separator packages
+     */
     public static final String PACKAGE_SEPARATOR = ".";
+
     /**
      * Get the short name of the specified class by striping off the package name.
      *
-     * @param className
-     *          Class name.
+     * @param className Class name.
      * @return Short class name.
      */
     public static String getSimpleClassName(final String className) {
@@ -681,5 +686,31 @@ public abstract class ReflectionUtils {
                     Modifier.isFinal(field.getModifiers()));
         }
     };
+
+    public static <T extends Annotation> T getAnnotation(Method method, Class<T> annotationType) {
+        T annotation = (T) method.getAnnotation(annotationType);
+
+        if (annotation != null) {
+            return annotation;
+        }
+
+
+        Class declaringClass = method.getDeclaringClass().getSuperclass();
+
+        while (annotation == null && !declaringClass.equals(Object.class)) {
+            Method superMethod = null;
+            try {
+                superMethod = declaringClass.getMethod(method.getName(), method.getParameterTypes());
+                annotation = superMethod.getAnnotation(annotationType);
+            } catch (NoSuchMethodException e) {
+
+            }
+
+            declaringClass = declaringClass.getSuperclass();
+        }
+
+
+        return annotation;
+    }
 
 }

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.aggregateframework</groupId>
     <artifactId>aggregate-framework</artifactId>
-    <version>2.6.1</version>
+    <version>2.6.2</version>
 
     <packaging>pom</packaging>
     <name>aggregate-framework</name>
@@ -20,11 +20,17 @@
         <java.src.version>1.6</java.src.version>
         <java.target.version>1.6</java.target.version>
         <project.encoding>UTF-8</project.encoding>
-        <repo.internal.snapshots.url>http://repo1.maven.org/maven2
+        <!--<repo.internal.snapshots.url>http://repo1.maven.org/maven2-->
+        <!--</repo.internal.snapshots.url>-->
+        <!--<repo.internal.releases.url>http://repo1.maven.org/maven2-->
+        <!--</repo.internal.releases.url>-->
+        <!--<repo.proxy.url>http://repo1.maven.org/maven2</repo.proxy.url>-->
+
+        <repo.internal.snapshots.url>http://artifactory.ximalaya.com/artifactory/thirdparty-snapshots-local/
         </repo.internal.snapshots.url>
-        <repo.internal.releases.url>http://repo1.maven.org/maven2
+        <repo.internal.releases.url>http://artifactory.ximalaya.com/artifactory/thirdparty-releases-local/
         </repo.internal.releases.url>
-        <repo.proxy.url>http://repo1.maven.org/maven2</repo.proxy.url>
+        <repo.proxy.url>http://repo1.maven.org/maven2 http://repo1.maven.org/maven2</repo.proxy.url>
 
         <repo.external.url>http://repo1.maven.org/maven2</repo.external.url>
         <servlet.version>2.4</servlet.version>

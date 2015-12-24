@@ -1,6 +1,7 @@
 package org.aggregateframework.eventhandling;
 
 import org.aggregateframework.SystemException;
+import org.aggregateframework.context.ReflectionUtils;
 import org.aggregateframework.eventhandling.async.AsyncMethodInvoker;
 import org.aggregateframework.session.EventInvokerEntry;
 
@@ -12,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 public class EventHandlerInvoker {
     public static void invoke(EventInvokerEntry eventInvokerEntry) {
 
-        EventHandler eventHandler = eventInvokerEntry.getMethod().getAnnotation(EventHandler.class);
+        EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
         if (eventHandler.asynchronous()) {
             AsyncMethodInvoker.getInstance().invoke(eventInvokerEntry.getMethod(), eventInvokerEntry.getTarget(), eventInvokerEntry.getParams());
         } else {
