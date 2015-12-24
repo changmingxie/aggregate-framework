@@ -6,6 +6,7 @@ import org.aggregateframework.test.command.domainevents.OrderCreatedEvent;
 import org.aggregateframework.test.command.domainevents.OrderUpdatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderHandler {
@@ -24,6 +25,7 @@ public class OrderHandler {
     }
 
     @EventHandler(postAfterTransaction = true)
+    @Transactional
     public void postHandleOrderUpdatedEvent(OrderUpdatedEvent event) {
 
         System.out.println("post handle update event");
