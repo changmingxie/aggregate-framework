@@ -51,9 +51,9 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> void doDelete(E entity) {
+    protected <E extends DomainObject<I>, I extends Serializable> int doDelete(E entity) {
         DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entity.getClass());
-        dao.delete(entity);
+        return dao.delete(entity);
     }
 
     @Override

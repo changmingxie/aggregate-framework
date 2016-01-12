@@ -1,9 +1,12 @@
 package org.aggregateframework.eventhandling.async;
 
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.aggregateframework.SystemException;
 import org.aggregateframework.context.AsyncParameterConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,6 +17,7 @@ import java.util.concurrent.Executor;
  */
 public class AsyncMethodInvoker {
 
+    private static final Logger logger = LoggerFactory.getLogger(AsyncMethodInvoker.class);
 
     private final RingBuffer<AsyncEvent> ringBuffer;
 
@@ -42,6 +46,8 @@ public class AsyncMethodInvoker {
         AsyncEventFactory factory = new AsyncEventFactory();
 
         Disruptor<AsyncEvent> disruptor = new Disruptor<AsyncEvent>(factory, AsyncParameterConfig.DISRUPTOR_RING_BUFFER_SIZE, executor);
+
+        disruptor.handleExceptionsWith(new AsyncExceptionEventHandler());
 
         disruptor.handleEventsWith(new AsyncEventHandler());
 
@@ -73,6 +79,24 @@ public class AsyncMethodInvoker {
             } catch (InvocationTargetException e) {
                 throw new SystemException(e);
             }
+        }
+    }
+
+    class AsyncExceptionEventHandler implements ExceptionHandler<AsyncEvent> {
+
+        @Override
+        public void handleEventException(Throwable throwable, long l, AsyncEvent asyncEvent) {
+            logger.error(String.format("method call failed. method:%s,target:%s", asyncEvent.getMethod().getName(), asyncEvent.getTarget().toString()), throwable);
+        }
+
+        @Override
+        public void handleOnStartException(Throwable throwable) {
+            throw new Error(throwable);
+        }
+
+        @Override
+        public void handleOnShutdownException(Throwable throwable) {
+            throw new Error(throwable);
         }
     }
 

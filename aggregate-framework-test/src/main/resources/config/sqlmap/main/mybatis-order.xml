@@ -67,8 +67,7 @@
 
     <delete id="delete" parameterType="org.aggregateframework.test.command.domain.entity.Order">
 		DELETE FROM
-		CQRS_ORDER WHERE ORDER_ID=#{id.id,javaType=java.lang.Integer,jdbcType=INTEGER}
-		AND USER_ID = #{id.userId,javaType=java.lang.Integer,jdbcType=INTEGER}
+		CQRS_ORDER WHERE ORDER_ID=#{id.id,javaType=java.lang.Integer,jdbcType=INTEGER} AND VERSION = #{version}
 	</delete>
 
     <update id="update" parameterType="org.aggregateframework.test.command.domain.entity.Order">

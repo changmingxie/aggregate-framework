@@ -166,6 +166,22 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
 
     @Test
+    public void given_a_prisisted_order_when_delete_then_order_removed() {
+
+        //given
+        Order order = buildOrder();
+        order.updateContent("test");
+        orderRepository.save(order);
+        //when
+        orderRepository.delete(order);
+
+        //then
+        Order foundOrder = orderRepository.findOne(order.getId());
+        Assert.assertNull(foundOrder);
+    }
+
+
+    @Test
     public void given_a_new_order_when_save_then_order_persisted() {
 
         //given

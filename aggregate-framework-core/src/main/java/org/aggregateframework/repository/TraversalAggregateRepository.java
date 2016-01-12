@@ -262,7 +262,12 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
     public <E extends DomainObject<I>, I extends Serializable> void removeDomainObject(E originalEntity, AggregateContext aggregateContext) {
 
-        doDelete(originalEntity);
+        int effectedCount = doDelete(originalEntity);
+
+        if (effectedCount < 1) {
+            throw new OptimisticLockException();
+        }
+
         aggregateContext.getEntityMap().put((Class<E>) originalEntity.getClass(), originalEntity.getId(), originalEntity);
 
         List<DomainObject<Serializable>> allOneToOneAttributeValues = DomainObjectUtils.getOneToOneValues(originalEntity);
@@ -514,7 +519,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
     protected abstract <E extends DomainObject<I>, I extends Serializable> int doUpdate(E entity);
 
-    protected abstract <E extends DomainObject<I>, I extends Serializable> void doDelete(E entity);
+    protected abstract <E extends DomainObject<I>, I extends Serializable> int doDelete(E entity);
 
     protected abstract T doFindOneDomainObject(Class<T> aggregateType, ID id);
 
@@ -523,11 +528,4 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
     protected abstract <E extends DomainObject<I>, I extends Serializable> List<E> doFindAllDomainObjects(Class<E> entityClass, List<I> ids);
 
     protected abstract <I extends Serializable, E extends DomainObject<I>> Map<I, List<DomainObject<Serializable>>> doFindAllOneToManyDomainObjects(Class<E> entityClass, Field oneToManyField, Collection<I> ids);
-
-//    protected abstract <E extends DomainObject<I>, I extends Serializable> Map<I, Map<String, Object>> findPropertyValues(Class<E> entityClass, Collection<I> id);
-//
-//    protected abstract Map<ID, Map<String, Object>> findAllAggregateRootPropertyValues();
-//
-//    protected abstract <E extends DomainObject<I>, I extends Serializable> Map<I, List<Map<String, Object>>> findOneToManyPropertyValues(Class<E> entityClass, String oneToManyProperty, Collection<I> ids);
-
 }

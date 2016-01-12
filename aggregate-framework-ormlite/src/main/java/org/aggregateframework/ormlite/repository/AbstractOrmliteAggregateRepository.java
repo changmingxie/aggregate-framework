@@ -51,9 +51,9 @@ public abstract class AbstractOrmliteAggregateRepository<T extends AggregateRoot
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> void doDelete(E entity) {
+    protected <E extends DomainObject<I>, I extends Serializable> int doDelete(E entity) {
         try {
-            getDao((Class<E>) entity.getClass()).delete(entity);
+            return getDao((Class<E>) entity.getClass()).delete(entity);
         } catch (SQLException e) {
             throw new SystemException(e);
         }
