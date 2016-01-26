@@ -10,6 +10,8 @@ import java.util.Date;
  */
 public abstract class AbstractSimpleAggregateRoot<ID extends Serializable> extends AbstractAggregateRoot<ID> {
 
+    private static final long serialVersionUID = 5687124586118075949L;
+
     private ID id;
 
     private Long version = 1L;

@@ -15,6 +15,7 @@ import java.util.Collection;
 public abstract class AbstractAggregateRoot<ID extends Serializable> extends AbstractDomainObject<ID> implements AggregateRoot<ID> {
 
 
+    private static final long serialVersionUID = -7295689940261849143L;
     private boolean isDeleted = false;
 
     protected void apply(Object eventPayload) {

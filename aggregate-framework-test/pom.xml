@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.aggregateframework</groupId>
         <artifactId>aggregate-framework</artifactId>
-        <version>2.6.3</version>
+        <version>2.7.0</version>
     </parent>
 
     <groupId>com.dianping.aggregateframework</groupId>
@@ -15,7 +15,11 @@
 
     <properties>
         <env>test</env>
-        <mybatis-version>3.2.8</mybatis-version>
+        <!--mybati 3.2.8.1:come from mybatis 3.2.8, and replace the Jdbc3KeyGenerator class with the same class in mybatis 3.4.0-SNAPSHOT.
+        the Jdbc3KeyGenerator class in mybatis 3.4.0-SNAPSHOT support update multiple rows with auto key (mybatis 3.4.0 has changed) set to beans.
+        see https://github.com/mybatis/mybatis-3/pull/324 for more info.
+        -->
+        <mybatis-version>3.2.8.1</mybatis-version>
     </properties>
 
     <dependencies>

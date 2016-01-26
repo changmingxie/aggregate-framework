@@ -11,4 +11,6 @@ public class AsyncParameterConfig {
     public static volatile int DISRUPTOR_RING_BUFFER_SIZE = 1024 * 1024;
 
     public static volatile Executor EXECUTOR = Executors.newCachedThreadPool();
+
+    public static volatile int ASYNC_EVENT_HANDLER_WORK_POOL_SIZE = 100;
 }

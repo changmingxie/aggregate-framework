@@ -7,12 +7,18 @@ import org.aggregateframework.entity.CompositeId;
  */
 public class UserShardingId implements CompositeId {
 
-    private int id;
+    private static final long serialVersionUID = -4926393025658856070L;
+    private Integer id;
 
-    private int userId;
+    private Integer userId;
 
     public UserShardingId() {
 
+    }
+
+    public UserShardingId(Integer id, Integer userId) {
+        this.id = id;
+        this.userId = userId;
     }
 
     public UserShardingId(int userId) {
@@ -21,18 +27,18 @@ public class UserShardingId implements CompositeId {
 
     @Override
     public boolean isNewId() {
-        return !(id > 0 && userId > 0);
+        return !(this.id != null && this.userId != null && this.id > 0 && this.userId > 0);
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
@@ -57,22 +63,32 @@ public class UserShardingId implements CompositeId {
 
         UserShardingId that = (UserShardingId) obj;
 
-        if (this.id == that.id && this.userId == that.userId) {
-            return true;
+        boolean isIdEquals = false;
+
+        boolean isUserIdEquals = false;
+
+        if ((this.id == null && that.id == null) || (this.id != null && this.id.equals(that.id))) {
+            isIdEquals = true;
         }
 
-        return false;
+        if ((this.userId == null && that.userId == null) || (this.userId != null && this.userId.equals(that.userId))) {
+            isUserIdEquals = true;
+        }
+
+        return isIdEquals && isUserIdEquals;
     }
+
 
     @Override
     public int hashCode() {
 
         int hashCode = 17;
 
-        hashCode += this.id * 31;
+        hashCode += this.id == null ? 0 : this.id * 31;
 
-        hashCode += this.userId * 31;
+        hashCode += this.userId == null ? 0 : this.userId * 31;
 
         return hashCode;
     }
+
 }

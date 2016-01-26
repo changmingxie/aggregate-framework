@@ -10,6 +10,8 @@ import java.math.BigDecimal;
  * Time: 下午6:46
  */
 public class Payment extends AbstractSimpleDomainObject<Integer> {
+
+    private static final long serialVersionUID = 6555609853935658453L;
     private BigDecimal amount;
 
     public BigDecimal getAmount() {
@@ -20,5 +22,13 @@ public class Payment extends AbstractSimpleDomainObject<Integer> {
         this.amount = amount;
     }
 
+    @Override
+    public Integer getId() {
+        return super.getId();
+    }
 
+    @Override
+    public void setId(Integer id) {
+        super.setId(id);
+    }
 }

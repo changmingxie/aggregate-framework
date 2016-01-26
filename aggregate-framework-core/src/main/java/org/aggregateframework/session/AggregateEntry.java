@@ -2,7 +2,11 @@ package org.aggregateframework.session;
 
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.eventhandling.EventBus;
+import org.aggregateframework.eventhandling.EventMessage;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -11,25 +15,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class AggregateEntry<T extends AggregateRoot> {
 
-    private final T aggregateRoot;
+    private final Collection<T> aggregateRoots = new ArrayList<T>();
     private final SaveAggregateCallback<T> callback;
 
     private final EventBus eventBus;
 
     private final Queue<AggregateEntry> children = new ConcurrentLinkedQueue<AggregateEntry>();
 
-    public AggregateEntry(T aggregateRoot, SaveAggregateCallback<T> callback, EventBus eventBus) {
-        this.aggregateRoot = aggregateRoot;
+    public AggregateEntry(Collection<T> aggregateRoots, SaveAggregateCallback<T> callback, EventBus eventBus) {
+        this.aggregateRoots.addAll(aggregateRoots);
         this.callback = callback;
         this.eventBus = eventBus;
     }
 
-    public T getAggregateRoot() {
-        return aggregateRoot;
-    }
-
     public void saveAggregate() {
-        callback.save(aggregateRoot);
+        callback.save(aggregateRoots);
     }
 
     public Queue<AggregateEntry> getChildren() {
@@ -38,5 +38,22 @@ public class AggregateEntry<T extends AggregateRoot> {
 
     public EventBus getEventBus() {
         return eventBus;
+    }
+
+    public Collection<? extends EventMessage> getUncommittedDomainEvents() {
+
+        List<EventMessage> uncommittedDomainEvents = new ArrayList<EventMessage>();
+
+        for (T aggregateRoot : aggregateRoots) {
+            uncommittedDomainEvents.addAll(aggregateRoot.getUncommittedDomainEvents());
+        }
+        return uncommittedDomainEvents;
+    }
+
+    public void commitDomainEvents() {
+
+        for (T aggregateRoot : aggregateRoots) {
+            aggregateRoot.commitDomainEvents();
+        }
     }
 }

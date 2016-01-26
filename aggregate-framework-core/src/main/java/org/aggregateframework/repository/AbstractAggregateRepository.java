@@ -1,5 +1,6 @@
 package org.aggregateframework.repository;
 
+import org.aggregateframework.SystemException;
 import org.aggregateframework.context.Assert;
 import org.aggregateframework.context.CollectionUtils;
 import org.aggregateframework.context.DomainObjectUtils;
@@ -10,10 +11,10 @@ import org.aggregateframework.session.AggregateEntry;
 import org.aggregateframework.session.LocalSessionFactory;
 import org.aggregateframework.session.SaveAggregateCallback;
 import org.aggregateframework.session.SessionFactory;
-import org.aggregateframework.SystemException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -39,25 +40,24 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
     @Override
     public T save(T entity) {
-
-        AggregateEntry<T> aggregateEntry = new AggregateEntry<T>(entity, saveAggregateCallback, eventBus);
-
-        sessionFactory.requireClientSession().registerAggregate(aggregateEntry);
-
+        save(Arrays.asList(entity));
         return entity;
     }
 
     @Override
     public List<T> save(Collection<T> entities) {
+
         List<T> result = new ArrayList<T>();
 
-        if (entities == null) {
+        if (CollectionUtils.isEmpty(entities)) {
             return result;
         }
 
-        for (T entity : entities) {
-            result.add(save(entity));
-        }
+        AggregateEntry<T> aggregateEntry = new AggregateEntry<T>(entities, saveAggregateCallback, eventBus);
+
+        sessionFactory.requireClientSession().registerAggregate(aggregateEntry);
+
+        result.addAll(entities);
         return result;
     }
 
@@ -200,9 +200,9 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
         }
     }
 
-    protected abstract T doSave(T entity);
+    protected abstract Collection<T> doSave(Collection<T> entities);
 
-    protected abstract void doDelete(T aggregate);
+    protected abstract void doRemove(Collection<T> aggregates);
 
     protected abstract T doFindOne(ID id);
 
@@ -216,11 +216,26 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
     private class SimpleSaveAggregateCallback implements SaveAggregateCallback<T> {
         @Override
-        public void save(final T aggregate) {
-            if (aggregate.isDeleted()) {
-                doDelete(aggregate);
-            } else {
-                doSave(aggregate);
+        public void save(final Collection<T> aggregateRoots) {
+
+            List<T> removedAggregates = new ArrayList<T>();
+
+            List<T> updatedAggregates = new ArrayList<T>();
+
+            for (T aggregate : aggregateRoots) {
+                if (aggregate.isDeleted()) {
+                    removedAggregates.add(aggregate);
+                } else {
+                    updatedAggregates.add(aggregate);
+                }
+            }
+
+            if (!CollectionUtils.isEmpty(removedAggregates)) {
+                doRemove(removedAggregates);
+            }
+
+            if (!CollectionUtils.isEmpty(updatedAggregates)) {
+                doSave(updatedAggregates);
             }
         }
 

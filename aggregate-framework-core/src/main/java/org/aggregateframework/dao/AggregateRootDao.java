@@ -12,7 +12,6 @@ import java.util.List;
  */
 public interface AggregateRootDao<T extends AggregateRoot<ID>, ID extends Serializable> extends DomainObjectDao<T, ID> {
 
-
     List<T> findAll();
 
     long count();

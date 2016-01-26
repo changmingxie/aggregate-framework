@@ -4,9 +4,20 @@ import org.aggregateframework.entity.AbstractSimpleDomainObject;
 
 public class SeatAvailability extends AbstractSimpleDomainObject<Integer> {
 
+    private static final long serialVersionUID = -1204283796830067140L;
     private Order order;
     private int quantity;
     private Payment payment;
+
+    @Override
+    public Integer getId() {
+        return super.getId();
+    }
+
+    @Override
+    public void setId(Integer id) {
+        super.setId(id);
+    }
 
     public Order getOrder() {
         return order;
@@ -31,4 +42,6 @@ public class SeatAvailability extends AbstractSimpleDomainObject<Integer> {
     public void setPayment(Payment payment) {
         this.payment = payment;
     }
+
+
 }

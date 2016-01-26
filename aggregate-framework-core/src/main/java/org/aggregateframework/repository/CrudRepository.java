@@ -10,7 +10,6 @@ import java.util.Collection;
  */
 public interface CrudRepository<T,ID extends Serializable> extends Repository<T,ID> {
 
-
     T save(T entity);
 
     Collection<T> save(Collection<T> entities);

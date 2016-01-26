@@ -5,6 +5,7 @@ import org.aggregateframework.context.CollectionUtils;
 import org.aggregateframework.context.DomainObjectUtils;
 import org.aggregateframework.context.ReflectionUtils;
 import org.aggregateframework.dao.AggregateRootDao;
+import org.aggregateframework.dao.CollectiveDomainObjectDao;
 import org.aggregateframework.dao.DomainObjectDao;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.DomainObject;
@@ -35,25 +36,52 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> int doUpdate(E entity) {
-        DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entity.getClass());
-//        entity.setLastUpdateTime(new Date());
-        return dao.update(entity);
+    protected <E extends DomainObject<I>, I extends Serializable> int doUpdate(Collection<E> entities) {
+        DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entities.iterator().next().getClass());
+
+        if (dao instanceof CollectiveDomainObjectDao) {
+            CollectiveDomainObjectDao<E, I> collectiveDao = (CollectiveDomainObjectDao<E, I>) dao;
+            return collectiveDao.updateAll(entities);
+        } else {
+            int effectedCount = 0;
+            for (E entity : entities) {
+                effectedCount += dao.update(entity);
+            }
+            return effectedCount;
+        }
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> I doInsert(E entity) {
-        DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entity.getClass());
-//        entityToInsert.setCreateTime(new Date());
-//        entityToInsert.setLastUpdateTime(new Date());
-        dao.insert(entity);
-        return entity.getId();
+    protected <E extends DomainObject<I>, I extends Serializable> int doInsert(Collection<E> entities) {
+
+        DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entities.iterator().next().getClass());
+
+        if (dao instanceof CollectiveDomainObjectDao) {
+            CollectiveDomainObjectDao<E, I> collectiveDao = (CollectiveDomainObjectDao<E, I>) dao;
+            return collectiveDao.insertAll(entities);
+        } else {
+            int effectedCount = 0;
+            for (E entity : entities) {
+                effectedCount += dao.insert(entity);
+            }
+            return effectedCount;
+        }
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> int doDelete(E entity) {
-        DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entity.getClass());
-        return dao.delete(entity);
+    protected <E extends DomainObject<I>, I extends Serializable> int doDelete(Collection<E> entities) {
+        DomainObjectDao<E, I> dao = DaoFactory.getDao((Class) entities.iterator().next().getClass());
+
+        if (dao instanceof CollectiveDomainObjectDao) {
+            CollectiveDomainObjectDao<E, I> collectiveDao = (CollectiveDomainObjectDao<E, I>) dao;
+            return collectiveDao.deleteAll(entities);
+        } else {
+            int effectedCount = 0;
+            for (E entity : entities) {
+                effectedCount += dao.delete(entity);
+            }
+            return effectedCount;
+        }
     }
 
     @Override
@@ -73,8 +101,22 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
     @Override
     protected <E extends DomainObject<I>, I extends Serializable> List<E> doFindAllDomainObjects(Class<E> entityClass, List<I> ids) {
         DomainObjectDao<E, I> dao = DaoFactory.getDao(entityClass);
-        List<E> entities = dao.findByIds(ids);
-        return entities;
+
+        if (dao instanceof CollectiveDomainObjectDao) {
+            CollectiveDomainObjectDao<E, I> collectiveDao = (CollectiveDomainObjectDao<E, I>) dao;
+            return collectiveDao.findByIds(ids);
+        } else {
+
+            List<E> entities = new ArrayList<E>();
+            for (I id : ids) {
+                E entity = dao.findById(id);
+
+                if (entity != null) {
+                    entities.add(entity);
+                }
+            }
+            return entities;
+        }
     }
 
     @Override

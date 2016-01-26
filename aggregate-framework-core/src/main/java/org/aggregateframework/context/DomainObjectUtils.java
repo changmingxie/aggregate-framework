@@ -80,40 +80,52 @@ public class DomainObjectUtils {
         ReflectionUtils.setField(idField, entity, value);
     }
 
-    public static <E extends DomainObject<I>, I extends Serializable> Collection<Collection<DomainObject<Serializable>>> getOneToManyValues(E entity) {
+    public static <E extends DomainObject<I>, I extends Serializable> Map<Field, List<DomainObject<Serializable>>> getOneToOneValues(Collection<E> entities) {
 
-        Collection<Collection<DomainObject<Serializable>>> attributeValues = new ArrayList<Collection<DomainObject<Serializable>>>(getOneToManyAttributeValues(entity).values());
+        Map<Field, List<DomainObject<Serializable>>> allOneToOneFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
 
-        attributeValues.removeAll(Collections.singleton(null));
+        for (E entity : entities) {
 
-        return attributeValues;
+            Map<Field, DomainObject<Serializable>> fieldValueMap = DomainObjectUtils.getOneToOneAttributeValues(entity);
+
+            for (Map.Entry<Field, DomainObject<Serializable>> keyValuePair : fieldValueMap.entrySet()) {
+                if (!allOneToOneFieldValuesMap.containsKey(keyValuePair.getKey())) {
+                    allOneToOneFieldValuesMap.put(keyValuePair.getKey(), new ArrayList<DomainObject<Serializable>>());
+                }
+
+                if (keyValuePair.getValue() != null) {
+                    allOneToOneFieldValuesMap.get(keyValuePair.getKey()).add(keyValuePair.getValue());
+                }
+            }
+        }
+
+        return allOneToOneFieldValuesMap;
     }
 
-    public static <E extends DomainObject<I>, I extends Serializable> List<DomainObject<Serializable>> getOneToOneValues(E entity) {
+    public static <E extends DomainObject<I>, I extends Serializable> Map<Field, List<DomainObject<Serializable>>> getOneToManyAttributeValues(
+            Collection<E> entities) {
 
-        List<DomainObject<Serializable>> attributeValues = new ArrayList<DomainObject<Serializable>>(DomainObjectUtils
-                .getOneToOneAttributeValues(entity).values());
+        Map<Field, List<DomainObject<Serializable>>> attributeValues = new HashMap<Field, List<DomainObject<Serializable>>>();
 
-        attributeValues.removeAll(Collections.singleton(null));
+        for (E entity : entities) {
 
-        return attributeValues;
-    }
+            List<Field> oneToManyFields = getOneToManyFields(entity.getClass());
+            for (Field field : oneToManyFields) {
+                Collection<DomainObject<Serializable>> values;
+                try {
+                    values = (Collection<DomainObject<Serializable>>) field.get(entity);
 
-    public static <E extends DomainObject<I>, I extends Serializable> Map<Field, Collection<DomainObject<Serializable>>> getOneToManyAttributeValues(
-            E entity) {
+                    if (!attributeValues.containsKey(field)) {
+                        attributeValues.put(field, new ArrayList<DomainObject<Serializable>>());
+                    }
 
-        Map<Field, Collection<DomainObject<Serializable>>> attributeValues = new HashMap<Field, Collection<DomainObject<Serializable>>>();
-
-        List<Field> oneToManyFields = getOneToManyFields(entity.getClass());
-
-        for (Field field : oneToManyFields) {
-
-            Collection<DomainObject<Serializable>> values;
-            try {
-                values = (Collection<DomainObject<Serializable>>) field.get(entity);
-                attributeValues.put(field, values);
-            } catch (Exception e) {
-                throw new SystemException(e);
+                    if (!CollectionUtils.isEmpty(values)) {
+                        attributeValues.get(field).addAll(values);
+                    }
+                    
+                } catch (Exception e) {
+                    throw new SystemException(e);
+                }
             }
 
         }
@@ -239,43 +251,33 @@ public class DomainObjectUtils {
         return null;
     }
 
-    public static <E extends DomainObject<I>, I extends Serializable> E instantiateDomainObject(Class<E> entityClass, Map<String, Object> propertyValues) {
+    public static Class<DomainObject<Serializable>> getFieldDomainObjectClass(Field field) {
 
-        E entity = (E) ObjectUtils.instantiateClass(entityClass);
+        field.setAccessible(true);
 
-        for (Map.Entry<String, Object> entry : propertyValues.entrySet()) {
+        Type declaringType = field.getGenericType();
 
-            if (entry.getKey().indexOf('.') > 0) {
-                String[] properties = entry.getKey().split("\\.");
-                Class currentEntityClass = entityClass;
-                Object currentEntity = entity;
+        if (declaringType instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) declaringType;
 
-                Field field = ReflectionUtils.findField(currentEntityClass, properties[0]);
-                if (field != null) {
-                    ReflectionUtils.makeAccessible(field);
-                    try {
-                        DomainObject domainObject = (DomainObject) ObjectUtils.instantiateClass(field.getType());
-                        DomainObjectUtils.setField((DomainObject) domainObject, DomainObjectUtils.ID, entry.getValue());
-                        field.set(currentEntity, domainObject);
-                    } catch (IllegalAccessException e) {
-                        throw new SystemException(e);
-                    }
+            if (paramType.getRawType() instanceof Class
+                    && Collection.class.isAssignableFrom((Class) paramType.getRawType())
+                    && paramType.getActualTypeArguments().length > 0) {
+                Type entityType = paramType.getActualTypeArguments()[0];
+
+                if (entityType instanceof Class
+                        && DomainObject.class.isAssignableFrom((Class) entityType)) {
+                    return (Class<DomainObject<Serializable>>) entityType;
                 }
-            } else {
-                Field field = ReflectionUtils.findField(entityClass, entry.getKey());
-                if (field != null) {
-                    ReflectionUtils.makeAccessible(field);
-                    try {
-                        field.set(entity, entry.getValue());
-                    } catch (IllegalAccessException e) {
-                        throw new SystemException(e);
-                    }
-                }
+            }
+        } else if (declaringType instanceof Class) {
+            if (!ReflectionUtils.isJdkPrimitiveType(((Class) declaringType))
+                    && DomainObject.class.isAssignableFrom((Class) declaringType)) {
+                return (Class<DomainObject<Serializable>>) declaringType;
             }
         }
 
-        return entity;
-
+        return null;
     }
 
     public static <E extends DomainObject<I>, I extends Serializable> boolean equal(E entity, E originalEntity) {

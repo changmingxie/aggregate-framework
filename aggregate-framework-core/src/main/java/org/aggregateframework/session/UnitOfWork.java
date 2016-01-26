@@ -14,11 +14,8 @@ public class UnitOfWork extends AbstractClientSession {
 
 
     @Override
-    public <T extends AggregateRoot<ID>, ID extends Serializable> T registerAggregate(AggregateEntry<T> aggregateEntry) {
-
+    public <T extends AggregateRoot<ID>, ID extends Serializable> void registerAggregate(AggregateEntry<T> aggregateEntry) {
         currentAggregateQueue.add(aggregateEntry);
-
-        return aggregateEntry.getAggregateRoot();
     }
 
     @Override

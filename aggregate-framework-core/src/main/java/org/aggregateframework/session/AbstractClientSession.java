@@ -71,9 +71,9 @@ public abstract class AbstractClientSession implements ClientSession {
 
             currentAggregateQueue = aggregateEntry.getChildren();
 
-            List<EventMessage> messageList = new ArrayList<EventMessage>(aggregateEntry.getAggregateRoot().getUncommittedDomainEvents());
+            List<EventMessage> messageList = new ArrayList<EventMessage>(aggregateEntry.getUncommittedDomainEvents());
 
-            aggregateEntry.getAggregateRoot().commitDomainEvents();
+            aggregateEntry.commitDomainEvents();
 
             EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
             aggregateEntry.getEventBus().publish(messages);

@@ -6,8 +6,13 @@ import org.aggregateframework.context.CollectionUtils;
 import org.aggregateframework.context.DomainObjectUtils;
 import org.aggregateframework.context.IdentifiedEntityMap;
 import org.aggregateframework.context.ReflectionUtils;
-import org.aggregateframework.entity.*;
+import org.aggregateframework.entity.AbstractDomainObject;
+import org.aggregateframework.entity.AggregateRoot;
+import org.aggregateframework.entity.CompositeId;
+import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.session.AggregateContext;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -26,42 +31,45 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
     }
 
     @Override
-    protected T doSave(T entity) {
+    protected Collection<T> doSave(Collection<T> entities) {
 
         Class idClass = DomainObjectUtils.getIdClass(this.aggregateType);
 
-        if (CompositeId.class.isAssignableFrom(idClass) && entity.getId() == null) {
-            try {
-                entity.setId((ID) idClass.newInstance());
-            } catch (Throwable e) {
-                throw new SystemException("new Instance of Composite Id failed. class:" + idClass.getCanonicalName());
+        List<T> insertEntities = new ArrayList<T>();
+        List<T> updateEntities = new ArrayList<T>();
+
+        for (T entity : entities) {
+
+            ensureCompositeIdInitialized(idClass, entity);
+
+            if (entity.isNew()) {
+                insertEntities.add(entity);
+            } else {
+                updateEntities.add(entity);
             }
         }
 
-        if (entity.isNew()) {
+        if (!CollectionUtils.isEmpty(insertEntities)) {
             AggregateContext aggregateContext = new AggregateContext();
-            insertDomainObject(entity, aggregateContext);
-        } else {
-
-            T originalEntity = sessionFactory.requireClientSession().findOriginalCopy(this.aggregateType, entity.getId());
-
-            if (originalEntity == null) {
-                originalEntity = doFindOne(entity.getId());
-            }
-            AggregateContext aggregateContext = new AggregateContext();
-
-            updateDomainObject(entity, originalEntity, aggregateContext);
-
-            compareAndSetRootVersion(entity, originalEntity, aggregateContext);
+            insertDomainObject(this.aggregateType, insertEntities, aggregateContext);
         }
-        return entity;
+
+        if (!CollectionUtils.isEmpty(updateEntities)) {
+
+            List<Pair<T, T>> currentAndOriginalEntityPairs = buildCurrentAndOriginalEntityPairs(updateEntities);
+
+            AggregateContext aggregateContext = new AggregateContext();
+            updateDomainObject(this.aggregateType, currentAndOriginalEntityPairs, aggregateContext);
+            compareAndSetRootVersion(currentAndOriginalEntityPairs, aggregateContext);
+        }
+
+        return entities;
     }
 
-
     @Override
-    protected void doDelete(T entity) {
+    protected void doRemove(Collection<T> entities) {
         AggregateContext aggregateContext = new AggregateContext();
-        removeDomainObject(entity, aggregateContext);
+        removeDomainObject(this.aggregateType, entities, aggregateContext);
     }
 
     @Override
@@ -94,26 +102,10 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
     @Override
     protected List<T> doFindAll(Collection<ID> ids) {
         IdentifiedEntityMap identifiedEntityMap = new IdentifiedEntityMap();
-        List<T> entities = doFindAll(this.aggregateType, ids, identifiedEntityMap, true);
+        List<T> entities = doFindAll(this.aggregateType, ids, identifiedEntityMap);
         return entities;
     }
 
-
-    protected <E extends DomainObject<I>, I extends Serializable> E doFindOne(Class<E> entityClass, I id) {
-
-        E entity = null;
-
-        IdentifiedEntityMap identifiedEntityMap = new IdentifiedEntityMap();
-        List<I> ids = new ArrayList<I>();
-        ids.add(id);
-        List<E> entities = doFindAll(entityClass, ids, identifiedEntityMap, true);
-
-        if (!CollectionUtils.isEmpty(entities)) {
-            entity = entities.get(0);
-        }
-
-        return entity;
-    }
 
     protected T fetchAllComponents(T entity) {
         if (entity == null) {
@@ -136,28 +128,30 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         fetchAllOneToManyComponents(entities, identifiedEntityMap, needRecursiveFetched);
 
         for (T entity : entities) {
-            ((AggregateRoot) entity).clearDomainEvents();
+            entity.clearDomainEvents();
         }
 
         return entities;
     }
 
 
-    private void compareAndSetRootVersion(T entity, T originalEntity, AggregateContext aggregateContext) {
-        if (DomainObjectUtils.equal(entity, originalEntity)) {
-            if (aggregateContext.isAggregateChanged()) {
-                int effectedCount = doUpdate(entity);
-                if (effectedCount < 1) {
-                    throw new OptimisticLockException();
-                }
-                DomainObjectUtils.setField((AbstractAggregateRoot) entity, DomainObjectUtils.VERSION, ((AbstractAggregateRoot) entity).getVersion() + 1L);
-            }
-        } else {
-            DomainObjectUtils.setField((AbstractAggregateRoot) entity, DomainObjectUtils.VERSION, ((AbstractAggregateRoot) entity).getVersion() + 1L);
+    private <E extends DomainObject<I>, I extends Serializable> E doFindOne(Class<E> entityClass, I id) {
+
+        E entity = null;
+
+        IdentifiedEntityMap identifiedEntityMap = new IdentifiedEntityMap();
+        List<I> ids = new ArrayList<I>();
+        ids.add(id);
+        List<E> entities = doFindAll(entityClass, ids, identifiedEntityMap);
+
+        if (!CollectionUtils.isEmpty(entities)) {
+            entity = entities.get(0);
         }
+
+        return entity;
     }
 
-    private <E extends DomainObject<I>, I extends Serializable> List<E> doFindAll(Class<E> entityClass, Collection<I> ids, IdentifiedEntityMap identifiedEntityMap, boolean needRecursiveFetched) {
+    private <E extends DomainObject<I>, I extends Serializable> List<E> doFindAll(Class<E> entityClass, Collection<I> ids, IdentifiedEntityMap identifiedEntityMap) {
 
         List<E> alreadyFetchedEntities = new ArrayList<E>();
         List<I> idsNeedFetch = new ArrayList<I>();
@@ -177,6 +171,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             for (E entity : entities) {
                 identifiedEntityMap.put(entityClass, entity.getId(), entity);
             }
+
             fetchAllComponents(entities, identifiedEntityMap, true);
 
             alreadyFetchedEntities.addAll(entities);
@@ -184,29 +179,75 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         return alreadyFetchedEntities;
     }
 
-    private <E extends DomainObject<I>, I extends Serializable> Map<I, List<DomainObject<Serializable>>> doFindAll(Class<E> entityClass, Field oneToManyField, Collection<I> ids, IdentifiedEntityMap identifiedEntityMap, boolean needRecursiveFetched) {
+    private <E extends DomainObject<I>, I extends Serializable> void insertDomainObject(Class<E> entityClass, List<E> entities, AggregateContext aggregateContext) {
 
-        ParameterizedType genericType = (ParameterizedType) oneToManyField.getGenericType();
-        Class<DomainObject<Serializable>> oneToManyEntityClass = (Class<DomainObject<Serializable>>) genericType.getActualTypeArguments()[0];
+        insertOneToOneAttributes(entities, aggregateContext);
 
-        Map<I, List<DomainObject<Serializable>>> oneToManyComponentMaps = doFindAllOneToManyDomainObjects(entityClass, oneToManyField, ids);
-
-        List<DomainObject<Serializable>> allOneToManyComponents = new ArrayList<DomainObject<Serializable>>();
-        for (List<DomainObject<Serializable>> oneToManyComponents : oneToManyComponentMaps.values()) {
-            allOneToManyComponents.addAll(oneToManyComponents);
+        for (E entity : entities) {
+            setCreateTimeOrLastUpdateTime(entity);
         }
 
-        List<DomainObject<Serializable>> duplicatedFetchedComponents = new ArrayList<DomainObject<Serializable>>();
-        List<DomainObject<Serializable>> alreadyFetchedComponents = new ArrayList<DomainObject<Serializable>>();
+        int effectedCount = doInsert(entities);
+        if (effectedCount < entities.size()) {
+            throw new OptimisticLockException();
+        }
 
-        replaceComponentsWithFetchedComponents(identifiedEntityMap, oneToManyEntityClass, allOneToManyComponents, duplicatedFetchedComponents, alreadyFetchedComponents);
+        aggregateContext.setAggregateChanged(true);
+        aggregateContext.getEntityMap().put(entityClass, entities);
 
-        allOneToManyComponents.removeAll(duplicatedFetchedComponents);
-        allOneToManyComponents.addAll(alreadyFetchedComponents);
+        insertOneToManyAttributes(entities, aggregateContext);
+    }
 
-        fetchAllComponents(allOneToManyComponents, identifiedEntityMap, true);
+    private <E extends DomainObject<I>, I extends Serializable> void updateDomainObject(Class<E> entityClass, List<Pair<E, E>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
 
-        return oneToManyComponentMaps;
+        updateOneToOneAttributes(currentAndOriginalEntityPairs, aggregateContext);
+        // update entity
+
+        List<E> updateEntities = new ArrayList<E>();
+
+        for (Pair<E, E> pair : currentAndOriginalEntityPairs) {
+
+            E entity = pair.getLeft();
+            E originalEntity = pair.getRight();
+
+            if (!DomainObjectUtils.equal(entity, originalEntity)) {
+                setCreateTimeOrLastUpdateTime(entity);
+                updateEntities.add(entity);
+            } else {
+                aggregateContext.getEntityMap().put(entityClass, entity);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(updateEntities)) {
+            int effectedCount = doUpdate(updateEntities);
+            if (effectedCount < updateEntities.size()) {
+                throw new OptimisticLockException();
+            }
+            aggregateContext.setAggregateChanged(true);
+        }
+
+        aggregateContext.getEntityMap().put(entityClass, updateEntities);
+
+        updateOneToManyAttributes(currentAndOriginalEntityPairs, aggregateContext);
+    }
+
+    private <E extends DomainObject<I>, I extends Serializable> void removeDomainObject(Class<E> entityClass, Collection<E> entities, AggregateContext aggregateContext) {
+
+        int effectedCount = doDelete(entities);
+
+        if (effectedCount < entities.size()) {
+            throw new OptimisticLockException();
+        }
+
+        aggregateContext.getEntityMap().put(entityClass, entities);
+
+        Map<Field, List<DomainObject<Serializable>>> allOneToOneFieldValuesMap = DomainObjectUtils.getOneToOneValues(entities);
+
+        removeFieldDomainObjects(allOneToOneFieldValuesMap, aggregateContext);
+
+        Map<Field, List<DomainObject<Serializable>>> allOneToManyFieldValuesMap = DomainObjectUtils.getOneToManyAttributeValues(entities);
+
+        removeFieldDomainObjects(allOneToManyFieldValuesMap, aggregateContext);
     }
 
     private <E extends DomainObject<I>, I extends Serializable> List<E> fetchAllComponents(List<E> entities, IdentifiedEntityMap identifiedEntityMap, boolean needRecursiveFetched) {
@@ -215,209 +256,158 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         return entities;
     }
 
-    private <E extends DomainObject<I>, I extends Serializable> I insertDomainObject(E entity, AggregateContext aggregateContext) {
 
-        insertOneToOneAttributes(entity, aggregateContext);
-
-        if (entity instanceof AbstractDomainObject) {
-            AbstractDomainObject abstractDomainObject = (AbstractDomainObject) entity;
-
-            if (abstractDomainObject.getCreateTime() == null) {
-                DomainObjectUtils.setField(entity, DomainObjectUtils.CREATE_TIME, new Date());
-            }
-
-            DomainObjectUtils.setField(entity, DomainObjectUtils.LAST_UPDATE_TIME, new Date());
-        }
-
-        I id = doInsert(entity);
-        aggregateContext.setAggregateChanged(true);
-        aggregateContext.getEntityMap().put((Class<E>) entity.getClass(), id, entity);
-
-        insertOneToManyAttributes(entity, aggregateContext);
-
-        return id;
+    private <E extends DomainObject<I>, I extends Serializable> void insertOneToOneAttributes(List<E> entities, AggregateContext aggregateContext) {
+        Map<Field, List<DomainObject<Serializable>>> fieldValuesMap = DomainObjectUtils.getOneToOneValues(entities);
+        insertFieldDomainObjects(fieldValuesMap, aggregateContext);
     }
 
-    public <E extends DomainObject<I>, I extends Serializable> void updateDomainObject(E entity, E originalEntity, AggregateContext aggregateContext) {
-        updateOneToOneAttributes(entity, originalEntity, aggregateContext);
-        // update entity
-        if (!DomainObjectUtils.equal(entity, originalEntity)) {
-            if (entity instanceof AbstractDomainObject) {
-                if (entity.getCreateTime() == null) {
-                    DomainObjectUtils.setField(entity, DomainObjectUtils.CREATE_TIME, new Date());
+    private <E extends DomainObject<I>, I extends Serializable> void insertOneToManyAttributes(List<E> entities, AggregateContext aggregateContext) {
+
+        Map<Field, List<DomainObject<Serializable>>> fieldValuesMap = DomainObjectUtils.getOneToManyAttributeValues(entities);
+        insertFieldDomainObjects(fieldValuesMap, aggregateContext);
+    }
+
+    private <E extends DomainObject<I>, I extends Serializable> void updateOneToOneAttributes(List<Pair<E, E>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
+
+        Map<Field, List<DomainObject<Serializable>>> allNeedInsertFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> allNeedUpdateFieldValuesMap = new HashMap<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>>();
+        Map<Field, List<DomainObject<Serializable>>> allNeedRemovedFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
+
+        for (Pair<E, E> pair : currentAndOriginalEntityPairs) {
+
+            E currentEntity = pair.getLeft();
+            E originalEntity = pair.getRight();
+
+            Map<Field, DomainObject<Serializable>> originalFieldValuesMap = DomainObjectUtils.getOneToOneAttributeValues(originalEntity);
+            Map<Field, DomainObject<Serializable>> currentFieldValuesMap = DomainObjectUtils.getOneToOneAttributeValues(currentEntity);
+
+            for (Field field : originalFieldValuesMap.keySet()) {
+
+                DomainObject<Serializable> originalValue = originalFieldValuesMap.get(field);
+                DomainObject<Serializable> currentValue = currentFieldValuesMap.get(field);
+
+
+                if (originalValue != null && (currentValue == null || !currentValue.getId().equals(originalValue.getId()))) {
+
+
+                    if (!allNeedRemovedFieldValuesMap.containsKey(field)) {
+                        allNeedRemovedFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                    }
+
+                    allNeedRemovedFieldValuesMap.get(field).add(originalValue);
+
                 }
-                DomainObjectUtils.setField(entity, DomainObjectUtils.LAST_UPDATE_TIME, new Date());
-            }
-            int effectedCount = doUpdate(entity);
-            if (effectedCount < 1) {
-                throw new OptimisticLockException();
-            }
-            aggregateContext.setAggregateChanged(true);
-        }
 
-        aggregateContext.getEntityMap().put((Class<E>) entity.getClass(), entity.getId(), entity);
+                if (originalValue != null && currentValue != null && currentValue.getId().equals(originalValue.getId())) {
 
-        updateOneToManyAttributes(entity, originalEntity, aggregateContext);
-    }
+                    if (!allNeedUpdateFieldValuesMap.containsKey(field)) {
+                        allNeedUpdateFieldValuesMap.put(field, new ArrayList<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>());
+                    }
 
-    public <E extends DomainObject<I>, I extends Serializable> void removeDomainObject(E originalEntity, AggregateContext aggregateContext) {
+                    //compare the equals
+                    allNeedUpdateFieldValuesMap.get(field).add(new ImmutablePair<DomainObject<Serializable>, DomainObject<Serializable>>(currentValue, originalValue));
 
-        int effectedCount = doDelete(originalEntity);
+                }
 
-        if (effectedCount < 1) {
-            throw new OptimisticLockException();
-        }
+                if (currentValue != null && !currentValue.getId().equals(originalValue.getId())) {
 
-        aggregateContext.getEntityMap().put((Class<E>) originalEntity.getClass(), originalEntity.getId(), originalEntity);
+                    if (!allNeedInsertFieldValuesMap.containsKey(field)) {
+                        allNeedInsertFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                    }
 
-        List<DomainObject<Serializable>> allOneToOneAttributeValues = DomainObjectUtils.getOneToOneValues(originalEntity);
-        for (DomainObject<Serializable> value : allOneToOneAttributeValues) {
-            if (!aggregateContext.getEntityMap().containsKey(value.getClass(), value.getId())) {
-                removeDomainObject(value, aggregateContext);
-            }
-        }
+                    allNeedInsertFieldValuesMap.get(field).add(currentValue);
 
-        Collection<Collection<DomainObject<Serializable>>> allOneToManyAttributeValues = DomainObjectUtils
-                .getOneToManyValues(originalEntity);
-
-        for (Collection<DomainObject<Serializable>> attributeValues : allOneToManyAttributeValues) {
-            for (DomainObject<Serializable> value : attributeValues) {
-
-                if (!aggregateContext.getEntityMap().containsKey(value.getClass(), value.getId())) {
-                    removeDomainObject(value, aggregateContext);
                 }
             }
         }
+
+        insertUpdateRemoveFieldDomainObjects(aggregateContext, allNeedInsertFieldValuesMap, allNeedUpdateFieldValuesMap, allNeedRemovedFieldValuesMap);
     }
 
-    private <E extends DomainObject<I>, I extends Serializable> void insertOneToOneAttributes(E entity, AggregateContext aggregateContext) {
-        List<DomainObject<Serializable>> allOneToOneAttributeValues = DomainObjectUtils.getOneToOneValues(entity);
+    private <E extends DomainObject<I>, I extends Serializable> void updateOneToManyAttributes(List<Pair<E, E>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
 
-        for (DomainObject<Serializable> value : allOneToOneAttributeValues) {
+        Map<Field, List<DomainObject<Serializable>>> allNeedInsertFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> allNeedUpdateFieldValuesMap = new HashMap<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>>();
+        Map<Field, List<DomainObject<Serializable>>> allNeedRemoveFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
 
-            if (!aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) value.getClass(), value.getId())) {
-                insertDomainObject(value, aggregateContext);
-            }
-        }
-    }
+        for (Pair<E, E> pair : currentAndOriginalEntityPairs) {
 
-    private <E extends DomainObject<I>, I extends Serializable> void insertOneToManyAttributes(E entity, AggregateContext aggregateContext) {
+            E currentEntity = pair.getLeft();
+            E originalEntity = pair.getRight();
 
-        Map<Field, Collection<DomainObject<Serializable>>> attributes = DomainObjectUtils.getOneToManyAttributeValues(entity);
+            Map<Field, Collection<DomainObject<Serializable>>> originalFieldValuesMap = DomainObjectUtils.getOneToManyAttributeValues((Collection) Arrays.asList(originalEntity));
 
-        for (Map.Entry<Field, Collection<DomainObject<Serializable>>> attribute : attributes.entrySet()) {
+            Map<Field, Collection<DomainObject<Serializable>>> currentFieldValuesMap = DomainObjectUtils.getOneToManyAttributeValues((Collection) Arrays.asList(currentEntity));
 
-            if (attribute.getValue().size() > 0) {
+            for (Field field : originalFieldValuesMap.keySet()) {
 
-                for (DomainObject<Serializable> value : attribute.getValue()) {
-                    if (!aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) value.getClass(), value.getId())) {
-                        insertDomainObject(value, aggregateContext);
+                Collection<DomainObject<Serializable>> originalValues = originalFieldValuesMap.get(field);
+                Collection<DomainObject<Serializable>> currentValues = currentFieldValuesMap.get(field);
+
+                Map<Serializable, DomainObject<Serializable>> currentValueMap = new HashMap<Serializable, DomainObject<Serializable>>();
+                Map<Serializable, DomainObject<Serializable>> originalValueMap = new HashMap<Serializable, DomainObject<Serializable>>();
+
+                for (DomainObject<Serializable> currentValue : currentValues) {
+                    if (!currentValue.isNew()) {
+                        currentValueMap.put(currentValue.getId(), currentValue);
                     }
                 }
-            }
-        }
-    }
 
-    private <E extends DomainObject<I>, I extends Serializable> void updateOneToOneAttributes(E entity, E originalEntity, AggregateContext aggregateContext) {
-
-        if (originalEntity == null) {
-            return;
-        }
-
-        Map<Field, DomainObject<Serializable>> orignalAttributes = DomainObjectUtils
-                .getOneToOneAttributeValues(originalEntity);
-        Map<Field, DomainObject<Serializable>> newAttributes = DomainObjectUtils.getOneToOneAttributeValues(entity);
-
-        for (Field field : orignalAttributes.keySet()) {
-
-            DomainObject<Serializable> orignalValue = orignalAttributes.get(field);
-            DomainObject<Serializable> newValue = newAttributes.get(field);
-
-            if (newValue == null || newValue.isNew()) {
-                if (orignalValue != null && !aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) orignalValue.getClass(), orignalValue.getId())) {
-                    removeDomainObject(orignalValue, aggregateContext);
-                }
-            }
-
-            if (newValue != null) {
-                if (newValue.isNew()) {
-                    insertDomainObject(newValue, aggregateContext);
-                } else {
-                    if (!aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) newValue.getClass(), newValue.getId())) {
-                        updateDomainObject(newValue, orignalValue, aggregateContext);
+                for (DomainObject<Serializable> originalValue : originalValues) {
+                    if (!originalValue.isNew()) {
+                        originalValueMap.put(originalValue.getId(), originalValue);
                     }
                 }
-            }
-        }
-    }
 
-    private <E extends DomainObject<I>, I extends Serializable> void updateOneToManyAttributes(E entity, E originalEntity, AggregateContext aggregateContext) {
+                List<DomainObject<Serializable>> addedValues = new ArrayList<DomainObject<Serializable>>();
+                List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>> updatedAndOriginalValues = new ArrayList<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>();
+                List<DomainObject<Serializable>> removedValues = new ArrayList<DomainObject<Serializable>>();
 
-        if (originalEntity == null) {
-            return;
-        }
-
-        Map<Field, Collection<DomainObject<Serializable>>> originalAttributes = DomainObjectUtils
-                .getOneToManyAttributeValues(originalEntity);
-
-        Map<Field, Collection<DomainObject<Serializable>>> newAttributes = DomainObjectUtils.getOneToManyAttributeValues(entity);
-
-        for (Field field : originalAttributes.keySet()) {
-            Collection<DomainObject<Serializable>> originalValues = originalAttributes.get(field);
-            Collection<DomainObject<Serializable>> newValues = newAttributes.get(field);
-
-            List<DomainObject<Serializable>> addedValues = new ArrayList<DomainObject<Serializable>>();
-            List<DomainObject<Serializable>> updatedValues = new ArrayList<DomainObject<Serializable>>();
-            List<DomainObject<Serializable>> removedValues = new ArrayList<DomainObject<Serializable>>();
-
-            for (DomainObject<Serializable> value : newValues) {
-
-                if (value.isNew()) {
-                    addedValues.add(value);
-                } else {
-                    updatedValues.add(value);
+                for (DomainObject<Serializable> currentValue : currentValues) {
+                    if (currentValue.isNew() || !originalValueMap.containsKey(currentValue.getId())) {
+                        addedValues.add(currentValue);
+                    }
                 }
-            }
 
-            List<DomainObject<Serializable>> originalValueCopies = new ArrayList<DomainObject<Serializable>>();
-            originalValueCopies.addAll(originalValues);
-
-            removedValues.addAll(CollectionUtils.subtract(originalValueCopies, updatedValues,
-                    new Comparator<DomainObject<Serializable>>() {
-                        @Override
-                        public int compare(DomainObject<Serializable> o1, DomainObject<Serializable> o2) {
-                            return o1.getId().equals(o2.getId()) ? 0 : -1;
-                        }
-
-                    }));
-
-            for (DomainObject<Serializable> value : addedValues) {
-                if (!aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) value.getClass(), value.getId())) {
-                    insertDomainObject(value, aggregateContext);
-
+                for (DomainObject<Serializable> originalValue : originalValues) {
+                    if (!currentValueMap.containsKey(originalValue.getId())) {
+                        removedValues.add(originalValue);
+                    } else {
+                        updatedAndOriginalValues.add(new ImmutablePair<DomainObject<Serializable>, DomainObject<Serializable>>(currentValueMap.get(originalValue.getId()), originalValue));
+                    }
                 }
-            }
 
+                for (DomainObject<Serializable> value : addedValues) {
 
-            Map<Serializable, DomainObject<Serializable>> originalEntityMap = new HashMap<Serializable, DomainObject<Serializable>>();
+                    if (!allNeedInsertFieldValuesMap.containsKey(field)) {
+                        allNeedInsertFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                    }
 
-            for (DomainObject<Serializable> originalValue : originalValues) {
-                originalEntityMap.put(originalValue.getId(), originalValue);
-            }
-
-            for (DomainObject<Serializable> value : updatedValues) {
-
-                if (!aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) value.getClass(), value.getId())) {
-                    updateDomainObject(value, originalEntityMap.get(value.getId()), aggregateContext);
+                    allNeedInsertFieldValuesMap.get(field).add(value);
                 }
-            }
 
-            for (DomainObject<Serializable> value : removedValues) {
-                if (!aggregateContext.getEntityMap().containsKey((Class<DomainObject<Serializable>>) value.getClass(), value.getId())) {
-                    removeDomainObject(value, aggregateContext);
+                for (Pair<DomainObject<Serializable>, DomainObject<Serializable>> updatedAndOriginalValue : updatedAndOriginalValues) {
+
+                    if (!allNeedUpdateFieldValuesMap.containsKey(field)) {
+                        allNeedUpdateFieldValuesMap.put(field, new ArrayList<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>());
+                    }
+
+                    allNeedUpdateFieldValuesMap.get(field).add(new ImmutablePair<DomainObject<Serializable>, DomainObject<Serializable>>(updatedAndOriginalValue.getLeft(), updatedAndOriginalValue.getRight()));
+                }
+
+                for (DomainObject<Serializable> value : removedValues) {
+
+                    if (!allNeedRemoveFieldValuesMap.containsKey(field)) {
+                        allNeedRemoveFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                    }
+
+                    allNeedRemoveFieldValuesMap.get(field).add(value);
                 }
             }
         }
+
+        insertUpdateRemoveFieldDomainObjects(aggregateContext, allNeedInsertFieldValuesMap, allNeedUpdateFieldValuesMap, allNeedRemoveFieldValuesMap);
     }
 
     private <E extends DomainObject<I>, I extends Serializable> void fetchAllOneToOneComponents(List<E> entities, IdentifiedEntityMap identifiedEntityMap, boolean needRecursiveFetched) {
@@ -444,7 +434,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
                 }
             }
 
-            List<DomainObject<Serializable>> values = doFindAll(oneToOneComponentClass, oneToOneComponentIdAndEntityMap.keySet(), identifiedEntityMap, true);
+            List<DomainObject<Serializable>> values = doFindAll(oneToOneComponentClass, oneToOneComponentIdAndEntityMap.keySet(), identifiedEntityMap);
 
             Map<Serializable, DomainObject<Serializable>> valueIdMap = new HashMap<Serializable, DomainObject<Serializable>>();
 
@@ -485,7 +475,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
         for (Field oneToManyField : oneToManyFields) {
 
-            Map<I, List<DomainObject<Serializable>>> oneToManyComponentMaps = doFindAll(entityClass, oneToManyField, entityIdMap.keySet(), identifiedEntityMap, needRecursiveFetched);
+            Map<I, List<DomainObject<Serializable>>> oneToManyComponentMaps = doFindAll(entityClass, oneToManyField, entityIdMap.keySet(), identifiedEntityMap);
 
             //associate the one to many
             for (E entity : entities) {
@@ -506,6 +496,181 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         }
     }
 
+
+    private void insertUpdateRemoveFieldDomainObjects(AggregateContext aggregateContext, Map<Field, List<DomainObject<Serializable>>> insertFieldValuesMap, Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> updateFieldValuesMap, Map<Field, List<DomainObject<Serializable>>> removeFieldValuesMap) {
+
+        insertFieldDomainObjects(insertFieldValuesMap, aggregateContext);
+
+        updateFieldDomainObjects(updateFieldValuesMap, aggregateContext);
+
+        removeFieldDomainObjects(removeFieldValuesMap, aggregateContext);
+    }
+
+    private void insertFieldDomainObjects(Map<Field, List<DomainObject<Serializable>>> fieldValuesMap, AggregateContext aggregateContext) {
+
+        removeAlreadySavedEntities(fieldValuesMap, aggregateContext);
+
+        for (Map.Entry<Field, List<DomainObject<Serializable>>> keyValuePair : fieldValuesMap.entrySet()) {
+            if (!CollectionUtils.isEmpty(keyValuePair.getValue())) {
+
+                insertDomainObject(DomainObjectUtils.getFieldDomainObjectClass(keyValuePair.getKey()), keyValuePair.getValue(), aggregateContext);
+            }
+        }
+    }
+
+    private void updateFieldDomainObjects(Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> fieldValuesMap, AggregateContext aggregateContext) {
+
+        for (List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>> fieldValues : fieldValuesMap.values()) {
+
+            List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>> alreadySavedEntities = new ArrayList<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>();
+
+            for (Pair<DomainObject<Serializable>, DomainObject<Serializable>> value : fieldValues) {
+
+                if (aggregateContext.getEntityMap().containsKey(value.getLeft().getClass(), value.getLeft().getId())) {
+                    alreadySavedEntities.add(value);
+                }
+            }
+
+            fieldValues.removeAll(alreadySavedEntities);
+        }
+
+
+        for (Map.Entry<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> fieldValues : fieldValuesMap.entrySet()) {
+            if (!CollectionUtils.isEmpty(fieldValues.getValue())) {
+                updateDomainObject(DomainObjectUtils.getFieldDomainObjectClass(fieldValues.getKey()), fieldValues.getValue(), aggregateContext);
+            }
+        }
+    }
+
+    private void removeFieldDomainObjects(Map<Field, List<DomainObject<Serializable>>> fieldValuesMap, AggregateContext aggregateContext) {
+
+        removeAlreadySavedEntities(fieldValuesMap, aggregateContext);
+
+        for (Map.Entry<Field, List<DomainObject<Serializable>>> fieldValues : fieldValuesMap.entrySet()) {
+            if (!CollectionUtils.isEmpty(fieldValues.getValue())) {
+                removeDomainObject(DomainObjectUtils.getFieldDomainObjectClass(fieldValues.getKey()), fieldValues.getValue(), aggregateContext);
+            }
+        }
+    }
+
+    private <E extends DomainObject<I>, I extends Serializable> Map<I, List<DomainObject<Serializable>>> doFindAll(Class<E> entityClass, Field oneToManyField, Collection<I> ids, IdentifiedEntityMap identifiedEntityMap) {
+
+        ParameterizedType genericType = (ParameterizedType) oneToManyField.getGenericType();
+        Class<DomainObject<Serializable>> oneToManyEntityClass = (Class<DomainObject<Serializable>>) genericType.getActualTypeArguments()[0];
+
+        Map<I, List<DomainObject<Serializable>>> oneToManyComponentMaps = doFindAllOneToManyDomainObjects(entityClass, oneToManyField, ids);
+
+        List<DomainObject<Serializable>> allOneToManyComponents = new ArrayList<DomainObject<Serializable>>();
+        for (List<DomainObject<Serializable>> oneToManyComponents : oneToManyComponentMaps.values()) {
+            allOneToManyComponents.addAll(oneToManyComponents);
+        }
+
+        List<DomainObject<Serializable>> duplicatedFetchedComponents = new ArrayList<DomainObject<Serializable>>();
+        List<DomainObject<Serializable>> alreadyFetchedComponents = new ArrayList<DomainObject<Serializable>>();
+
+        replaceComponentsWithFetchedComponents(identifiedEntityMap, oneToManyEntityClass, allOneToManyComponents, duplicatedFetchedComponents, alreadyFetchedComponents);
+
+        allOneToManyComponents.removeAll(duplicatedFetchedComponents);
+        allOneToManyComponents.addAll(alreadyFetchedComponents);
+
+        fetchAllComponents(allOneToManyComponents, identifiedEntityMap, true);
+
+        return oneToManyComponentMaps;
+    }
+
+
+    private List<Pair<T, T>> buildCurrentAndOriginalEntityPairs(List<T> updateEntities) {
+        List<Pair<T, T>> currentAndOriginalEntityPairs = new ArrayList<Pair<T, T>>();
+
+        Map<ID, T> needFetchIdEntityMap = new HashMap<ID, T>();
+
+        for (T updateEntity : updateEntities) {
+            T originalEntity = sessionFactory.requireClientSession().findOriginalCopy(this.aggregateType, updateEntity.getId());
+
+            if (originalEntity == null) {
+                needFetchIdEntityMap.put(updateEntity.getId(), updateEntity);
+            } else {
+                currentAndOriginalEntityPairs.add(new ImmutablePair<T, T>(updateEntity, originalEntity));
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(needFetchIdEntityMap.keySet())) {
+            List<T> originalEntities = doFindAll(needFetchIdEntityMap.keySet());
+
+            for (T originalEntity : originalEntities) {
+                currentAndOriginalEntityPairs.add(new ImmutablePair<T, T>(needFetchIdEntityMap.get(originalEntity.getId()), originalEntity));
+            }
+        }
+        return currentAndOriginalEntityPairs;
+    }
+
+    private <E extends DomainObject<I>, I extends Serializable> void setCreateTimeOrLastUpdateTime(E entity) {
+        if (entity instanceof AbstractDomainObject) {
+            AbstractDomainObject abstractDomainObject = (AbstractDomainObject) entity;
+
+            if (abstractDomainObject.getCreateTime() == null) {
+                DomainObjectUtils.setField(entity, DomainObjectUtils.CREATE_TIME, new Date());
+            }
+
+            DomainObjectUtils.setField(entity, DomainObjectUtils.LAST_UPDATE_TIME, new Date());
+        }
+    }
+
+    private void ensureCompositeIdInitialized(Class idClass, T entity) {
+        if (CompositeId.class.isAssignableFrom(idClass) && entity.getId() == null) {
+            try {
+                entity.setId((ID) idClass.newInstance());
+            } catch (Throwable e) {
+                throw new SystemException("new Instance of Composite Id failed. class:" + idClass.getCanonicalName());
+            }
+        }
+    }
+
+    private void removeAlreadySavedEntities(Map<Field, List<DomainObject<Serializable>>> fieldValuesMap, AggregateContext aggregateContext) {
+        for (List<DomainObject<Serializable>> fieldValues : fieldValuesMap.values()) {
+
+            List<DomainObject<Serializable>> alreadySavedEntities = new ArrayList<DomainObject<Serializable>>();
+
+            for (DomainObject<Serializable> value : fieldValues) {
+
+                if (aggregateContext.getEntityMap().containsKey(value.getClass(), value.getId())) {
+                    alreadySavedEntities.add(value);
+                }
+            }
+
+            fieldValues.removeAll(alreadySavedEntities);
+        }
+    }
+
+    private void compareAndSetRootVersion(List<Pair<T, T>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
+
+        List<T> updateEntities = new ArrayList<T>();
+
+        for (Pair<T, T> currentAndOriginalEntityPair : currentAndOriginalEntityPairs) {
+
+            T entity = currentAndOriginalEntityPair.getLeft();
+            T originalEntity = currentAndOriginalEntityPair.getRight();
+
+            if (DomainObjectUtils.equal(entity, originalEntity)) {
+                if (aggregateContext.isAggregateChanged()) {
+                    updateEntities.add(entity);
+                }
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(updateEntities)) {
+            int effectedCount = doUpdate(updateEntities);
+            if (effectedCount < updateEntities.size()) {
+                throw new OptimisticLockException();
+            }
+        }
+
+        for (Pair<T, T> pair : currentAndOriginalEntityPairs) {
+            T entity = pair.getLeft();
+            DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
+        }
+    }
+
     private void replaceComponentsWithFetchedComponents(IdentifiedEntityMap identifiedEntityMap, Class<DomainObject<Serializable>> oneToManyEntityClass, List<DomainObject<Serializable>> allOneToManyComponents, List<DomainObject<Serializable>> duplicatedFetchedComponents, List<DomainObject<Serializable>> alreadyFetchedComponents) {
         for (DomainObject<Serializable> oneToManyComponent : allOneToManyComponents) {
             if (identifiedEntityMap.containsKey(oneToManyEntityClass, oneToManyComponent.getId())) {
@@ -515,11 +680,12 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         }
     }
 
-    protected abstract <E extends DomainObject<I>, I extends Serializable> I doInsert(E entity);
 
-    protected abstract <E extends DomainObject<I>, I extends Serializable> int doUpdate(E entity);
+    protected abstract <E extends DomainObject<I>, I extends Serializable> int doInsert(Collection<E> entities);
 
-    protected abstract <E extends DomainObject<I>, I extends Serializable> int doDelete(E entity);
+    protected abstract <E extends DomainObject<I>, I extends Serializable> int doUpdate(Collection<E> entities);
+
+    protected abstract <E extends DomainObject<I>, I extends Serializable> int doDelete(Collection<E> entities);
 
     protected abstract T doFindOneDomainObject(Class<T> aggregateType, ID id);
 

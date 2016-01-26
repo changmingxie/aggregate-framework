@@ -30,33 +30,49 @@ public abstract class AbstractOrmliteAggregateRepository<T extends AggregateRoot
     protected abstract Dao getDao(Class clazz);
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> I doInsert(E entity) {
-        try {
-            getDao((Class<E>) entity.getClass()).createOrUpdate(entity);
-            return entity.getId();
-        } catch (SQLException e) {
-            throw new SystemException(e);
+    protected <E extends DomainObject<I>, I extends Serializable> int doInsert(Collection<E> entities) {
+
+        int effectedCount = 0;
+
+        for (E entity : entities) {
+            try {
+                Dao.CreateOrUpdateStatus status = getDao((Class<E>) entity.getClass()).createOrUpdate(entity);
+                effectedCount += status.getNumLinesChanged();
+            } catch (SQLException e) {
+                throw new SystemException(e);
+            }
         }
+        return effectedCount;
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> int doUpdate(E entity) {
+    protected <E extends DomainObject<I>, I extends Serializable> int doUpdate(Collection<E> entities) {
 
-        try {
-            Dao.CreateOrUpdateStatus status = getDao((Class<E>) entity.getClass()).createOrUpdate(entity);
-            return status.getNumLinesChanged();
-        } catch (SQLException e) {
-            throw new SystemException(e);
+        int effectedCount = 0;
+        for (E entity : entities) {
+            try {
+                Dao.CreateOrUpdateStatus status = getDao((Class<E>) entity.getClass()).createOrUpdate(entity);
+                effectedCount += status.getNumLinesChanged();
+            } catch (SQLException e) {
+                throw new SystemException(e);
+            }
         }
+        return effectedCount;
     }
 
     @Override
-    protected <E extends DomainObject<I>, I extends Serializable> int doDelete(E entity) {
-        try {
-            return getDao((Class<E>) entity.getClass()).delete(entity);
-        } catch (SQLException e) {
-            throw new SystemException(e);
+    protected <E extends DomainObject<I>, I extends Serializable> int doDelete(Collection<E> entities) {
+
+        int effectedCount = 0;
+
+        for (E entity : entities) {
+            try {
+                effectedCount += getDao((Class<E>) entity.getClass()).delete(entity);
+            } catch (SQLException e) {
+                throw new SystemException(e);
+            }
         }
+        return effectedCount;
     }
 
     @Override

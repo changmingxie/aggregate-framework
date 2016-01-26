@@ -3,7 +3,7 @@
 <mapper namespace="org.aggregateframework.test.dao.PaymentDao">
     <resultMap id="result"
                type="org.aggregateframework.test.command.domain.entity.Payment">
-        <result property="id" javaType="java.lang.Integer" column="PAYMENT_ID"/>
+        <result property="id" column="PAYMENT_ID"/>
         <result property="amount" column="AMOUNT"/>
     </resultMap>
 
@@ -18,16 +18,8 @@
     <select id="findById" resultMap="result">
         <include refid="sql_select"/>
         <![CDATA[
-		WHERE PAYMENT_ID=#id#
+		WHERE PAYMENT_ID=#{id}
 		]]>
-    </select>
-
-    <select id="find" resultMap="result">
-        <include refid="sql_select"/>
-        limit 1;
-        <!--<![CDATA[-->
-        <!--WHERE PAYMENT_ID=#id#-->
-        <!--]]>-->
     </select>
 
     <select id="findByIds" resultMap="result">
@@ -39,33 +31,74 @@
         </foreach>
     </select>
 
-    <insert id="insert" parameterType="org.aggregateframework.test.command.domain.entity.Payment"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="PAYMENT_ID"
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
             >
         <![CDATA[
+
+
+
 		INSERT INTO CQRS_PAYMENT
 		(AMOUNT)
 		VALUES
 		(#{amount})
-		]]>
 
-        <selectKey resultType="java.lang.Integer" keyProperty="id">
-            SELECT @@IDENTITY AS id
-        </selectKey>
+
+        ]]>
+
     </insert>
 
-    <delete id="delete" parameterType="org.aggregateframework.test.command.domain.entity.Payment">
-		DELETE FROM
-		CQRS_PAYMENT WHERE PAYMENT_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
-	</delete>
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO CQRS_PAYMENT
+        (AMOUNT)
+        VALUES
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            (#{item.amount})
+        </foreach>
 
-    <update id="update" parameterType="org.aggregateframework.test.command.domain.entity.Payment">
+    </insert>
+
+
+    <update id="update">
 		UPDATE
 		CQRS_PAYMENT
 		SET
 		AMOUNT=#{amount}
 		WHERE
-		PAYMENT_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+		PAYMENT_ID=#{id}
 	</update>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_PAYMENT
+        SET
+        AMOUNT=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN PAYMENT_ID=#{item.id}
+            THEN  #{item.amount}
+        </foreach>
+        ELSE AMOUNT END
+
+        WHERE PAYMENT_ID IN
+        <foreach item="item" index="index" collection="list" separator="," open="("  close=")">
+            #{item.id}
+        </foreach>
+
+    </update>
+
+
+    <delete id="delete">
+        DELETE FROM
+        CQRS_PAYMENT WHERE PAYMENT_ID=#{id}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_PAYMENT WHERE PAYMENT_ID IN
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
 
 </mapper>

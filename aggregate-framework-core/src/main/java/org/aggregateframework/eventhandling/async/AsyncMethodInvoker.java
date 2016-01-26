@@ -23,6 +23,10 @@ public class AsyncMethodInvoker {
 
     private static volatile AsyncMethodInvoker INSTANCE = null;
 
+    public  RingBuffer<AsyncEvent> getRingBuffer() {
+        return ringBuffer;
+    }
+
     public static AsyncMethodInvoker getInstance() {
 
         if (INSTANCE == null) {
@@ -49,7 +53,15 @@ public class AsyncMethodInvoker {
 
         disruptor.handleExceptionsWith(new AsyncExceptionEventHandler());
 
-        disruptor.handleEventsWith(new AsyncEventHandler());
+        AsyncEventHandler asyncEventHandler = new AsyncEventHandler();
+
+        AsyncEventHandler[] asyncEventHandlers = new AsyncEventHandler[AsyncParameterConfig.ASYNC_EVENT_HANDLER_WORK_POOL_SIZE];
+
+        for (int i = 0; i < asyncEventHandlers.length; i++) {
+            asyncEventHandlers[i] = asyncEventHandler;
+        }
+
+        disruptor.handleEventsWithWorkerPool(asyncEventHandlers);
 
         disruptor.start();
 
@@ -68,10 +80,10 @@ public class AsyncMethodInvoker {
     }
 
 
-    class AsyncEventHandler implements com.lmax.disruptor.EventHandler<AsyncEvent> {
+    class AsyncEventHandler implements com.lmax.disruptor.WorkHandler<AsyncEvent> {
 
         @Override
-        public void onEvent(AsyncEvent asyncEvent, long l, boolean b) throws Exception {
+        public void onEvent(AsyncEvent asyncEvent) throws Exception {
             try {
                 asyncEvent.getMethod().invoke(asyncEvent.getTarget(), asyncEvent.getParams());
             } catch (IllegalAccessException e) {

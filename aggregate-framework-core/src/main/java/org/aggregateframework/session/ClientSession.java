@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 public interface ClientSession {
 
 
-    <T extends AggregateRoot<ID>,ID extends Serializable> T registerAggregate(AggregateEntry<T> aggregateEntry);
+    <T extends AggregateRoot<ID>,ID extends Serializable> void registerAggregate(AggregateEntry<T> aggregateEntry);
 
     void flush();
 

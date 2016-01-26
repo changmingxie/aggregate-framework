@@ -10,6 +10,8 @@ import java.io.Serializable;
 public abstract class AbstractDomainObject<ID extends Serializable> implements DomainObject<ID> {
 
 
+    private static final long serialVersionUID = -1026311526086575034L;
+
     @Override
     public boolean isNew() {
 

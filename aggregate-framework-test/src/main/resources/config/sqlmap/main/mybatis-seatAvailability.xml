@@ -4,14 +4,16 @@
     <resultMap id="result"
                type="org.aggregateframework.test.command.domain.entity.SeatAvailability">
         <result property="id" javaType="java.lang.Integer" column="SEAT_AVAILABILITY_ID"/>
-        <!--<result property="order.id.id" javaType="java.lang.Integer" column="ORDER_ID"/>-->
-        <!--<result property="order.id.userId" javaType="java.lang.Integer" column="USER_ID"/>-->
+        <result property="order.id.id" column="ORDER_ID"/>
+        <result property="order.id.userId" column="USER_ID"/>
         <result property="quantity" column="QUANTITY"/>
-        <result property="payment.id" javaType="java.lang.Integer" column="PAYMENT_ID"/>
-        <association property="order.id" javaType="org.aggregateframework.test.command.domain.entity.UserShardingId">
-            <result property="id" javaType="java.lang.Integer" column="ORDER_ID"/>
-            <result property="userId" javaType="java.lang.Integer" column="USER_ID"/>
-        </association>
+        <result property="payment.id" column="PAYMENT_ID"/>
+        <!--<association property="order.id" javaType="org.aggregateframework.test.command.domain.entity.UserShardingId">-->
+            <!--<constructor>-->
+                <!--<arg column="ORDER_ID" javaType="java.lang.Integer"/>-->
+                <!--<arg column="USER_ID" javaType="java.lang.Integer"/>-->
+            <!--</constructor>-->
+        <!--</association>-->
     </resultMap>
 
     <sql id="sql_select">
@@ -27,7 +29,7 @@
 
     <select id="findById" resultMap="result">
         <include refid="sql_select"/>
-        WHERE SEAT_AVAILABILITY_ID=#id#
+        WHERE SEAT_AVAILABILITY_ID=#{id}
     </select>
 
     <select id="findByIds" resultMap="result">
@@ -55,34 +57,93 @@
         AND USER_ID=#{list[0].userId}
     </select>
 
-    <insert id="insert" parameterType="org.aggregateframework.test.command.domain.entity.SeatAvailability">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         <![CDATA[
 		INSERT INTO CQRS_SEAT_AVAILABILITY
 		(USER_ID,ORDER_ID,QUANTITY,PAYMENT_ID)
 		VALUES
-		(#{order.id.userId},#{order.id.id,javaType=java.lang.Integer,jdbcType=INTEGER},#{quantity},#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER})
-		]]>
+		(#{order.id.userId},#{order.id.id},#{quantity},#{payment.id})
+        ]]>
 
-        <selectKey resultType="java.lang.Integer" keyProperty="id">
-            SELECT @@IDENTITY AS id
-        </selectKey>
     </insert>
 
-    <delete id="delete" parameterType="org.aggregateframework.test.command.domain.entity.SeatAvailability">
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
+        <![CDATA[
+		INSERT INTO CQRS_SEAT_AVAILABILITY
+		(USER_ID,ORDER_ID,QUANTITY,PAYMENT_ID)
+		VALUES
+		]]>
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            (#{item.order.id.userId},#{item.order.id.id},#{item.quantity},#{item.payment.id})
+        </foreach>
+
+    </insert>
+
+    <update id="update">
+        UPDATE
+        CQRS_SEAT_AVAILABILITY
+        SET
+        USER_ID =#{order.id.userId},
+        ORDER_ID=#{order.id.id},
+        QUANTITY=#{quantity},
+        PAYMENT_ID=#{payment.id}
+        WHERE
+        SEAT_AVAILABILITY_ID=#{id}
+    </update>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_SEAT_AVAILABILITY
+        SET
+        USER_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.order.id.userId}
+        </foreach>
+        ELSE USER_ID END,
+
+        ORDER_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.order.id.id}
+        </foreach>
+        ELSE ORDER_ID END,
+
+        QUANTITY=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.quantity}
+        </foreach>
+        ELSE QUANTITY END,
+
+        PAYMENT_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.payment.id}
+        </foreach>
+        ELSE PAYMENT_ID END
+
+        WHERE SEAT_AVAILABILITY_ID IN
+        <foreach item="item" index="index" collection="list" separator="," open="("  close=")">
+            #{item.id}
+        </foreach>
+
+    </update>
+
+
+    <delete id="delete">
 		DELETE FROM
-		CQRS_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
+		CQRS_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID=#{id}
 	</delete>
 
-    <update id="update" parameterType="org.aggregateframework.test.command.domain.entity.SeatAvailability">
-		UPDATE
-		CQRS_SEAT_AVAILABILITY
-		SET
-		USER_ID =#{order.id.userId},
-		ORDER_ID=#{order.id.id,javaType=java.lang.Integer,jdbcType=INTEGER},
-		QUANTITY=#{quantity},
-		PAYMENT_ID=#{payment.id,javaType=java.lang.Integer,jdbcType=INTEGER}
-		WHERE
-		SEAT_AVAILABILITY_ID=#{id,javaType=java.lang.Integer,jdbcType=INTEGER}
-	</update>
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID IN
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
 
 </mapper>

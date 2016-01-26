@@ -51,6 +51,103 @@ public class OrderRepositoryTest extends AbstractTestCase {
         return order;
     }
 
+    private Order buildOrderWithDifferentPayments() {
+        Order order = new Order();
+        order.setId(new UserShardingId(100));
+        order.updateContent("test");
+        Payment payment = new Payment();
+        payment.setAmount(new BigDecimal(100));
+        order.updatePayment(payment);
+
+        SeatAvailability seatAvailability = new SeatAvailability();
+
+        seatAvailability.setQuantity(1000);
+        payment = new Payment();
+        payment.setAmount(new BigDecimal(200));
+        seatAvailability.setPayment(payment);
+        order.getSeatAvailabilities().add(seatAvailability);
+        seatAvailability.setOrder(order);
+
+        SeatAvailability seatAvailability2 = new SeatAvailability();
+        seatAvailability2.setQuantity(2000);
+
+        payment = new Payment();
+        payment.setAmount(new BigDecimal(300));
+        seatAvailability2.setPayment(payment);
+        order.getSeatAvailabilities().add(seatAvailability2);
+        seatAvailability2.setOrder(order);
+
+        return order;
+    }
+
+    @Test
+    public void given_a_new_order_with_multiple_component_when_save_then_order_persisted_with_few_sqls() {
+
+        //given
+        Order order1 = buildOrderWithDifferentPayments();
+
+        //when
+        orderRepository.save(order1);
+
+        //then
+        Order foundOrder1 = orderRepository.findOne(order1.getId());
+        Assert.assertNotNull(foundOrder1.getId());
+    }
+
+    @Test
+    @Transactional
+    public void given_a_new_order_with_multiple_component_when_update_components_then_order_persisted_with_few_sqls() {
+
+        //given
+        Order order1 = buildOrderWithDifferentPayments();
+
+        //when
+        orderRepository.save(order1);
+        orderRepository.flush();
+
+        //then
+        Order foundOrder1 = orderRepository.findOne(order1.getId());
+
+        foundOrder1.getSeatAvailabilities().get(0).setQuantity(200);
+
+        SeatAvailability seatAvailability = new SeatAvailability();
+
+        seatAvailability.setQuantity(2000);
+        foundOrder1.addSeatAvailability(seatAvailability);
+
+        orderRepository.save(foundOrder1);
+        orderRepository.flush();
+
+        Order foundOrder2 = orderRepository.findOne(order1.getId());
+        Assert.assertTrue(foundOrder2.getSeatAvailabilities().size() == 3);
+    }
+
+    @Test
+    @Transactional
+    public void given_a_new_order_with_multiple_component_when_remove_components_then_order_persisted_with_few_sqls() {
+
+        //given
+        Order order1 = buildOrder();
+
+        //when
+        orderRepository.save(order1);
+        orderRepository.flush();
+
+        //then
+        Order foundOrder1 = orderRepository.findOne(order1.getId());
+
+        foundOrder1.removeSeatAvailability(foundOrder1.getSeatAvailabilities().get(0));
+        foundOrder1.removeSeatAvailability(foundOrder1.getSeatAvailabilities().get(0));
+
+
+        orderRepository.save(foundOrder1);
+        orderRepository.flush();
+
+        Order foundOrder2 = orderRepository.findOne(order1.getId());
+        Assert.assertTrue(foundOrder2.getSeatAvailabilities().size() == 0);
+    }
+
+
     @Test
     @Transactional
     public void given_a_persisted_order_when_update_component_then_the_version_of_root_increment() {
@@ -163,7 +260,6 @@ public class OrderRepositoryTest extends AbstractTestCase {
             Assert.assertEquals(10010, seatAvailability.getQuantity());
         }
     }
-
 
     @Test
     public void given_a_prisisted_order_when_delete_then_order_removed() {
@@ -358,20 +454,6 @@ public class OrderRepositoryTest extends AbstractTestCase {
 
         //then
         Assert.assertTrue(updatedOrder.getContent().equals(order.getContent()));
-    }
-
-    @Test
-    public void given_a_persisted_order_when_update_content_then_application_event_fired() {
-        //given
-        Order order = new Order();
-        Order savedOrder = orderRepository.save(order);
-
-        //when
-        savedOrder.updateContent("test3");
-        orderRepository.save(savedOrder);
-
-        //then
-        // check OrderHandle.handleOrderUpdatedApplicationEvent called
     }
 
     @Test

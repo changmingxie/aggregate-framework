@@ -10,6 +10,7 @@ import java.util.List;
 
 public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
 
+    private static final long serialVersionUID = -1431035454011931259L;
     private String content;
 
     @DaoAwareQuery(mappedBy = "order", select = "findByOrderId")
@@ -19,6 +20,16 @@ public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
 
     public Order() {
         apply(new OrderCreatedEvent(this));
+    }
+
+    @Override
+    public UserShardingId getId() {
+        return super.getId();
+    }
+
+    @Override
+    public void setId(UserShardingId userShardingId) {
+        super.setId(userShardingId);
     }
 
     public String getContent() {
@@ -52,4 +63,6 @@ public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
     public void removeSeatAvailability(SeatAvailability seatAvailability) {
         seatAvailabilities.remove(seatAvailability);
     }
+
+
 }
