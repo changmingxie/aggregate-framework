@@ -15,20 +15,24 @@
     <packaging>jar</packaging>
 
     <dependencies>
+
         <dependency>
             <groupId>org.aggregateframework</groupId>
             <artifactId>aggregate-framework-core</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.j256.ormlite</groupId>
             <artifactId>ormlite-android</artifactId>
             <version>${ormlite.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.j256.ormlite</groupId>
             <artifactId>ormlite-core</artifactId>
             <version>${ormlite.version}</version>
         </dependency>
+
     </dependencies>
 
 </project>

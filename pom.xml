@@ -16,7 +16,6 @@
     </modules>
 
     <properties>
-
         <java.src.version>1.6</java.src.version>
         <java.target.version>1.6</java.target.version>
         <project.encoding>UTF-8</project.encoding>
@@ -33,7 +32,6 @@
         <spring.version>3.2.12.RELEASE</spring.version>
         <struts.version>2.3.16.3</struts.version>
         <ormlite.version>4.48</ormlite.version>
-
     </properties>
 
     <dependencyManagement>
