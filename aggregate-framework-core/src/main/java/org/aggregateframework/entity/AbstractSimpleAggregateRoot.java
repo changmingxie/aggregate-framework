@@ -1,7 +1,5 @@
 package org.aggregateframework.entity;
 
-import org.aggregateframework.eventhandling.EventContainer;
-
 import java.io.Serializable;
 import java.util.Date;
 

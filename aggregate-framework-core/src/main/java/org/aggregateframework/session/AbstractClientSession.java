@@ -1,8 +1,8 @@
 package org.aggregateframework.session;
 
-import org.aggregateframework.context.IdentifiedEntityMap;
-import org.aggregateframework.eventhandling.EventHandlerInvoker;
-import org.aggregateframework.eventhandling.EventMessage;
+import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
+import org.aggregateframework.domainevent.EventMessage;
+import org.aggregateframework.eventhandling.EventInvokerEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public abstract class AbstractClientSession implements ClientSession {
     @Override
     public void postHandle() {
         while (!eventInvokerEntryQueue.isEmpty()) {
-            EventHandlerInvoker.invoke(eventInvokerEntryQueue.poll());
+            EventHandlerProcessor.proceed(eventInvokerEntryQueue.poll());
         }
     }
 

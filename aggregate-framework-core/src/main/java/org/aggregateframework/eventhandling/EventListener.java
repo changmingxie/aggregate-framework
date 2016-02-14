@@ -1,5 +1,7 @@
 package org.aggregateframework.eventhandling;
 
+import org.aggregateframework.domainevent.EventMessage;
+
 /**
  * User: changming.xie
  * Date: 14-7-10

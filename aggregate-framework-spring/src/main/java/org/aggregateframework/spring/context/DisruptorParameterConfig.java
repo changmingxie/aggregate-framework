@@ -48,7 +48,7 @@ public class DisruptorParameterConfig implements InitializingBean {
         }
 
         if (asyncEventHandlerWorkpoolSize > 0) {
-            AsyncParameterConfig.ASYNC_EVENT_HANDLER_WORKPOOL_SIZE = this.asyncEventHandlerWorkpoolSize;
+            AsyncParameterConfig.ASYNC_EVENT_HANDLER_WORK_POOL_SIZE = this.asyncEventHandlerWorkpoolSize;
         }
 
         if (executor != null) {
