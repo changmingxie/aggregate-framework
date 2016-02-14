@@ -1,6 +1,10 @@
 package org.aggregateframework.spring.eventhandling;
 
-import org.aggregateframework.eventhandling.*;
+import org.aggregateframework.eventhandling.AnnotationEventListenerAdapter;
+import org.aggregateframework.eventbus.EventBus;
+import org.aggregateframework.eventhandling.EventListener;
+import org.aggregateframework.eventbus.SimpleEventBus;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.IntroductionInfo;
 import org.springframework.aop.IntroductionInterceptor;

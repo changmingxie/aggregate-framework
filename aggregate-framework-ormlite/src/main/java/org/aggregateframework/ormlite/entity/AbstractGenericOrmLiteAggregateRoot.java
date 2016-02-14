@@ -3,7 +3,7 @@ package org.aggregateframework.ormlite.entity;
 import com.j256.ormlite.field.DatabaseField;
 import org.aggregateframework.entity.AbstractAggregateRoot;
 import org.aggregateframework.entity.Transient;
-import org.aggregateframework.eventhandling.EventContainer;
+import org.aggregateframework.entity.EventContainer;
 
 import java.io.Serializable;
 import java.util.Date;

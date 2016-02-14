@@ -2,10 +2,10 @@ package org.aggregateframework.repository;
 
 import org.aggregateframework.OptimisticLockException;
 import org.aggregateframework.SystemException;
-import org.aggregateframework.context.CollectionUtils;
-import org.aggregateframework.context.DomainObjectUtils;
-import org.aggregateframework.context.IdentifiedEntityMap;
-import org.aggregateframework.context.ReflectionUtils;
+import org.aggregateframework.utils.CollectionUtils;
+import org.aggregateframework.utils.DomainObjectUtils;
+import org.aggregateframework.session.IdentifiedEntityMap;
+import org.aggregateframework.utils.ReflectionUtils;
 import org.aggregateframework.entity.AbstractDomainObject;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.CompositeId;

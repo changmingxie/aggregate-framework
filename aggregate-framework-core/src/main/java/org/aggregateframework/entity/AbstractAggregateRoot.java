@@ -1,8 +1,7 @@
 package org.aggregateframework.entity;
 
 
-import org.aggregateframework.eventhandling.EventContainer;
-import org.aggregateframework.eventhandling.EventMessage;
+import org.aggregateframework.domainevent.EventMessage;
 
 import java.io.Serializable;
 import java.util.Collection;

@@ -1,9 +1,9 @@
 package org.aggregateframework.session;
 
 import org.aggregateframework.entity.AggregateRoot;
+import org.aggregateframework.eventhandling.EventInvokerEntry;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 
 /**
  * User: changming.xie

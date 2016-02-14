@@ -1,9 +1,9 @@
 package org.aggregateframework.spring.repository;
 
 import org.aggregateframework.SystemException;
-import org.aggregateframework.context.CollectionUtils;
-import org.aggregateframework.context.DomainObjectUtils;
-import org.aggregateframework.context.ReflectionUtils;
+import org.aggregateframework.utils.CollectionUtils;
+import org.aggregateframework.utils.DomainObjectUtils;
+import org.aggregateframework.utils.ReflectionUtils;
 import org.aggregateframework.dao.AggregateRootDao;
 import org.aggregateframework.dao.CollectiveDomainObjectDao;
 import org.aggregateframework.dao.DomainObjectDao;

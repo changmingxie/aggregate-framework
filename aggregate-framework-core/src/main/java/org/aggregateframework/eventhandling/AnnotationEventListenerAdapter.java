@@ -1,7 +1,9 @@
 package org.aggregateframework.eventhandling;
 
-import org.aggregateframework.context.ReflectionUtils;
-import org.aggregateframework.session.EventInvokerEntry;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
+import org.aggregateframework.utils.ReflectionUtils;
+import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.session.LocalSessionFactory;
 
 import java.lang.reflect.Method;
@@ -32,8 +34,13 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
         while (currentClazz != null && !currentClazz.equals(Object.class)) {
 
             if (!currentClazz.getName().contains(ReflectionUtils.CGLIB_SUB_CLASS_IDENTIFIER)) {
-                methods.addAll(Arrays.asList(currentClazz.getDeclaredMethods()));
-                addMethodsOnDeclaredInterfaces(currentClazz, methods);
+                for (Method method : currentClazz.getDeclaredMethods()) {
+                    if (method.getAnnotation(EventHandler.class) != null) {
+                        methods.add(method);
+                    }
+                }
+//                methods.addAll(Arrays.asList(currentClazz.getDeclaredMethods()));
+                // addMethodsOnDeclaredInterfaces(currentClazz, methods);
             }
 
             currentClazz = currentClazz.getSuperclass();
@@ -58,8 +65,6 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
     public void handle(EventMessage event) {
 
         for (Method method : methods) {
-
-            System.out.println(method.getName());
 
             Class<?>[] classes = method.getParameterTypes();
             if (classes != null && classes.length > 0) {
@@ -107,10 +112,14 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
 
     private void handle(EventInvokerEntry eventInvokerEntry) {
         EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
+//        if (eventHandler == null) {
+//            return;
+//        }
+
         if (eventHandler.postAfterTransaction()) {
             LocalSessionFactory.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
         } else {
-            EventHandlerInvoker.invoke(eventInvokerEntry);
+            EventHandlerProcessor.proceed(eventInvokerEntry);
         }
     }
 }

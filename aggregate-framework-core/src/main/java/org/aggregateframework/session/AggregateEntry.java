@@ -1,8 +1,9 @@
 package org.aggregateframework.session;
 
 import org.aggregateframework.entity.AggregateRoot;
-import org.aggregateframework.eventhandling.EventBus;
-import org.aggregateframework.eventhandling.EventMessage;
+import org.aggregateframework.eventbus.EventBus;
+import org.aggregateframework.domainevent.EventMessage;
+import org.aggregateframework.repository.SaveAggregateCallback;
 
 import java.util.ArrayList;
 import java.util.Collection;

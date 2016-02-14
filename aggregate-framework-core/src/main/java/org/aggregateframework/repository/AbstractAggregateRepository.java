@@ -1,15 +1,14 @@
 package org.aggregateframework.repository;
 
 import org.aggregateframework.SystemException;
-import org.aggregateframework.context.Assert;
-import org.aggregateframework.context.CollectionUtils;
-import org.aggregateframework.context.DomainObjectUtils;
+import org.aggregateframework.utils.Assert;
+import org.aggregateframework.utils.CollectionUtils;
+import org.aggregateframework.utils.DomainObjectUtils;
 import org.aggregateframework.entity.AggregateRoot;
-import org.aggregateframework.eventhandling.EventBus;
-import org.aggregateframework.eventhandling.SimpleEventBus;
+import org.aggregateframework.eventbus.EventBus;
+import org.aggregateframework.eventbus.SimpleEventBus;
 import org.aggregateframework.session.AggregateEntry;
 import org.aggregateframework.session.LocalSessionFactory;
-import org.aggregateframework.session.SaveAggregateCallback;
 import org.aggregateframework.session.SessionFactory;
 
 import java.io.Serializable;

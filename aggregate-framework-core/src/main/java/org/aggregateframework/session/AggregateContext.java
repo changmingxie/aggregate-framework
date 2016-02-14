@@ -1,7 +1,5 @@
 package org.aggregateframework.session;
 
-import org.aggregateframework.context.IdentifiedEntityMap;
-
 /**
  * Created by changmingxie on 7/17/15.
  */

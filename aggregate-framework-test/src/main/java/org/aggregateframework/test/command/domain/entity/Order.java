@@ -4,6 +4,7 @@ import org.aggregateframework.entity.AbstractSimpleAggregateRoot;
 import org.aggregateframework.spring.entity.DaoAwareQuery;
 import org.aggregateframework.test.command.domainevents.OrderCreatedEvent;
 import org.aggregateframework.test.command.domainevents.OrderUpdatedEvent;
+import org.aggregateframework.test.command.domainevents.SeatAvailabilityRemovedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,8 @@ public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
     private List<SeatAvailability> seatAvailabilities = new ArrayList<SeatAvailability>();
 
     private Payment payment;
+
+    private boolean recovered;
 
     public Order() {
         apply(new OrderCreatedEvent(this));
@@ -39,6 +42,11 @@ public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
     public void updateContent(String content) {
         this.content = content;
         this.apply(new OrderUpdatedEvent(this.getId(), content));
+    }
+
+    public void removeSeatAvailabilities() {
+        seatAvailabilities.clear();
+        this.apply(new SeatAvailabilityRemovedEvent(this));
     }
 
     public Payment getPayment() {
@@ -65,4 +73,11 @@ public class Order extends AbstractSimpleAggregateRoot<UserShardingId> {
     }
 
 
+    public void recovered() {
+        recovered = true;
+    }
+
+    public boolean isRecovered() {
+        return recovered;
+    }
 }
