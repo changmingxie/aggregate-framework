@@ -43,6 +43,8 @@ public class RetryTemplate implements RetryOperations {
 
         BackOffContext backOffContext = backOffPolicy.start(context);
 
+        Throwable lastException = null;
+
         while (canRetry(retryPolicy, context)) {
 
             backOffPolicy.backOff(backOffContext);
@@ -50,27 +52,25 @@ public class RetryTemplate implements RetryOperations {
             try {
                 return retryCallback.doWithRetry(context);
             } catch (Throwable e) {
+                lastException = e;
                 registerThrowable(retryPolicy, context, e);
             }
         }
 
-        return handleRetryExhausted(recoveryCallback, context);
-    }
-
-    private RetryContext requireRetryContext(RetryPolicy retryPolicy) {
-        return retryPolicy.requireRetryContext();
+        return handleRetryExhausted(recoveryCallback, context, lastException);
     }
 
     protected boolean canRetry(RetryPolicy retryPolicy, RetryContext context) {
         return retryPolicy.canRetry(context);
     }
 
-    protected <T> T handleRetryExhausted(RecoveryCallback<T> recoveryCallback, RetryContext context) {
+    protected <T> T handleRetryExhausted(RecoveryCallback<T> recoveryCallback, RetryContext context, Throwable lastException) {
 
         if (recoveryCallback != null) {
             return recoveryCallback.recover(context);
         }
-        return null;
+
+        throw new Error(lastException);
     }
 
     protected void registerThrowable(RetryPolicy retryPolicy, RetryContext context, Throwable e) {

@@ -27,18 +27,18 @@ public class AsyncMethodInvoker {
 
     static final Logger logger = LoggerFactory.getLogger(AsyncMethodInvoker.class);
 
-    private RingBuffer<AsyncEvent> ringBuffer;
+    private Disruptor<AsyncEvent> disruptor;
 
-    private RingBuffer<RetryEvent> retryRingBuffer;
+    private Disruptor<RetryEvent> retryDisruptor;
 
     private static volatile AsyncMethodInvoker INSTANCE = null;
 
-    public RingBuffer<AsyncEvent> getRingBuffer() {
-        return ringBuffer;
+    public Disruptor<AsyncEvent> getDisruptor() {
+        return disruptor;
     }
 
-    public RingBuffer<RetryEvent> getRetryRingBuffer() {
-        return retryRingBuffer;
+    public Disruptor<RetryEvent> getRetryDisruptor() {
+        return retryDisruptor;
     }
 
     public static AsyncMethodInvoker getInstance() {
@@ -67,7 +67,7 @@ public class AsyncMethodInvoker {
 
         AsyncEventFactory factory = new AsyncEventFactory();
 
-        Disruptor<AsyncEvent> disruptor = new Disruptor<AsyncEvent>(factory, AsyncParameterConfig.DISRUPTOR_RING_BUFFER_SIZE, executor);
+        disruptor = new Disruptor<AsyncEvent>(factory, AsyncParameterConfig.DISRUPTOR_RING_BUFFER_SIZE, executor);
 
         disruptor.handleExceptionsWith(new AsyncExceptionEventHandler());
 
@@ -82,8 +82,6 @@ public class AsyncMethodInvoker {
         disruptor.handleEventsWithWorkerPool(asyncEventHandlers);
 
         disruptor.start();
-
-        ringBuffer = disruptor.getRingBuffer();
     }
 
     private void initializeRetryRingBuffer() {
@@ -91,9 +89,9 @@ public class AsyncMethodInvoker {
 
         RetryEventFactory factory = new RetryEventFactory();
 
-        Disruptor<RetryEvent> disruptor = new Disruptor<RetryEvent>(factory, AsyncParameterConfig.DISRUPTOR_RETRY_RING_BUFFER_SIZE, executor);
+        retryDisruptor = new Disruptor<RetryEvent>(factory, AsyncParameterConfig.DISRUPTOR_RETRY_RING_BUFFER_SIZE, executor);
 
-        disruptor.handleExceptionsWith(new RetryExceptionEventHandler());
+        retryDisruptor.handleExceptionsWith(new RetryExceptionEventHandler());
 
         RetryEventHandler retryEventHandler = new RetryEventHandler();
 
@@ -103,32 +101,31 @@ public class AsyncMethodInvoker {
             retryEventHandlers[i] = retryEventHandler;
         }
 
-        disruptor.handleEventsWithWorkerPool(retryEventHandlers);
+        retryDisruptor.handleEventsWithWorkerPool(retryEventHandlers);
 
-        disruptor.start();
+        retryDisruptor.start();
 
-        retryRingBuffer = disruptor.getRingBuffer();
     }
 
     public void invoke(Method method, Object target, Object... params) {
-        long sequence = ringBuffer.next();
+        long sequence = disruptor.getRingBuffer().next();
 
         try {
-            AsyncEvent event = ringBuffer.get(sequence);
+            AsyncEvent event = disruptor.getRingBuffer().get(sequence);
             event.reset(method, target, params);
         } finally {
-            ringBuffer.publish(sequence);
+            disruptor.getRingBuffer().publish(sequence);
         }
     }
 
     private void retryableInvoke(Throwable throwable, Method method, Object target, Object[] params) {
-        long sequence = retryRingBuffer.next();
+        long sequence = retryDisruptor.getRingBuffer().next();
 
         try {
-            RetryEvent event = retryRingBuffer.get(sequence);
+            RetryEvent event = retryDisruptor.getRingBuffer().get(sequence);
             event.reset(throwable, method, target, params);
         } finally {
-            retryRingBuffer.publish(sequence);
+            retryDisruptor.getRingBuffer().publish(sequence);
         }
     }
 

@@ -5,13 +5,19 @@ import org.aggregateframework.eventbus.EventBus;
 import org.aggregateframework.eventhandling.EventListener;
 import org.aggregateframework.eventbus.SimpleEventBus;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.processor.AsyncMethodInvoker;
 import org.aopalliance.intercept.MethodInvocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.IntroductionInfo;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
@@ -23,7 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Date: 14-6-13
  * Time: 上午10:46
  */
-public class AnnotationEventListenerBeanPostProcessor implements DestructionAwareBeanPostProcessor, ApplicationContextAware {
+public class AnnotationEventListenerBeanPostProcessor implements DestructionAwareBeanPostProcessor, ApplicationContextAware, ApplicationListener<ContextClosedEvent> {
+
+    private static final Logger logger = LoggerFactory.getLogger(AnnotationEventListenerBeanPostProcessor.class);
 
     private EventBus eventBus = null;
     private ApplicationContext applicationContext;
@@ -109,6 +117,19 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        AsyncMethodInvoker asyncMethodInvoker = AsyncMethodInvoker.getInstance();
+
+        logger.info("aggeraget-framework disruptor and retry-disruptor shutdown...");
+
+        asyncMethodInvoker.getDisruptor().shutdown();
+        asyncMethodInvoker.getRetryDisruptor().shutdown();
+
+        logger.info("aggeraget-framework disruptor and retry-disruptor shutdowned");
+
     }
 
     private class HasEventHandlerAnnotationMethodCallback implements ReflectionUtils.MethodCallback {
