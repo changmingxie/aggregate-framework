@@ -1,2 +1,4 @@
 
 Aggregate Framework是为方便开发人员运用DDD和CQRS思想来构建复杂的、可扩展的Java企业应用系统而提供的Java技术框架。该框架提供了Aggregate、Repository、Domain Event等构建块的实现；使用DomainEvent，借助于内建的Disruptor组件，AggregateFramework可使开发人员方便的实现高性能SEDA架构。此外，该框架支持与Spring集成，提供使用 annotation的方式让开发人员方便地为Domain Event定义一个或多个事件处理, 同时可指定事件处理是同步还是异步触发，是否需要重试，以及重试策略; 使用Spring事务管理器管理事务时，支持Unit Of Work数据访问模式以及内建一级缓存以提高访问性能。
+
+AggregateFramework Reference 参考：https://github.com/changmingxie/aggregate-framework/blob/master/doc/AggregateFamework%20Reference.pdf
