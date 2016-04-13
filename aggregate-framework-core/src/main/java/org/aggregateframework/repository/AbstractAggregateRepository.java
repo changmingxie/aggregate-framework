@@ -1,15 +1,15 @@
 package org.aggregateframework.repository;
 
 import org.aggregateframework.SystemException;
-import org.aggregateframework.utils.Assert;
-import org.aggregateframework.utils.CollectionUtils;
-import org.aggregateframework.utils.DomainObjectUtils;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.eventbus.EventBus;
 import org.aggregateframework.eventbus.SimpleEventBus;
 import org.aggregateframework.session.AggregateEntry;
 import org.aggregateframework.session.LocalSessionFactory;
 import org.aggregateframework.session.SessionFactory;
+import org.aggregateframework.utils.Assert;
+import org.aggregateframework.utils.CollectionUtils;
+import org.aggregateframework.utils.DomainObjectUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -196,6 +196,31 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
     public void deleteAll() {
         for (T element : findAll()) {
             delete(element);
+        }
+    }
+
+    protected List<T> tryFetchFreshEntities(List<T> sharedEntities) {
+
+        List<T> resultEntities = new ArrayList<T>();
+
+        for (T sharedEntity : sharedEntities) {
+            resultEntities.add(tryFetchFreshEntity(sharedEntity));
+        }
+
+        return resultEntities;
+    }
+
+    protected T tryFetchFreshEntity(T sharedEntity) {
+
+        T localCacheEntity = sessionFactory.requireClientSession().findInLocalCache(this.aggregateType, sharedEntity.getId());
+
+        if (localCacheEntity == null) {
+
+            sessionFactory.requireClientSession().registerOriginalCopy(sharedEntity);
+            sessionFactory.requireClientSession().registerToLocalCache(sharedEntity);
+            return sharedEntity;
+        } else {
+            return localCacheEntity;
         }
     }
 

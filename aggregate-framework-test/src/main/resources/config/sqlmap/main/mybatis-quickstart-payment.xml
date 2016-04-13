@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.test.quickstart.command.infrastructure.dao.PaymentDao">
+
+    <resultMap id="result" type="org.aggregateframework.test.quickstart.command.domain.entity.Payment">
+        <result property="id" column="PAYMENT_ID"/>
+        <result property="totalAmount" column="TOTAL_AMOUNT"/>
+        <result property="paymentNo" column="PAYMENT_NO"/>
+        <result property="statusId" column="STATUS_ID"/>
+        <result property="orderId" column="ORDER_ID"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+        <result property="version" column="VERSION"/>
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		PAYMENT_ID,
+		TOTAL_AMOUNT,
+		STATUS_ID,
+		PAYMENT_NO,
+		ORDER_ID,
+		CREATE_TIME,
+		LAST_UPDATE_TIME,
+		VERSION
+		FROM
+		CQRS_QCK_PAYMENT
+	</sql>
+
+    <select id="findAll" resultMap="result">
+        <include refid="sql_select"/>
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE PAYMENT_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="findByPaymentNo" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE PAYMENT_NO = #{paymentNo}
+    </select>
+
+
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id.id">
+        INSERT INTO CQRS_QCK_PAYMENT
+        (TOTAL_AMOUNT,STATUS_ID,PAYMENT_NO,ORDER_ID,CREATE_TIME,LAST_UPDATE_TIME,VERSION)
+        VALUES
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            (#{item.totalAmount},#{item.statusId},#{item.paymentNo},#{item.orderId},#{item.createTime},#{item.lastUpdateTime},#{item.version})
+        </foreach>
+    </insert>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_QCK_PAYMENT
+        SET
+        TOTAL_AMOUNT=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN PAYMENT_ID=#{item.id}
+            THEN #{item.totalAmount}
+        </foreach>
+        ELSE TOTAL_AMOUNT END,
+
+        STATUS_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN PAYMENT_ID=#{item.id}
+            THEN #{item.statusId}
+        </foreach>
+        ELSE STATUS_ID END,
+
+        VERSION=VERSION+1
+
+        WHERE
+        <foreach item="item" index="index" collection="list" separator="OR">
+            (PAYMENT_ID=#{item.id} AND VERSION = #{item.version})
+        </foreach>
+
+    </update>
+
+</mapper>

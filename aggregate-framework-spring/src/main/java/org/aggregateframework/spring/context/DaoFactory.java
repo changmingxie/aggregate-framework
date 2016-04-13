@@ -1,8 +1,11 @@
 package org.aggregateframework.spring.context;
 
-import org.aggregateframework.entity.DomainObject;
-import org.aggregateframework.dao.DomainObjectDao;
 import org.aggregateframework.NoDaoDefinitionException;
+import org.aggregateframework.dao.DomainObjectDao;
+import org.aggregateframework.entity.AbstractDomainObject;
+import org.aggregateframework.entity.DomainObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -14,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author changming.xie
  */
 public class DaoFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(DaoFactory.class);
 
     private static Map<Class<? extends DomainObject>, DomainObjectDao> daoMap = new ConcurrentHashMap<Class<? extends DomainObject>, DomainObjectDao>();
 
@@ -46,7 +51,7 @@ public class DaoFactory {
                         Type[] typeArguments = parameterizedType.getActualTypeArguments();
 
                         for (Type typeArgument : typeArguments) {
-                            if (typeArgument == entityClass) {
+                            if (isEntityClassMatch(typeArgument, entityClass)) {
                                 foundDao = dao;
                                 daoMap.put(entityClass, foundDao);
                                 return foundDao;
@@ -73,4 +78,32 @@ public class DaoFactory {
 
         return dao;
     }
+
+    private static boolean isEntityClassMatch(Type providedType, Type requiredType) {
+
+        if (providedType == requiredType) {
+            return true;
+        }
+
+        if (providedType instanceof Class && requiredType instanceof Class &&
+                AbstractDomainObject.class.isAssignableFrom((Class) providedType) &&
+                AbstractDomainObject.class.isAssignableFrom((Class) requiredType)) {
+
+            Class providedClass = (Class) providedType;
+            Class requiredClass = ((Class) requiredType).getSuperclass();
+
+            while (requiredClass != null && !requiredClass.equals(AbstractDomainObject.class)) {
+
+                if (providedClass == requiredClass) {
+                    logger.warn("Could not found Dao Definition for Class [" + ((Class) requiredType).getCanonicalName() + "], use the Dao of super class [" + providedClass.getCanonicalName() + "] instead.");
+                    return true;
+                }
+
+                requiredClass = requiredClass.getSuperclass();
+            }
+        }
+
+        return false;
+    }
+
 }

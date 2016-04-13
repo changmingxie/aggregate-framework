@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.test.complexmodel.command.infrastructure.dao.SeatAvailabilityDao">
+    <resultMap id="result"
+               type="org.aggregateframework.test.complexmodel.command.domain.entity.SeatAvailability">
+        <result property="id" javaType="java.lang.Integer" column="SEAT_AVAILABILITY_ID"/>
+        <result property="bookingOrder.id.id" column="ORDER_ID"/>
+        <result property="bookingOrder.id.userId" column="USER_ID"/>
+        <result property="quantity" column="QUANTITY"/>
+        <result property="bookingPayment.id" column="PAYMENT_ID"/>
+        <!--<association property="order.id" javaType="UserShardingId">-->
+            <!--<constructor>-->
+                <!--<arg column="ORDER_ID" javaType="java.lang.Integer"/>-->
+                <!--<arg column="USER_ID" javaType="java.lang.Integer"/>-->
+            <!--</constructor>-->
+        <!--</association>-->
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		SEAT_AVAILABILITY_ID,
+		ORDER_ID,
+		USER_ID,
+		QUANTITY,
+		PAYMENT_ID
+		FROM
+		CQRS_CPL_SEAT_AVAILABILITY
+	</sql>
+
+    <select id="findById" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE SEAT_AVAILABILITY_ID=#{id}
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE SEAT_AVAILABILITY_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="findByOrderId" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID=#{id} AND USER_ID=#{userId}
+    </select>
+
+    <select id="findByOrderIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+        AND USER_ID=#{list[0].userId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <![CDATA[
+		INSERT INTO CQRS_CPL_SEAT_AVAILABILITY
+		(USER_ID,ORDER_ID,QUANTITY,PAYMENT_ID)
+		VALUES
+		(#{bookingOrder.id.userId},#{bookingOrder.id.id},#{quantity},#{bookingPayment.id})
+        ]]>
+
+    </insert>
+
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
+        <![CDATA[
+		INSERT INTO CQRS_CPL_SEAT_AVAILABILITY
+		(USER_ID,ORDER_ID,QUANTITY,PAYMENT_ID)
+		VALUES
+		]]>
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            (#{item.bookingOrder.id.userId},#{item.bookingOrder.id.id},#{item.quantity},#{item.bookingPayment.id})
+        </foreach>
+
+    </insert>
+
+    <update id="update">
+        UPDATE
+        CQRS_CPL_SEAT_AVAILABILITY
+        SET
+        USER_ID =#{bookingOrder.id.userId},
+        ORDER_ID=#{bookingOrder.id.id},
+        QUANTITY=#{quantity},
+        PAYMENT_ID=#{bookingPayment.id}
+        WHERE
+        SEAT_AVAILABILITY_ID=#{id}
+    </update>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_CPL_SEAT_AVAILABILITY
+        SET
+        USER_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.bookingOrder.id.userId}
+        </foreach>
+        ELSE USER_ID END,
+
+        ORDER_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.bookingOrder.id.id}
+        </foreach>
+        ELSE ORDER_ID END,
+
+        QUANTITY=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.quantity}
+        </foreach>
+        ELSE QUANTITY END,
+
+        PAYMENT_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN SEAT_AVAILABILITY_ID=#{item.id}
+            THEN  #{item.bookingPayment.id}
+        </foreach>
+        ELSE PAYMENT_ID END
+
+        WHERE SEAT_AVAILABILITY_ID IN
+        <foreach item="item" index="index" collection="list" separator="," open="("  close=")">
+            #{item.id}
+        </foreach>
+
+    </update>
+
+
+    <delete id="delete">
+		DELETE FROM
+		CQRS_CPL_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID=#{id}
+	</delete>
+
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_CPL_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID IN
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
+
+</mapper>

@@ -2,15 +2,15 @@ package org.aggregateframework.repository;
 
 import org.aggregateframework.OptimisticLockException;
 import org.aggregateframework.SystemException;
-import org.aggregateframework.utils.CollectionUtils;
-import org.aggregateframework.utils.DomainObjectUtils;
-import org.aggregateframework.session.IdentifiedEntityMap;
-import org.aggregateframework.utils.ReflectionUtils;
 import org.aggregateframework.entity.AbstractDomainObject;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.CompositeId;
 import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.session.AggregateContext;
+import org.aggregateframework.session.IdentifiedEntityMap;
+import org.aggregateframework.utils.CollectionUtils;
+import org.aggregateframework.utils.DomainObjectUtils;
+import org.aggregateframework.utils.ReflectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -288,29 +288,9 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
                 DomainObject<Serializable> currentValue = currentFieldValuesMap.get(field);
 
 
-                if (originalValue != null && (currentValue == null || !currentValue.getId().equals(originalValue.getId()))) {
+                if (originalValue == null && currentValue == null) {
 
-
-                    if (!allNeedRemovedFieldValuesMap.containsKey(field)) {
-                        allNeedRemovedFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
-                    }
-
-                    allNeedRemovedFieldValuesMap.get(field).add(originalValue);
-
-                }
-
-                if (originalValue != null && currentValue != null && currentValue.getId().equals(originalValue.getId())) {
-
-                    if (!allNeedUpdateFieldValuesMap.containsKey(field)) {
-                        allNeedUpdateFieldValuesMap.put(field, new ArrayList<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>());
-                    }
-
-                    //compare the equals
-                    allNeedUpdateFieldValuesMap.get(field).add(new ImmutablePair<DomainObject<Serializable>, DomainObject<Serializable>>(currentValue, originalValue));
-
-                }
-
-                if (currentValue != null && !currentValue.getId().equals(originalValue.getId())) {
+                } else if (originalValue == null && currentValue != null) {
 
                     if (!allNeedInsertFieldValuesMap.containsKey(field)) {
                         allNeedInsertFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
@@ -318,6 +298,39 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
                     allNeedInsertFieldValuesMap.get(field).add(currentValue);
 
+
+                } else if (originalValue != null && currentValue == null) {
+
+                    if (!allNeedRemovedFieldValuesMap.containsKey(field)) {
+                        allNeedRemovedFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                    }
+
+                    allNeedRemovedFieldValuesMap.get(field).add(originalValue);
+
+                } else if (originalValue != null && currentValue != null) {
+
+                    if (originalValue.getId().equals(currentValue.getId())) {
+                        if (!allNeedUpdateFieldValuesMap.containsKey(field)) {
+                            allNeedUpdateFieldValuesMap.put(field, new ArrayList<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>());
+                        }
+
+                        //compare the equals
+                        allNeedUpdateFieldValuesMap.get(field).add(new ImmutablePair<DomainObject<Serializable>, DomainObject<Serializable>>(currentValue, originalValue));
+                    } else {
+
+                        if (!allNeedRemovedFieldValuesMap.containsKey(field)) {
+                            allNeedRemovedFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                        }
+
+                        allNeedRemovedFieldValuesMap.get(field).add(originalValue);
+
+
+                        if (!allNeedInsertFieldValuesMap.containsKey(field)) {
+                            allNeedInsertFieldValuesMap.put(field, new ArrayList<DomainObject<Serializable>>());
+                        }
+
+                        allNeedInsertFieldValuesMap.get(field).add(currentValue);
+                    }
                 }
             }
         }
