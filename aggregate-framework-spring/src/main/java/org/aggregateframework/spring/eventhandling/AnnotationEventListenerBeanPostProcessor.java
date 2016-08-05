@@ -1,9 +1,9 @@
 package org.aggregateframework.spring.eventhandling;
 
-import org.aggregateframework.eventhandling.AnnotationEventListenerAdapter;
 import org.aggregateframework.eventbus.EventBus;
-import org.aggregateframework.eventhandling.EventListener;
 import org.aggregateframework.eventbus.SimpleEventBus;
+import org.aggregateframework.eventhandling.AnnotationEventListenerAdapter;
+import org.aggregateframework.eventhandling.EventListener;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.processor.AsyncMethodInvoker;
 import org.aopalliance.intercept.MethodInvocation;
@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.aop.IntroductionInfo;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -92,7 +91,7 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
 
     @Override
     public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-        
+
     }
 
     private boolean isPostProcessingCandidate(Class<?> targetClass) {
@@ -125,8 +124,7 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
 
         logger.info("aggeraget-framework disruptor and retry-disruptor shutdown...");
 
-        asyncMethodInvoker.getDisruptor().shutdown();
-        asyncMethodInvoker.getRetryDisruptor().shutdown();
+        asyncMethodInvoker.shutdown();
 
         logger.info("aggeraget-framework disruptor and retry-disruptor shutdowned");
 

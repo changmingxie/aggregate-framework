@@ -7,11 +7,13 @@ import java.lang.reflect.Method;
  */
 public class EventInvokerEntry {
 
+    private Class payloadType;
     private Method method;
     private Object target;
     private Object[] params;
 
-    public EventInvokerEntry(Method method, Object target, Object... params) {
+    public EventInvokerEntry(Class payloadType, Method method, Object target, Object... params) {
+        this.payloadType = payloadType;
         this.method = method;
         this.target = target;
         this.params = params;
@@ -27,5 +29,9 @@ public class EventInvokerEntry {
 
     public Object[] getParams() {
         return params;
+    }
+
+    public Class getPayloadType() {
+        return payloadType;
     }
 }

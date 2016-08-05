@@ -43,4 +43,8 @@ public class OrderLine extends AbstractSimpleDomainObject<Long> {
     public BigDecimal getTotalAmount() {
         return BigDecimal.valueOf(quantity * price);
     }
+
+    public int getProductId() {
+        return productId;
+    }
 }

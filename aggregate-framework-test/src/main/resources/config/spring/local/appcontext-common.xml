@@ -10,6 +10,10 @@
 
     <context:property-placeholder location="classpath:config.properties"/>
 
+    <bean id="disruptorConfig" class="org.aggregateframework.spring.context.DisruptorParameterConfig">
+        <property name="disruptorRingBufferSize" value="2"/>
+    </bean>
+
     <bean id="transactionManager"
           class="org.aggregateframework.spring.datasource.SessionDataSourceTransactionManager">
         <property name="dataSource" ref="dataSource"/>

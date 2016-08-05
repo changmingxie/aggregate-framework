@@ -70,7 +70,7 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
             if (classes != null && classes.length > 0) {
                 for (Class<?> clazz : classes) {
                     if (clazz.equals(event.getPayloadType())) {
-                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(method, this.target, event.getPayload());
+                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(),method, this.target, event.getPayload());
                         handle(eventInvokerEntry);
 
                         break;

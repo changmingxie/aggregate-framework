@@ -1,6 +1,7 @@
 package org.aggregateframework.eventhandling.processor;
 
 import org.aggregateframework.SystemException;
+import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.eventhandling.processor.retry.*;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +30,11 @@ public class SyncMethodInvoker {
         return INSTANCE;
     }
 
-    public void invoke(final Method method, final Object target, final Object... params) {
+    public void invoke(EventInvokerEntry eventInvokerEntry) {
+        final Method method = eventInvokerEntry.getMethod();
+        final Object target = eventInvokerEntry.getTarget();
+        final Object[] params = eventInvokerEntry.getParams();
+
         final Retryable retryable = method.getAnnotation(Retryable.class);
 
         try {

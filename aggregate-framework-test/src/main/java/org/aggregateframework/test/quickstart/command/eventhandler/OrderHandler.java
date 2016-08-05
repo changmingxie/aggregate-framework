@@ -17,10 +17,10 @@ public class OrderHandler {
     @Autowired
     PaymentRepository paymentRepository;
 
-    @EventHandler
+    @EventHandler(asynchronous = false, postAfterTransaction = true)
     public void handleOrderCreatedEvent(OrderPlacedEvent event) {
-        System.out.println("haha");
-
+        System.out.println("haha, product id:" + event.getOrder().getOrderLines().get(0).getProductId());
+        
         Payment payment = PaymentFactory.buildPayment(event.getOrder().getId(), String.format("p000%s", event.getOrder().getId()), event.getOrder().getTotalAmount());
 
         paymentRepository.save(payment);

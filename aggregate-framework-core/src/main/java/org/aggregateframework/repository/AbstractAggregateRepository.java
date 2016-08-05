@@ -1,9 +1,11 @@
 package org.aggregateframework.repository;
 
 import org.aggregateframework.SystemException;
+import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.eventbus.EventBus;
 import org.aggregateframework.eventbus.SimpleEventBus;
+import org.aggregateframework.eventhandling.processor.AsyncMethodInvoker;
 import org.aggregateframework.session.AggregateEntry;
 import org.aggregateframework.session.LocalSessionFactory;
 import org.aggregateframework.session.SessionFactory;
@@ -53,6 +55,10 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
         }
 
         AggregateEntry<T> aggregateEntry = new AggregateEntry<T>(entities, saveAggregateCallback, eventBus);
+
+        for (EventMessage eventMessage : aggregateEntry.getUncommittedDomainEvents()) {
+            AsyncMethodInvoker.registerEventDomainType(eventMessage.getPayloadType(), this.aggregateType);
+        }
 
         sessionFactory.requireClientSession().registerAggregate(aggregateEntry);
 

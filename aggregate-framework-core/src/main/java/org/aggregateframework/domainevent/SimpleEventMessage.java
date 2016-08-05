@@ -7,6 +7,8 @@ package org.aggregateframework.domainevent;
  */
 public class SimpleEventMessage<T> implements EventMessage {
 
+    private static final long serialVersionUID = 4075952009259360956L;
+
     final T payload;
 
     private MessageType type = MessageType.DOMAIN_EVENT;

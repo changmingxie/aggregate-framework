@@ -1,5 +1,6 @@
 package org.aggregateframework.test.quickstart.service;
 
+import org.aggregateframework.eventhandling.processor.AsyncMethodInvoker;
 import org.aggregateframework.test.AbstractTestCase;
 import org.aggregateframework.test.quickstart.command.domain.entity.Order;
 import org.aggregateframework.test.quickstart.command.domain.entity.Payment;
@@ -27,10 +28,27 @@ public class OrderServiceTest extends AbstractTestCase {
     @Test
     public void testHandleConfirmNotify() {
         Order order = orderService.placeOrder(1, 10);
+
         notifyListener.handleConfirmMessage(String.format("p000%s", order.getId()));
 
         Payment payment = paymentRepository.findByPaymentNo(String.format("p000%s", order.getId()));
 
         Assert.assertEquals(1, payment.getStatusId());
+    }
+
+    @Test
+    public void testUpdateAndVersionChanged() {
+
+        Order order = orderService.placeOrder(1, 10);
+        notifyListener.handleConfirmMessage(String.format("p000%s", order.getId()));
+
+        Payment payment = paymentRepository.findByPaymentNo(String.format("p000%s", order.getId()));
+
+        paymentRepository.save(payment);
+
+        Payment payment2 = paymentRepository.findByPaymentNo(String.format("p000%s", order.getId()));
+
+        Assert.assertEquals(payment.getVersion(),payment2.getVersion());
+
     }
 }

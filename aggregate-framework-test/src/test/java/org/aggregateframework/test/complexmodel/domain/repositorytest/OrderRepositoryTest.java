@@ -208,6 +208,34 @@ public class OrderRepositoryTest extends OrderTestCase {
     }
 
     @Test
+    public void given_a_persisted_order_when_update_component_then_order_version_updated() {
+
+        //given
+        BookingOrder bookingOrder = buildOrder();
+        orderRepository.save(bookingOrder);
+
+        Long version = bookingOrder.getVersion();
+        //when
+        BookingOrder expectedBookingOrder = orderRepository.findOne(bookingOrder.getId());
+
+        List<SeatAvailability> seatAvailabilities = expectedBookingOrder.getSeatAvailabilities();
+
+        seatAvailabilities.get(0).setQuantity(10010);
+        seatAvailabilities.get(1).setQuantity(10010);
+
+        orderRepository.save(expectedBookingOrder);
+
+        //then
+        BookingOrder foundBookingOrder = orderRepository.findOne(bookingOrder.getId());
+
+        for (SeatAvailability seatAvailability : foundBookingOrder.getSeatAvailabilities()) {
+            Assert.assertEquals(10010, seatAvailability.getQuantity());
+        }
+
+        Assert.assertEquals(version+1,expectedBookingOrder.getVersion());
+    }
+
+    @Test
     public void given_a_prisisted_order_when_delete_then_order_removed() {
 
         //given

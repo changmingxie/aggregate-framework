@@ -7,13 +7,16 @@ import java.lang.reflect.Method;
  */
 public class AsyncEvent {
 
+    private Class payloadType;
+
     private Method method;
 
     private Object target;
 
     private Object[] params;
 
-    public void reset(Method method, Object target, Object... params) {
+    public void reset(Class payloadType, Method method, Object target, Object... params) {
+        this.payloadType = payloadType;
         this.method = method;
         this.target = target;
         this.params = params;
@@ -29,5 +32,9 @@ public class AsyncEvent {
 
     public Object[] getParams() {
         return params;
+    }
+
+    public Class getPayloadType() {
+        return payloadType;
     }
 }

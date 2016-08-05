@@ -16,7 +16,7 @@ public class PaymentHandler {
     @Autowired
     OrderRepository orderRepository;
 
-    @EventHandler
+    @EventHandler(asynchronous = true, postAfterTransaction = true)
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
 
         Order order = orderRepository.findOne(event.getOrderId());
