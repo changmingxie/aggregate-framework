@@ -658,16 +658,20 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
     private void compareAndSetRootVersion(List<Pair<T, T>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
 
         List<T> needUpdateRootEntities = new ArrayList<T>();
+        List<T> needUpdateVersionEntities = new ArrayList<T>();
 
         for (Pair<T, T> currentAndOriginalEntityPair : currentAndOriginalEntityPairs) {
 
             T entity = currentAndOriginalEntityPair.getLeft();
             T originalEntity = currentAndOriginalEntityPair.getRight();
 
-            if (DomainObjectUtils.equal(entity, originalEntity)) {
-                if (aggregateContext.isAggregateChanged()) {
-                    needUpdateRootEntities.add(entity);
-                }
+            if (DomainObjectUtils.equal(entity, originalEntity) && aggregateContext.isAggregateChanged()) {
+                needUpdateRootEntities.add(entity);
+                needUpdateVersionEntities.add(entity);
+            }
+
+            if (!DomainObjectUtils.equal(entity, originalEntity)) {
+                needUpdateVersionEntities.add(entity);
             }
         }
 
@@ -676,8 +680,10 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             if (effectedCount < needUpdateRootEntities.size()) {
                 throw new OptimisticLockException();
             }
+        }
 
-            for (T entity : needUpdateRootEntities) {
+        if (!CollectionUtils.isEmpty(needUpdateVersionEntities)) {
+            for (T entity : needUpdateVersionEntities) {
                 DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
             }
         }
