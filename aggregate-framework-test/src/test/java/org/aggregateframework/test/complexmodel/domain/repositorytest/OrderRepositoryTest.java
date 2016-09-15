@@ -1,11 +1,11 @@
 package org.aggregateframework.test.complexmodel.domain.repositorytest;
 
 import org.aggregateframework.test.complexmodel.OrderTestCase;
-import org.aggregateframework.utils.DomainObjectUtils;
 import org.aggregateframework.test.complexmodel.command.domain.entity.BookingOrder;
 import org.aggregateframework.test.complexmodel.command.domain.entity.BookingPayment;
 import org.aggregateframework.test.complexmodel.command.domain.entity.SeatAvailability;
 import org.aggregateframework.test.complexmodel.command.domain.repository.JpaOrderRepository;
+import org.aggregateframework.utils.DomainObjectUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -232,7 +232,7 @@ public class OrderRepositoryTest extends OrderTestCase {
             Assert.assertEquals(10010, seatAvailability.getQuantity());
         }
 
-        Assert.assertEquals(version+1,expectedBookingOrder.getVersion());
+        Assert.assertEquals(version + 1, expectedBookingOrder.getVersion());
     }
 
     @Test
@@ -441,4 +441,7 @@ public class OrderRepositoryTest extends OrderTestCase {
 
         Assert.assertEquals(foundBookingOrder.getBookingPayment(), foundBookingOrder.getSeatAvailabilities().get(0).getBookingPayment());
     }
+
+
+
 }

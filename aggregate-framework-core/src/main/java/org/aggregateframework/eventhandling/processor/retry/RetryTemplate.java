@@ -18,12 +18,12 @@ public class RetryTemplate implements RetryOperations {
 
 
     @Override
-    public <T, E extends Throwable> T execute(RetryContext context, RetryCallback<T, E> retryCallback) throws E {
+    public <T> T execute(RetryContext context, RetryCallback<T> retryCallback) {
         return doExecute(context, retryCallback, null);
     }
 
     @Override
-    public <T, E extends Throwable> T execute(RetryContext context, RetryCallback<T, E> retryCallback, RecoveryCallback<T> recoveryCallback) throws E {
+    public <T> T execute(RetryContext context, RetryCallback<T> retryCallback, RecoveryCallback<T> recoveryCallback) {
         return doExecute(context, retryCallback, recoveryCallback);
     }
 
@@ -35,8 +35,8 @@ public class RetryTemplate implements RetryOperations {
         this.backOffPolicy = backOffPolicy;
     }
 
-    protected <T, E extends Throwable> T doExecute(RetryContext context, RetryCallback<T, E> retryCallback,
-                                                   RecoveryCallback<T> recoveryCallback) throws E {
+    protected <T> T doExecute(RetryContext context, RetryCallback<T> retryCallback,
+                                                   RecoveryCallback<T> recoveryCallback) {
 
         RetryPolicy retryPolicy = this.retryPolicy;
         BackOffPolicy backOffPolicy = this.backOffPolicy;

@@ -5,7 +5,7 @@ package org.aggregateframework.eventhandling.processor.retry;
  */
 public interface RetryOperations {
 
-    <T, E extends Throwable> T execute(RetryContext context, RetryCallback<T, E> retryCallback) throws E;
+    <T> T execute(RetryContext context, RetryCallback<T> retryCallback);
 
-    <T, E extends Throwable> T execute(RetryContext context, RetryCallback<T, E> retryCallback, RecoveryCallback<T> recoveryCallback) throws E;
+    <T> T execute(RetryContext context, RetryCallback<T> retryCallback, RecoveryCallback<T> recoveryCallback);
 }

@@ -52,16 +52,16 @@
     <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
 
         INSERT INTO CQRS_HIE_ORDER
-        (CONTENT,DELIVER,JOB,ORDER_INFO_ID,DTYPE)
+        (CONTENT,DELIVER,JOB,ORDER_INFO_ID,DTYPE,CREATE_TIME)
         VALUES
         <foreach item="item" index="index" collection="list"
                  separator=",">
             <choose>
                 <when test="item.dtype=='DeliveryOrder'">
-                    (#{item.content}, #{item.deliver},NULL,#{item.orderInfo.id},#{item.dtype})
+                    (#{item.content}, #{item.deliver},NULL,#{item.orderInfo.id},#{item.dtype},#{item.createTime})
                 </when>
                 <when test="item.dtype=='JobOrder'">
-                    (#{item.content}, NULL,#{item.job},#{item.orderInfo.id},#{item.dtype})
+                    (#{item.content}, NULL,#{item.job},#{item.orderInfo.id},#{item.dtype},#{item.createTime})
                 </when>
             </choose>
         </foreach>

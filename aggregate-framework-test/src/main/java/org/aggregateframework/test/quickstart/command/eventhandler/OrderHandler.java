@@ -5,6 +5,7 @@ import org.aggregateframework.test.quickstart.command.domain.entity.Payment;
 import org.aggregateframework.test.quickstart.command.domain.event.OrderPlacedEvent;
 import org.aggregateframework.test.quickstart.command.domain.factory.PaymentFactory;
 import org.aggregateframework.test.quickstart.command.domain.repository.PaymentRepository;
+import org.aggregateframework.test.quickstart.command.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,14 +15,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderHandler {
 
+
+    @Autowired
+    OrderService orderService;
+
     @Autowired
     PaymentRepository paymentRepository;
 
-    @EventHandler(asynchronous = false, postAfterTransaction = true)
+    @EventHandler
     public void handleOrderCreatedEvent(OrderPlacedEvent event) {
-        System.out.println("haha, product id:" + event.getOrder().getOrderLines().get(0).getProductId());
-        
-        Payment payment = PaymentFactory.buildPayment(event.getOrder().getId(), String.format("p000%s", event.getOrder().getId()), event.getOrder().getTotalAmount());
+
+        Payment payment = PaymentFactory.buildPayment(event.getOrder().getId(),
+                String.format("p000%s", event.getOrder().getId()), event.getOrder().getTotalAmount());
 
         paymentRepository.save(payment);
     }

@@ -28,43 +28,53 @@ public class DaoFactory {
 
         foundDao = daoMap.get(entityClass);
 
-        if (foundDao != null) {
-            return foundDao;
-        }
+        if (foundDao == null) {
+            
+            synchronized (entityClass) {
 
-        Map<String, DomainObjectDao> daos = SpringObjectFactory.getApplicationContext().getBeansOfType(DomainObjectDao.class);
+                foundDao = daoMap.get(entityClass);
 
-        for (DomainObjectDao<E, ID> dao : daos.values()) {
+                if (foundDao == null) {
 
-            Class[] classes = dao.getClass().getInterfaces();
+                    Map<String, DomainObjectDao> daos = SpringObjectFactory.getApplicationContext().getBeansOfType(DomainObjectDao.class);
 
-            for (Class clazz : classes) {
+                    for (DomainObjectDao<E, ID> dao : daos.values()) {
 
-                Type[] types = clazz.getGenericInterfaces();
+                        Class[] classes = dao.getClass().getInterfaces();
 
-                for (Type type : types) {
+                        for (Class clazz : classes) {
 
-                    if (type instanceof ParameterizedType) {
+                            Type[] types = clazz.getGenericInterfaces();
 
-                        ParameterizedType parameterizedType = (ParameterizedType) type;
+                            for (Type type : types) {
 
-                        Type[] typeArguments = parameterizedType.getActualTypeArguments();
+                                if (type instanceof ParameterizedType) {
 
-                        for (Type typeArgument : typeArguments) {
-                            if (isEntityClassMatch(typeArgument, entityClass)) {
-                                foundDao = dao;
-                                daoMap.put(entityClass, foundDao);
-                                return foundDao;
+                                    ParameterizedType parameterizedType = (ParameterizedType) type;
+
+                                    Type[] typeArguments = parameterizedType.getActualTypeArguments();
+
+                                    for (Type typeArgument : typeArguments) {
+                                        if (isEntityClassMatch(typeArgument, entityClass)) {
+                                            foundDao = dao;
+                                            daoMap.put(entityClass, foundDao);
+                                            return foundDao;
+                                        }
+                                    }
+                                }
                             }
+
                         }
                     }
-                }
 
+                    throw new NoDaoDefinitionException("No Dao Definition is found in Spring Beans for Class:" + entityClass.getCanonicalName());
+                }
             }
         }
 
-        throw new NoDaoDefinitionException("No Dao Definition is found in Spring Beans for Class:" + entityClass.getCanonicalName());
+        return foundDao;
     }
+
 
     public static <E extends DomainObject<ID>, ID extends Serializable> DomainObjectDao<E, ID> tryGetDao(Class<E> entityClass) {
 

@@ -7,6 +7,7 @@ import org.aggregateframework.entity.AbstractSimpleAggregateRoot;
  */
 public class HierarchicalOrder extends AbstractSimpleAggregateRoot<Integer> {
 
+    private static final long serialVersionUID = 2788858215657724845L;
     private String dtype;
 
     private String content;

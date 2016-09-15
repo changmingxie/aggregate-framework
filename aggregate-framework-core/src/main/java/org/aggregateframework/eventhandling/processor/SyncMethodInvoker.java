@@ -6,6 +6,7 @@ import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.eventhandling.processor.retry.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -37,48 +38,58 @@ public class SyncMethodInvoker {
 
         final Retryable retryable = method.getAnnotation(Retryable.class);
 
-        try {
-            if (retryable == null) {
+        if (retryable == null) {
+            try {
                 method.invoke(target, params);
-            } else {
-
-                final PolicyBuilder policyBuilder = new PolicyBuilder();
-                RetryTemplate retryTemplate = new RetryTemplate();
-
-                RetryPolicy retryPolicy = policyBuilder.getRetryPolicy(retryable);
-                retryTemplate.setRetryPolicy(retryPolicy);
-                retryTemplate.setBackOffPolicy(policyBuilder.getBackoffPolicy(retryable.backoff()));
-
-                RetryContext retryContext = retryPolicy.requireRetryContext();
-
-                RetryCallback<Object, Exception> retryCallback = new RetryCallback<Object, Exception>() {
-                    @Override
-                    public Object doWithRetry(RetryContext context) throws Exception {
-                        return method.invoke(target, params);
+            } catch (IllegalAccessException e) {
+                throw new SystemException(e);
+            } catch (InvocationTargetException e) {
+                if (e.getCause() != null) {
+                    if (e.getCause() instanceof RuntimeException) {
+                        throw (RuntimeException) (e.getCause());
                     }
-                };
-
-                RecoveryCallback<Object> recoveryCallback = null;
-
-                if (StringUtils.isNotEmpty(retryable.recoverMethod())) {
-                    recoveryCallback = new RecoveryCallback<Object>() {
-
-                        @Override
-                        public Object recover(RetryContext context) {
-                            try {
-                                Method recoverMethod = target.getClass().getMethod(retryable.recoverMethod(), method.getParameterTypes());
-                                return recoverMethod.invoke(target, params);
-                            } catch (Exception ex) {
-                                throw new SystemException(ex);
-                            }
-                        }
-                    };
                 }
 
-                retryTemplate.execute(retryContext, retryCallback, recoveryCallback);
+                throw new SystemException(e);
             }
-        } catch (Exception e) {
-            throw new SystemException(e);
+        } else {
+
+            final PolicyBuilder policyBuilder = new PolicyBuilder();
+            RetryTemplate retryTemplate = new RetryTemplate();
+
+            RetryPolicy retryPolicy = policyBuilder.getRetryPolicy(retryable);
+            retryTemplate.setRetryPolicy(retryPolicy);
+            retryTemplate.setBackOffPolicy(policyBuilder.getBackoffPolicy(retryable.backoff()));
+
+            RetryContext retryContext = retryPolicy.requireRetryContext();
+
+            RetryCallback<Object> retryCallback = new RetryCallback<Object>() {
+                @Override
+                public Object doWithRetry(RetryContext context) {
+                    try {
+                        return method.invoke(target, params);
+                    } catch (IllegalAccessException e) {
+                        throw new SystemException(e);
+                    } catch (InvocationTargetException e) {
+                        if (e.getCause() != null) {
+                            if (e.getCause() instanceof RuntimeException) {
+                                throw (RuntimeException) (e.getCause());
+                            }
+                        }
+
+                        throw new SystemException(e);
+                    }
+                }
+            };
+
+            RecoveryCallback<Object> recoveryCallback = null;
+
+            if (StringUtils.isNotEmpty(retryable.recoverMethod())) {
+                recoveryCallback = new SimpleRecoveryCallback(target, retryable.recoverMethod(), method.getParameterTypes(), params);
+            }
+
+            retryTemplate.execute(retryContext, retryCallback, recoveryCallback);
+
         }
     }
 }

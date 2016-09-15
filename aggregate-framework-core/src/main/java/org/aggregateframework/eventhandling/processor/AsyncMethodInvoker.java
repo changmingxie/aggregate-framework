@@ -1,10 +1,13 @@
 package org.aggregateframework.eventhandling.processor;
 
 import com.lmax.disruptor.ExceptionHandler;
+import com.lmax.disruptor.InsufficientCapacityException;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.aggregateframework.SystemException;
 import org.aggregateframework.context.AsyncParameterConfig;
+import org.aggregateframework.context.PayloadDisruptorConfig;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.eventhandling.processor.async.AsyncEvent;
 import org.aggregateframework.eventhandling.processor.async.AsyncEventFactory;
@@ -16,10 +19,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Created by changmingxie on 12/2/15.
@@ -28,20 +33,11 @@ public class AsyncMethodInvoker {
 
     static final Logger logger = LoggerFactory.getLogger(AsyncMethodInvoker.class);
 
-    private static Map<Class, Class> eventDomainTypeMap = new ConcurrentHashMap<Class, Class>();
+    private static Map<Class, Disruptor<AsyncEvent>> payloadTypeDisruptorMap = new ConcurrentHashMap<Class, Disruptor<AsyncEvent>>();
 
-    private static Map<Class, Disruptor<AsyncEvent>> domainTypeDisruptorMap = new ConcurrentHashMap<Class, Disruptor<AsyncEvent>>();
-
-    private static Map<Class, Disruptor<RetryEvent>> domainTypeRetryDisruptorMap = new ConcurrentHashMap<Class, Disruptor<RetryEvent>>();
-
+    private static Map<Class, Disruptor<RetryEvent>> payloadTypeRetryDisruptorMap = new ConcurrentHashMap<Class, Disruptor<RetryEvent>>();
 
     private static volatile AsyncMethodInvoker INSTANCE = null;
-
-    public static void registerEventDomainType(Class eventType, Class domainType) {
-        if (!eventDomainTypeMap.containsKey(eventType)) {
-            eventDomainTypeMap.put(eventType, domainType);
-        }
-    }
 
     public static AsyncMethodInvoker getInstance() {
 
@@ -58,22 +54,82 @@ public class AsyncMethodInvoker {
         return INSTANCE;
     }
 
+    public void invoke(EventInvokerEntry eventInvokerEntry) {
+        Method method = eventInvokerEntry.getMethod();
+        Object target = eventInvokerEntry.getTarget();
+        Object[] params = eventInvokerEntry.getParams();
+
+        Disruptor<AsyncEvent> disruptor = getDisruptor(eventInvokerEntry.getPayloadType());
+
+        if (disruptor.getRingBuffer().remainingCapacity() <= 0) {
+            logger.warn(String.format("aggregate framework ring buffer size fulled. remaining capacity:%d, method:%s", disruptor.getRingBuffer().remainingCapacity(), method.getName()));
+        }
+
+
+        do {
+
+            try {
+                long sequence = disruptor.getRingBuffer().tryNext();
+
+                try {
+                    AsyncEvent event = disruptor.getRingBuffer().get(sequence);
+                    event.reset(eventInvokerEntry.getPayloadType(), method, target, params);
+                } finally {
+                    disruptor.getRingBuffer().publish(sequence);
+                }
+                return;
+
+            } catch (InsufficientCapacityException e) {
+
+                EventHandler eventHandler = ReflectionUtils.getAnnotation(method, EventHandler.class);
+
+                if (StringUtils.isNotEmpty(eventHandler.backOffMethod())) {
+
+                    Method backOffMethod = null;
+                    try {
+                        backOffMethod = target.getClass().getMethod(eventHandler.backOffMethod(), method.getParameterTypes());
+                        backOffMethod.invoke(target, params);
+                    } catch (Exception ex) {
+                        throw new SystemException(ex);
+                    }
+                    return;
+                }
+            }
+            LockSupport.parkNanos(1);
+        } while (true);
+
+    }
+
+    public void shutdown() {
+
+        for (Map.Entry<Class, Disruptor<AsyncEvent>> entry : payloadTypeDisruptorMap.entrySet()) {
+            entry.getValue().shutdown();
+        }
+
+        for (Map.Entry<Class, Disruptor<RetryEvent>> entry : payloadTypeRetryDisruptorMap.entrySet()) {
+            entry.getValue().shutdown();
+        }
+    }
+
     private AsyncMethodInvoker() {
 
     }
 
-    private Disruptor<AsyncEvent> initializeAsyncRingBuffer() {
-        Executor executor = AsyncParameterConfig.EXECUTOR;
+    private Disruptor<AsyncEvent> initializeAsyncRingBuffer(Class payloadType) {
+
+        PayloadDisruptorConfig payloadDisruptorConfig = getPayloadDisruptorConfig(payloadType);
+
+        Executor executor = payloadDisruptorConfig.getExecutor();
 
         AsyncEventFactory factory = new AsyncEventFactory();
 
-        Disruptor<AsyncEvent> disruptor = new Disruptor<AsyncEvent>(factory, AsyncParameterConfig.DISRUPTOR_RING_BUFFER_SIZE, executor);
+        Disruptor<AsyncEvent> disruptor = new Disruptor<AsyncEvent>(factory, payloadDisruptorConfig.getRingBufferSize(), executor);
 
         disruptor.handleExceptionsWith(new AsyncExceptionEventHandler());
 
         AsyncEventHandler asyncEventHandler = new AsyncEventHandler();
 
-        AsyncEventHandler[] asyncEventHandlers = new AsyncEventHandler[AsyncParameterConfig.ASYNC_EVENT_HANDLER_WORK_POOL_SIZE];
+        AsyncEventHandler[] asyncEventHandlers = new AsyncEventHandler[payloadDisruptorConfig.getWorkPoolSize()];
 
         for (int i = 0; i < asyncEventHandlers.length; i++) {
             asyncEventHandlers[i] = asyncEventHandler;
@@ -85,18 +141,35 @@ public class AsyncMethodInvoker {
         return disruptor;
     }
 
-    private Disruptor<RetryEvent> initializeRetryRingBuffer() {
-        Executor executor = AsyncParameterConfig.RETRY_EXECUTOR;
+    private PayloadDisruptorConfig getPayloadDisruptorConfig(Class payloadType) {
+
+        PayloadDisruptorConfig payloadDisruptorConfig = null;
+
+        for (PayloadDisruptorConfig config : AsyncParameterConfig.PAYLOAD_TYPE_DISRUPTOR_CONFIGS) {
+            if (config.getPayloadType().equals(payloadType)) {
+                payloadDisruptorConfig = config;
+            }
+        }
+
+        if (payloadDisruptorConfig == null) {
+            payloadDisruptorConfig = new PayloadDisruptorConfig(payloadType);
+        }
+        return payloadDisruptorConfig;
+    }
+
+    private Disruptor<RetryEvent> initializeRetryRingBuffer(Class payloadType) {
+
+        PayloadDisruptorConfig payloadDisruptorConfig = getPayloadDisruptorConfig(payloadType);
 
         RetryEventFactory factory = new RetryEventFactory();
 
-        Disruptor<RetryEvent> retryDisruptor = new Disruptor<RetryEvent>(factory, AsyncParameterConfig.DISRUPTOR_RETRY_RING_BUFFER_SIZE, executor);
+        Disruptor<RetryEvent> retryDisruptor = new Disruptor<RetryEvent>(factory, payloadDisruptorConfig.getRingBufferSize(), payloadDisruptorConfig.getExecutor());
 
         retryDisruptor.handleExceptionsWith(new RetryExceptionEventHandler());
 
         RetryEventHandler retryEventHandler = new RetryEventHandler();
 
-        RetryEventHandler[] retryEventHandlers = new RetryEventHandler[AsyncParameterConfig.RETRY_EVENT_HANDLER_WORK_POOL_SIZE];
+        RetryEventHandler[] retryEventHandlers = new RetryEventHandler[payloadDisruptorConfig.getWorkPoolSize()];
 
         for (int i = 0; i < retryEventHandlers.length; i++) {
             retryEventHandlers[i] = retryEventHandler;
@@ -109,75 +182,44 @@ public class AsyncMethodInvoker {
         return retryDisruptor;
     }
 
-    public void invoke(EventInvokerEntry eventInvokerEntry) {
-        Method method = eventInvokerEntry.getMethod();
-        Object target = eventInvokerEntry.getTarget();
-        Object[] params = eventInvokerEntry.getParams();
-
-        Disruptor<AsyncEvent> disruptor = getDisruptor(eventInvokerEntry.getPayloadType());
-
-        long sequence = disruptor.getRingBuffer().next();
-
-        try {
-            AsyncEvent event = disruptor.getRingBuffer().get(sequence);
-            event.reset(eventInvokerEntry.getPayloadType(), method, target, params);
-        } finally {
-            disruptor.getRingBuffer().publish(sequence);
-        }
-    }
-
-    public void shutdown() {
-
-        for(Map.Entry<Class, Disruptor<AsyncEvent>> entry:domainTypeDisruptorMap.entrySet()) {
-            entry.getValue().shutdown();
-        }
-
-        for(Map.Entry<Class, Disruptor<RetryEvent>> entry:domainTypeRetryDisruptorMap.entrySet()) {
-            entry.getValue().shutdown();
-        }
-    }
 
     private Disruptor<AsyncEvent> getDisruptor(Class payloadType) {
 
-        Class domainType = eventDomainTypeMap.get(payloadType);
+        if (!payloadTypeDisruptorMap.containsKey(payloadType)) {
 
-        if (!domainTypeDisruptorMap.containsKey(domainType)) {
+            synchronized (payloadType) {
 
-            synchronized (domainType) {
+                if (!payloadTypeDisruptorMap.containsKey(payloadType)) {
 
-                if (!domainTypeDisruptorMap.containsKey(domainType)) {
+                    Disruptor<AsyncEvent> disruptor = initializeAsyncRingBuffer(payloadType);
+                    Disruptor<RetryEvent> retryDisruptor = initializeRetryRingBuffer(payloadType);
 
-                    Disruptor<AsyncEvent> disruptor = initializeAsyncRingBuffer();
-                    Disruptor<RetryEvent> retryDisruptor = initializeRetryRingBuffer();
-
-                    domainTypeDisruptorMap.put(domainType, disruptor);
-                    domainTypeRetryDisruptorMap.put(domainType, retryDisruptor);
+                    payloadTypeDisruptorMap.put(payloadType, disruptor);
+                    payloadTypeRetryDisruptorMap.put(payloadType, retryDisruptor);
                 }
             }
         }
 
-        return domainTypeDisruptorMap.get(domainType);
+        return payloadTypeDisruptorMap.get(payloadType);
 
     }
 
     private Disruptor<RetryEvent> getRetryDisruptor(Class payloadType) {
 
-        Class domainType = eventDomainTypeMap.get(payloadType);
+        if (!payloadTypeRetryDisruptorMap.containsKey(payloadType)) {
 
-        if (!domainTypeRetryDisruptorMap.containsKey(domainType)) {
+            synchronized (payloadType) {
 
-            synchronized (domainType) {
+                if (!payloadTypeRetryDisruptorMap.containsKey(payloadType)) {
 
-                if (!domainTypeRetryDisruptorMap.containsKey(domainType)) {
+                    Disruptor<RetryEvent> retryDisruptor = initializeRetryRingBuffer(payloadType);
 
-                    Disruptor<RetryEvent> retryDisruptor = initializeRetryRingBuffer();
-
-                    domainTypeRetryDisruptorMap.put(domainType, retryDisruptor);
+                    payloadTypeRetryDisruptorMap.put(payloadType, retryDisruptor);
                 }
             }
         }
 
-        return domainTypeRetryDisruptorMap.get(domainType);
+        return payloadTypeRetryDisruptorMap.get(payloadType);
 
     }
 
@@ -225,28 +267,23 @@ public class AsyncMethodInvoker {
             final Object target = retryEvent.getTarget();
             final Object[] params = retryEvent.getParams();
 
-            RetryCallback<Object, Exception> retryCallback = new RetryCallback<Object, Exception>() {
+            RetryCallback<Object> retryCallback = new RetryCallback<Object>() {
                 @Override
-                public Object doWithRetry(RetryContext context) throws Exception {
-                    return method.invoke(target, params);
+                public Object doWithRetry(RetryContext context) {
+                    try {
+                        return method.invoke(target, params);
+                    } catch (IllegalAccessException e) {
+                        throw new SystemException(e);
+                    } catch (InvocationTargetException e) {
+                        throw new SystemException(e);
+                    }
                 }
             };
 
             RecoveryCallback<Object> recoveryCallback = null;
 
             if (StringUtils.isNotEmpty(retryable.recoverMethod())) {
-                recoveryCallback = new RecoveryCallback<Object>() {
-
-                    @Override
-                    public Object recover(RetryContext context) {
-                        try {
-                            Method recoverMethod = target.getClass().getMethod(retryable.recoverMethod(), method.getParameterTypes());
-                            return recoverMethod.invoke(target, params);
-                        } catch (Exception ex) {
-                            throw new SystemException(ex);
-                        }
-                    }
-                };
+                recoveryCallback = new SimpleRecoveryCallback(target, retryable.recoverMethod(), method.getParameterTypes(), params);
             }
 
             retryTemplate.execute(retryContext, retryCallback, recoveryCallback);

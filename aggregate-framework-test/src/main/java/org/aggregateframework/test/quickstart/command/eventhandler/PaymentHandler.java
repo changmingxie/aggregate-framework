@@ -1,9 +1,10 @@
 package org.aggregateframework.test.quickstart.command.eventhandler;
 
 import org.aggregateframework.eventhandling.annotation.EventHandler;
-import org.aggregateframework.test.quickstart.command.domain.entity.Order;
+import org.aggregateframework.test.hierarchicalmodel.command.domain.entity.DeliveryOrder;
+import org.aggregateframework.test.hierarchicalmodel.command.domain.entity.DeliveryOrderInfo;
+import org.aggregateframework.test.hierarchicalmodel.command.domain.repository.DeliveryOrderRepository;
 import org.aggregateframework.test.quickstart.command.domain.event.PaymentConfirmedEvent;
-import org.aggregateframework.test.quickstart.command.domain.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,13 +15,26 @@ import org.springframework.stereotype.Service;
 public class PaymentHandler {
 
     @Autowired
-    OrderRepository orderRepository;
+    DeliveryOrderRepository deliveryOrderRepository;
 
-    @EventHandler(asynchronous = true, postAfterTransaction = true)
+    @EventHandler(asynchronous = true, postAfterTransaction = true, backOffMethod = "backOffMethod")
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
 
-        Order order = orderRepository.findOne(event.getOrderId());
-        order.confirm();
-        orderRepository.save(order);
+        DeliveryOrder deliveryOrder = buildOrder();
+        deliveryOrderRepository.save(deliveryOrder);
+    }
+
+    public void backOffMethod(PaymentConfirmedEvent event) {
+        System.out.println("backOff:" + event.getOrderId());
+    }
+
+    private DeliveryOrder buildOrder() {
+        DeliveryOrder deliveryOrder = new DeliveryOrder();
+
+        deliveryOrder.setOrderInfo(new DeliveryOrderInfo());
+
+        deliveryOrder.getOrderInfo().setDeliveryInfo("deliverinfo");
+
+        return deliveryOrder;
     }
 }

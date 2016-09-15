@@ -16,9 +16,9 @@ import org.springframework.transaction.support.DefaultTransactionStatus;
  * Time: 下午1:15
  */
 public class SessionDataSourceTransactionManager extends DataSourceTransactionManager {
-
-
+    
     private static final String TRANSACTIONAL_TEST_DEFINITION_CLASS_NAME = "1org.springframework.test.context.transaction.TransactionalTestExecutionListener$1";
+    private static final long serialVersionUID = -6436694485382392463L;
     private SessionFactory sessionFactory = LocalSessionFactory.INSTANCE;
 
     public SessionDataSourceTransactionManager() {

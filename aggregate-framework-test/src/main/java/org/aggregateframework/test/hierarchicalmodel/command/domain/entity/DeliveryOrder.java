@@ -5,6 +5,7 @@ package org.aggregateframework.test.hierarchicalmodel.command.domain.entity;
  */
 public class DeliveryOrder extends HierarchicalOrder {
 
+    private static final long serialVersionUID = 2259054024797433038L;
     private String deliver;
 
     public DeliveryOrder() {

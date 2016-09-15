@@ -4,10 +4,10 @@ import org.aggregateframework.eventhandling.annotation.Backoff;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.test.complexmodel.command.domain.entity.BookingOrder;
-import org.aggregateframework.test.complexmodel.command.domain.repository.JpaOrderRepository;
 import org.aggregateframework.test.complexmodel.command.domain.event.OrderCreatedEvent;
 import org.aggregateframework.test.complexmodel.command.domain.event.OrderUpdatedEvent;
 import org.aggregateframework.test.complexmodel.command.domain.event.SeatAvailabilityRemovedEvent;
+import org.aggregateframework.test.complexmodel.command.domain.repository.JpaOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +18,13 @@ public class BookingOrderHandler {
     @Autowired
     JpaOrderRepository jpaOrderRepository;
 
-    @EventHandler
+    @EventHandler(asynchronous = true, postAfterTransaction = true)
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2), recoverMethod = "recoverOrderCreatedEvent")
     public void handleOrderCreatedEvent(OrderCreatedEvent event) {
+        System.out.println("sync handle create event,id:"+event.getBookingOrder().getId().getId());
+    }
+
+    public void recoverOrderCreatedEvent(OrderCreatedEvent event) {
         System.out.println("sync handle create event");
     }
 
@@ -40,20 +45,22 @@ public class BookingOrderHandler {
     }
 
     @EventHandler(asynchronous = true, postAfterTransaction = true)
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500,multiplier = 2), recoverMethod = "recoverHandleSeatAvailabilityRemovedEvent")
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2), recoverMethod = "recoverHandleSeatAvailabilityRemovedEvent")
     public void handleSeatAvailabilityRemovedEvent(SeatAvailabilityRemovedEvent event) {
         System.out.println("handleSeatAvailabilityRemovedEvent called at:" + System.currentTimeMillis());
         throw new RuntimeException();
     }
 
     @EventHandler
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500,multiplier = 2), recoverMethod = "recoverHandleSeatAvailabilityRemovedEvent")
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2), recoverMethod = "recoverHandleSeatAvailabilityRemovedEvent")
     public void syncHandleSeatAvailabilityRemovedEvent(SeatAvailabilityRemovedEvent event) {
         System.out.println("syncHandleSeatAvailabilityRemovedEvent called at:" + System.currentTimeMillis());
         throw new RuntimeException();
     }
 
-    public void recoverHandleSeatAvailabilityRemovedEvent(SeatAvailabilityRemovedEvent event) {
+    public void recoverHandleSeatAvailabilityRemovedEvent(SeatAvailabilityRemovedEvent event, Throwable e) {
+
+        System.out.println(e);
         System.out.println("recoverHandleSeatAvailabilityRemovedEvent called at:" + System.currentTimeMillis());
         BookingOrder bookingOrder = event.getBookingOrder();
 

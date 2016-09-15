@@ -56,10 +56,6 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
         AggregateEntry<T> aggregateEntry = new AggregateEntry<T>(entities, saveAggregateCallback, eventBus);
 
-        for (EventMessage eventMessage : aggregateEntry.getUncommittedDomainEvents()) {
-            AsyncMethodInvoker.registerEventDomainType(eventMessage.getPayloadType(), this.aggregateType);
-        }
-
         sessionFactory.requireClientSession().registerAggregate(aggregateEntry);
 
         result.addAll(entities);
