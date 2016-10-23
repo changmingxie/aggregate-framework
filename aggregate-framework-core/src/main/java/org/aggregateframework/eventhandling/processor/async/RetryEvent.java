@@ -8,6 +8,8 @@ import java.lang.reflect.Method;
  */
 public class RetryEvent {
 
+    private Class payloadType;
+
     private Method method;
 
     private Object target;
@@ -16,7 +18,8 @@ public class RetryEvent {
 
     private Throwable throwable;
 
-    public void reset(Throwable throwable, Method method, Object target, Object[] params) {
+    public void reset(Class payloadType,Throwable throwable, Method method, Object target, Object[] params) {
+        this.payloadType = payloadType;
         this.throwable = throwable;
         this.method = method;
         this.target = target;
@@ -37,5 +40,9 @@ public class RetryEvent {
 
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    public Class getPayloadType() {
+        return payloadType;
     }
 }

@@ -1,12 +1,17 @@
 package org.aggregateframework.test.quickstart.command.eventhandler;
 
+import org.aggregateframework.eventhandling.annotation.Backoff;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.test.hierarchicalmodel.command.domain.entity.DeliveryOrder;
 import org.aggregateframework.test.hierarchicalmodel.command.domain.entity.DeliveryOrderInfo;
 import org.aggregateframework.test.hierarchicalmodel.command.domain.repository.DeliveryOrderRepository;
 import org.aggregateframework.test.quickstart.command.domain.event.PaymentConfirmedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Created by changming.xie on 4/7/16.
@@ -17,15 +22,19 @@ public class PaymentHandler {
     @Autowired
     DeliveryOrderRepository deliveryOrderRepository;
 
-    @EventHandler(asynchronous = true, postAfterTransaction = true, backOffMethod = "backOffMethod")
+    AtomicInteger counter = new AtomicInteger();
+
+    @EventHandler(asynchronous = true, postAfterTransaction = true)
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2))
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
 
-        DeliveryOrder deliveryOrder = buildOrder();
-        deliveryOrderRepository.save(deliveryOrder);
+        System.out.println("count:" + counter.incrementAndGet());
+//        LockSupport.parkNanos(1000 * 1000 * 500);
     }
 
-    public void backOffMethod(PaymentConfirmedEvent event) {
-        System.out.println("backOff:" + event.getOrderId());
+    public void recoverPaymentConfirmedEvent(PaymentConfirmedEvent event) {
+        System.out.println("count:" + counter.incrementAndGet());
+//        LockSupport.parkNanos(1000 * 1000 * 500);
     }
 
     private DeliveryOrder buildOrder() {

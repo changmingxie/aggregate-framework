@@ -298,11 +298,13 @@ public class OrderRepositoryTest extends OrderTestCase {
     }
 
     @Test
+    @Transactional
     public void given_a_persisted_order_when_remove_component_then_root_updated() {
 
         //given
         BookingOrder bookingOrder = buildOrder();
         orderRepository.save(bookingOrder);
+        orderRepository.flush();
 
         //when
         BookingOrder expectedBookingOrder = orderRepository.findOne(bookingOrder.getId());
@@ -314,6 +316,7 @@ public class OrderRepositoryTest extends OrderTestCase {
         expectedBookingOrder.removeSeatAvailability(seatAvailabilities.get(0));
 
         orderRepository.save(expectedBookingOrder);
+        orderRepository.flush();
 
         //then
         BookingOrder foundBookingOrder = orderRepository.findOne(bookingOrder.getId());

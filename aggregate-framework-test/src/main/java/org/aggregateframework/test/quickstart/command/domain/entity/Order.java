@@ -62,4 +62,12 @@ public class Order extends AbstractSimpleAggregateRoot<Long> {
     public void confirm() {
         this.statusId = 1;
     }
+
+    public String getMerchantOrderNo() {
+        return merchantOrderNo;
+    }
+
+    public void setMerchantOrderNo(String merchantOrderNo) {
+        this.merchantOrderNo = merchantOrderNo;
+    }
 }

@@ -16,6 +16,4 @@ public @interface EventHandler {
     boolean asynchronous() default false;
 
     boolean postAfterTransaction() default false;
-
-    String backOffMethod() default "";
 }

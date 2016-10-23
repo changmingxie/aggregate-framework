@@ -46,7 +46,7 @@
     </select>
 
 
-    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id.id">
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO CQRS_QCK_PAYMENT
         (TOTAL_AMOUNT,STATUS_ID,PAYMENT_NO,ORDER_ID,CREATE_TIME,LAST_UPDATE_TIME,VERSION)
         VALUES
@@ -83,5 +83,13 @@
         </foreach>
 
     </update>
+
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_QCK_PAYMENT WHERE PAYMENT_ID in
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
 
 </mapper>

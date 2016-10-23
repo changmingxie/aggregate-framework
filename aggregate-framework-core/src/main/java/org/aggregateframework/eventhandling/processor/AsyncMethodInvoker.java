@@ -7,7 +7,6 @@ import org.aggregateframework.SystemException;
 import org.aggregateframework.context.AsyncParameterConfig;
 import org.aggregateframework.context.PayloadDisruptorConfig;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
-import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.eventhandling.processor.async.AsyncEvent;
 import org.aggregateframework.eventhandling.processor.async.AsyncEventFactory;
@@ -24,7 +23,9 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by changmingxie on 12/2/15.
@@ -37,7 +38,12 @@ public class AsyncMethodInvoker {
 
     private static Map<Class, Disruptor<RetryEvent>> payloadTypeRetryDisruptorMap = new ConcurrentHashMap<Class, Disruptor<RetryEvent>>();
 
+    private static Map<Disruptor<AsyncEvent>, NotFullCondition> disruptorNotFullConditionMap = new ConcurrentHashMap<Disruptor<AsyncEvent>, NotFullCondition>();
+
+    private static Map<Disruptor<RetryEvent>, NotFullCondition> retryDisruptorNotFullConditionMap = new ConcurrentHashMap<Disruptor<RetryEvent>, NotFullCondition>();
+
     private static volatile AsyncMethodInvoker INSTANCE = null;
+
 
     public static AsyncMethodInvoker getInstance() {
 
@@ -65,40 +71,52 @@ public class AsyncMethodInvoker {
             logger.warn(String.format("aggregate framework ring buffer size fulled. remaining capacity:%d, method:%s", disruptor.getRingBuffer().remainingCapacity(), method.getName()));
         }
 
+        long sequence;
 
-        do {
+        if ((sequence = tryNext(disruptor)) == -1) {
 
-            try {
-                long sequence = disruptor.getRingBuffer().tryNext();
-
+            Method recoverMethod = tryGetRecoverMethod(target, method);
+            if (recoverMethod != null) {
                 try {
-                    AsyncEvent event = disruptor.getRingBuffer().get(sequence);
-                    event.reset(eventInvokerEntry.getPayloadType(), method, target, params);
-                } finally {
-                    disruptor.getRingBuffer().publish(sequence);
+                    recoverMethod.invoke(target, params);
+                } catch (Exception ex) {
+                    throw new SystemException(ex);
                 }
                 return;
 
-            } catch (InsufficientCapacityException e) {
+            } else {
 
-                EventHandler eventHandler = ReflectionUtils.getAnnotation(method, EventHandler.class);
+                disruptorNotFullConditionMap.get(disruptor).lock.lock();
 
-                if (StringUtils.isNotEmpty(eventHandler.backOffMethod())) {
+                try {
+                    while ((sequence = tryNext(disruptor)) == -1) {
+                        try {
 
-                    Method backOffMethod = null;
-                    try {
-                        backOffMethod = target.getClass().getMethod(eventHandler.backOffMethod(), method.getParameterTypes());
-                        backOffMethod.invoke(target, params);
-                    } catch (Exception ex) {
-                        throw new SystemException(ex);
+                            //add timeout to ensure the thread can run finally
+                            disruptorNotFullConditionMap.get(disruptor).notFull.await(2, TimeUnit.SECONDS);
+                            //as notfull.signial call at onEvent method,
+                            // which cannot ensure the sequence is release immediately, so wait a moment
+//                            LockSupport.parkNanos(1);
+                        } catch (InterruptedException e) {
+
+                        }
                     }
-                    return;
+                } finally {
+                    disruptorNotFullConditionMap.get(disruptor).lock.unlock();
                 }
             }
-            LockSupport.parkNanos(1);
-        } while (true);
+        }
 
+        try {
+            AsyncEvent event = disruptor.getRingBuffer().get(sequence);
+            event.reset(eventInvokerEntry.getPayloadType(), method, target, params);
+        } finally {
+            disruptor.getRingBuffer().publish(sequence);
+        }
+
+        return;
     }
+
 
     public void shutdown() {
 
@@ -113,6 +131,29 @@ public class AsyncMethodInvoker {
 
     private AsyncMethodInvoker() {
 
+    }
+
+    private Method tryGetRecoverMethod(Object target, Method method) {
+
+        Retryable retryable = ReflectionUtils.getAnnotation(method, Retryable.class);
+
+        if (retryable != null && StringUtils.isNotEmpty(retryable.recoverMethod())) {
+            try {
+                return target.getClass().getMethod(retryable.recoverMethod(), method.getParameterTypes());
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private long tryNext(Disruptor disruptor) {
+        try {
+            long sequence = disruptor.getRingBuffer().tryNext();
+            return sequence;
+        } catch (InsufficientCapacityException e) {
+            return -1;
+        }
     }
 
     private Disruptor<AsyncEvent> initializeAsyncRingBuffer(Class payloadType) {
@@ -192,10 +233,11 @@ public class AsyncMethodInvoker {
                 if (!payloadTypeDisruptorMap.containsKey(payloadType)) {
 
                     Disruptor<AsyncEvent> disruptor = initializeAsyncRingBuffer(payloadType);
-                    Disruptor<RetryEvent> retryDisruptor = initializeRetryRingBuffer(payloadType);
 
                     payloadTypeDisruptorMap.put(payloadType, disruptor);
-                    payloadTypeRetryDisruptorMap.put(payloadType, retryDisruptor);
+
+                    disruptorNotFullConditionMap.put(disruptor, new NotFullCondition());
+
                 }
             }
         }
@@ -215,6 +257,8 @@ public class AsyncMethodInvoker {
                     Disruptor<RetryEvent> retryDisruptor = initializeRetryRingBuffer(payloadType);
 
                     payloadTypeRetryDisruptorMap.put(payloadType, retryDisruptor);
+
+                    retryDisruptorNotFullConditionMap.put(retryDisruptor, new NotFullCondition());
                 }
             }
         }
@@ -227,13 +271,44 @@ public class AsyncMethodInvoker {
 
         Disruptor<RetryEvent> retryDisruptor = getRetryDisruptor(asyncEvent.getPayloadType());
 
-        long sequence = retryDisruptor.getRingBuffer().next();
+        long sequence = -1;
+
+        if ((sequence = tryNext(retryDisruptor)) == -1) {
+
+            retryDisruptorNotFullConditionMap.get(retryDisruptor).lock.lock();
+            try {
+                while ((sequence = tryNext(retryDisruptor)) == -1) {
+                    try {
+
+                        //add timeout to ensure the thread can run finally
+                        retryDisruptorNotFullConditionMap.get(retryDisruptor).notFull.await(2, TimeUnit.SECONDS);
+
+                        //as notfull.signial call at onEvent method,
+                        // which cannot ensure the sequence is release immediately, so wait a moment
+//                        LockSupport.parkNanos(1000 * 1000 * 100);
+                    } catch (InterruptedException e) {
+
+                    }
+                }
+            } finally {
+                retryDisruptorNotFullConditionMap.get(retryDisruptor).lock.unlock();
+            }
+        }
 
         try {
             RetryEvent event = retryDisruptor.getRingBuffer().get(sequence);
-            event.reset(throwable, asyncEvent.getMethod(), asyncEvent.getTarget(), asyncEvent.getParams());
+            event.reset(asyncEvent.getPayloadType(), throwable, asyncEvent.getMethod(), asyncEvent.getTarget(), asyncEvent.getParams());
         } finally {
             retryDisruptor.getRingBuffer().publish(sequence);
+        }
+    }
+
+    private void conditionSignalAll(NotFullCondition notFullCondition) {
+        notFullCondition.lock.lock();
+        try {
+            notFullCondition.notFull.signalAll();
+        } finally {
+            notFullCondition.lock.unlock();
         }
     }
 
@@ -242,6 +317,9 @@ public class AsyncMethodInvoker {
         @Override
         public void onEvent(AsyncEvent asyncEvent) throws Exception {
             asyncEvent.getMethod().invoke(asyncEvent.getTarget(), asyncEvent.getParams());
+
+            Disruptor<AsyncEvent> disruptor = payloadTypeDisruptorMap.get(asyncEvent.getPayloadType());
+            conditionSignalAll(disruptorNotFullConditionMap.get(disruptor));
         }
     }
 
@@ -287,6 +365,9 @@ public class AsyncMethodInvoker {
             }
 
             retryTemplate.execute(retryContext, retryCallback, recoveryCallback);
+
+            Disruptor<RetryEvent> disruptor = payloadTypeRetryDisruptorMap.get(retryEvent.getPayloadType());
+            conditionSignalAll(retryDisruptorNotFullConditionMap.get(disruptor));
         }
 
     }
@@ -297,13 +378,17 @@ public class AsyncMethodInvoker {
         @Override
         public void handleEventException(Throwable throwable, long l, AsyncEvent asyncEvent) {
 
-            Retryable retryable = ReflectionUtils.getAnnotation(asyncEvent.getMethod(), Retryable.class);
+            try {
+                Retryable retryable = ReflectionUtils.getAnnotation(asyncEvent.getMethod(), Retryable.class);
 
-            if (retryable == null) {
-                logger.error(String.format("method call failed. method:%s,target:%s", asyncEvent.getMethod().getName(), asyncEvent.getTarget().toString()), throwable);
-                return;
-            } else {
-                retryableInvoke(throwable, asyncEvent);
+                if (retryable == null) {
+                    logger.error(String.format("method call failed. method:%s,target:%s", asyncEvent.getMethod().getName(), asyncEvent.getTarget().toString()), throwable);
+                } else {
+                    retryableInvoke(throwable, asyncEvent);
+                }
+            } finally {
+                Disruptor<AsyncEvent> disruptor = payloadTypeDisruptorMap.get(asyncEvent.getPayloadType());
+                conditionSignalAll(disruptorNotFullConditionMap.get(disruptor));
             }
         }
 
@@ -322,8 +407,13 @@ public class AsyncMethodInvoker {
 
         @Override
         public void handleEventException(Throwable throwable, long l, RetryEvent retryEvent) {
-            logger.error(String.format("method call failed. method:%s,target:%s", retryEvent.getMethod().getName(), retryEvent.getTarget().toString()), throwable);
-            return;
+
+            try {
+                logger.error(String.format("method call failed. method:%s,target:%s", retryEvent.getMethod().getName(), retryEvent.getTarget().toString()), throwable);
+            } finally {
+                Disruptor<RetryEvent> disruptor = payloadTypeRetryDisruptorMap.get(retryEvent.getPayloadType());
+                conditionSignalAll(retryDisruptorNotFullConditionMap.get(disruptor));
+            }
         }
 
         @Override
@@ -335,6 +425,13 @@ public class AsyncMethodInvoker {
         public void handleOnShutdownException(Throwable throwable) {
             throw new Error(throwable);
         }
+    }
+
+    class NotFullCondition {
+
+        final ReentrantLock lock = new ReentrantLock();
+
+        final Condition notFull = lock.newCondition();
     }
 
 }

@@ -23,6 +23,10 @@ public class Payment extends AbstractSimpleAggregateRoot<Long> {
         return statusId;
     }
 
+    public void setStatusId(int statusId) {
+        this.statusId = statusId;
+    }
+
     public BigDecimal getTotalAmount() {
         return totalAmount;
     }
@@ -46,6 +50,7 @@ public class Payment extends AbstractSimpleAggregateRoot<Long> {
     public Long getOrderId() {
         return orderId;
     }
+
 
     public Payment() {
 
