@@ -34,7 +34,6 @@
 
 3.6 Test
     最后在aggregate-framework-test项目里，OrderRepositoryTest里有各种unit test。
-
-
-
-
+    
+    更多详情参考：https://github.com/changmingxie/aggregate-framework/blob/master/doc/AggregateFamework%20Reference.pdf
+    
