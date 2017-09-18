@@ -127,9 +127,9 @@ public abstract class AbstractOrmliteAggregateRepository<T extends AggregateRoot
             Dao oneToManyDao = getDao(oneToManyEntityClass);
 
             List<DomainObject<Serializable>> oneToManyComponents = (List<DomainObject<Serializable>>) oneToManyDao.query(oneToManyDao.queryBuilder().where().in(databaseField.columnName(), ids).prepare());
-            Map<I, List<DomainObject<Serializable>>> identifyOneToManyEntityMap = new HashMap<I, List<DomainObject<Serializable>>>();
+            Map<I, List<DomainObject<Serializable>>> identifyOneToManyEntityMap = new LinkedHashMap<I, List<DomainObject<Serializable>>>();
 
-            Map<Serializable, DomainObject<Serializable>> oneToManyEntityMap = new HashMap<Serializable, DomainObject<Serializable>>();
+            Map<Serializable, DomainObject<Serializable>> oneToManyEntityMap = new LinkedHashMap<Serializable, DomainObject<Serializable>>();
             for (DomainObject<Serializable> entity : oneToManyComponents) {
                 oneToManyEntityMap.put(entity.getId(), entity);
             }

@@ -1,8 +1,5 @@
 package org.aggregateframework.session;
 
-import java.util.Deque;
-import java.util.LinkedList;
-
 /**
  * User: changming.xie
  * Date: 14-7-29
@@ -12,42 +9,38 @@ public class LocalSessionFactory implements SessionFactory {
 
     public static SessionFactory INSTANCE = new LocalSessionFactory();
 
-    private static final ThreadLocal<Deque<SessionEntry>> CURRENT = new ThreadLocal<Deque<SessionEntry>>();
+    private static final ThreadLocal<SessionEntry> CURRENT = new ThreadLocal<SessionEntry>();
 
     private static boolean isEmpty() {
-        Deque<SessionEntry> session = CURRENT.get();
-        return session == null || session.isEmpty();
+
+        SessionEntry session = CURRENT.get();
+        return session == null;
     }
 
     @Override
-    public ClientSession registerClientSession(ClientSession clientClientSession) {
+    public boolean registerClientSession() {
 
         if (CURRENT.get() == null) {
-            CURRENT.set(new LinkedList<SessionEntry>());
+            CURRENT.set(new SessionEntry(new UnitOfWork()));
+
+            return true;
         }
 
-        CURRENT.get().push(new SessionEntry(clientClientSession));
-        return requireClientSession();
+        return false;
     }
 
     @Override
     public ClientSession requireClientSession() {
-        if (isEmpty()) {
-            if (CURRENT.get() == null) {
-                CURRENT.set(new LinkedList<SessionEntry>());
-            }
-
-            CURRENT.get().push(new SessionEntry(new NoClientSession()));
-        }
-        return CURRENT.get().peek().getClientSession();
+        return CURRENT.get().getClientSession();
     }
 
     @Override
     public void closeClientSession() {
-        CURRENT.get().pop();
+        CURRENT.set(null);
     }
 
     class SessionEntry {
+
         private ClientSession clientSession;
 
         public SessionEntry(ClientSession clientSession) {

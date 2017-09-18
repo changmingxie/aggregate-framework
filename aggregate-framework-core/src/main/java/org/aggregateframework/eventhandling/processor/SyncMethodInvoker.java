@@ -3,7 +3,7 @@ package org.aggregateframework.eventhandling.processor;
 import org.aggregateframework.SystemException;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.annotation.Retryable;
-import org.aggregateframework.eventhandling.processor.retry.*;
+import org.aggregateframework.retry.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;

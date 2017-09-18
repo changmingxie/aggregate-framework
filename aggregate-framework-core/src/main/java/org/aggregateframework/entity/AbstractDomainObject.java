@@ -12,20 +12,15 @@ public abstract class AbstractDomainObject<ID extends Serializable> implements D
 
     private static final long serialVersionUID = -1026311526086575034L;
 
+    private boolean isNew;
+
     @Override
     public boolean isNew() {
+        return isNewId() || isNew;
+    }
 
-        ID id = getId();
-
-        if (id == null) {
-            return true;
-        }
-
-        if (id instanceof CompositeId) {
-            return ((CompositeId) id).isNewId();
-        }
-
-        return false;
+    protected void setNew(boolean isNew) {
+        this.isNew = isNew;
     }
 
     @Override
@@ -72,5 +67,20 @@ public abstract class AbstractDomainObject<ID extends Serializable> implements D
         hashCode += null == getId() ? 0 : getId().hashCode() * 31;
 
         return hashCode;
+    }
+
+    private boolean isNewId() {
+
+        ID id = getId();
+
+        if (id == null) {
+            return true;
+        }
+
+        if (id instanceof CompositeId) {
+            return ((CompositeId) id).isNewId();
+        }
+
+        return false;
     }
 }

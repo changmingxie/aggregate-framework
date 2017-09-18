@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.sample.hierarchicalmodel.command.infrastructure.dao.HierarchicalOrderDao">
+
+    <resultMap id="result" type="org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.HierarchicalOrder">
+        <id property="id" column="ORDER_ID"/>
+        <result property="content" column="CONTENT"/>
+        <result property="version" column="VERSION"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+        <result property="orderInfo.id" column="ORDER_INFO_ID"/>
+        <discriminator javaType="string" column="DTYPE">
+            <case value="DeliveryOrder"
+                  resultType="org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.DeliveryOrder">
+                <result property="deliver" column="DELIVER"/>
+            </case>
+            <case value="JobOrder"
+                  resultType="org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.JobOrder">
+                <result property="job" column="JOB"/>
+            </case>
+        </discriminator>
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		ORDER_ID,
+		CONTENT,
+		DELIVER,
+		JOB,
+		ORDER_INFO_ID,
+		DTYPE,
+		VERSION,
+		CREATE_TIME,
+		LAST_UPDATE_TIME
+		FROM
+		CQRS_HIE_ORDER
+	</sql>
+
+    <select id="findAll" resultMap="result">
+        <include refid="sql_select"/>
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
+
+        INSERT INTO CQRS_HIE_ORDER
+        (CONTENT,DELIVER,JOB,ORDER_INFO_ID,DTYPE,CREATE_TIME,VERSION)
+        VALUES
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            <choose>
+                <when test="item.dtype=='DeliveryOrder'">
+                    (#{item.content}, #{item.deliver},NULL,#{item.orderInfo.id},#{item.dtype},#{item.createTime},#{item.version})
+                </when>
+                <when test="item.dtype=='JobOrder'">
+                    (#{item.content}, NULL,#{item.job},#{item.orderInfo.id},#{item.dtype},#{item.createTime},#{item.version})
+                </when>
+            </choose>
+        </foreach>
+    </insert>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_HIE_ORDER
+        SET
+        CONTENT=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_ID=#{item.id}
+            THEN #{item.content}
+        </foreach>
+        ELSE CONTENT END,
+
+        DELIVER=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_ID=#{item.id}
+            THEN
+            <choose>
+                <when test="item.dtype=='DeliveryOrder'">#{item.deliver}</when>
+                <otherwise>NULL</otherwise>
+            </choose>
+        </foreach>
+        ELSE DELIVER END,
+
+        JOB=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_ID=#{item.id}
+            THEN
+            <choose>
+                <when test="item.dtype=='JobOrder'">#{item.job}</when>
+                <otherwise>NULL</otherwise>
+            </choose>
+        </foreach>
+        ELSE JOB END,
+
+        ORDER_INFO_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_ID=#{item.id}
+            THEN #{item.orderInfo.id}
+        </foreach>
+        ELSE ORDER_INFO_ID END,
+
+        VERSION=#{item.version}
+
+        WHERE
+        <foreach item="item" index="index" collection="list" separator="OR">
+            (ORDER_ID=#{item.id} AND VERSION=#{item.version}-1)
+        </foreach>
+
+    </update>
+
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_HIE_ORDER WHERE ORDER_ID in
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
+
+</mapper>

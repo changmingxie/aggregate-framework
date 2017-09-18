@@ -1,6 +1,7 @@
 package org.aggregateframework.spring.context;
 
 import org.aggregateframework.NoDaoDefinitionException;
+import org.aggregateframework.dao.AggregateDao;
 import org.aggregateframework.dao.DomainObjectDao;
 import org.aggregateframework.entity.AbstractDomainObject;
 import org.aggregateframework.entity.DomainObject;
@@ -29,7 +30,7 @@ public class DaoFactory {
         foundDao = daoMap.get(entityClass);
 
         if (foundDao == null) {
-            
+
             synchronized (entityClass) {
 
                 foundDao = daoMap.get(entityClass);
@@ -39,6 +40,14 @@ public class DaoFactory {
                     Map<String, DomainObjectDao> daos = SpringObjectFactory.getApplicationContext().getBeansOfType(DomainObjectDao.class);
 
                     for (DomainObjectDao<E, ID> dao : daos.values()) {
+
+                        AggregateDao aggregateDao = dao.getClass().getAnnotation(AggregateDao.class);
+
+                        if (aggregateDao != null && isEntityClassMatch(aggregateDao.value(), entityClass)) {
+                            foundDao = dao;
+                            daoMap.put(entityClass, foundDao);
+                            return foundDao;
+                        }
 
                         Class[] classes = dao.getClass().getInterfaces();
 

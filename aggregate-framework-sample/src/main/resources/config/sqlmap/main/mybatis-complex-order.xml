@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.sample.complexmodel.command.infrastructure.dao.BookingOrderDao">
+
+    <resultMap id="result" type="org.aggregateframework.sample.complexmodel.command.domain.entity.BookingOrder">
+        <result property="content" column="CONTENT"/>
+        <result property="bookingPayment.id" column="PAYMENT_ID"/>
+        <result property="version" column="VERSION"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+        <!--<association property="id" javaType="UserShardingId">-->
+        <!--<constructor>-->
+        <!--<arg column="ORDER_ID" javaType="java.lang.Integer"/>-->
+        <!--<arg column="USER_ID" javaType="java.lang.Integer"/>-->
+        <!--</constructor>-->
+        <!--</association>-->
+        <result property="id.id" column="ORDER_ID"/>
+        <result property="id.userId" column="USER_ID"/>
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		ORDER_ID,
+		USER_ID,
+		CONTENT,
+		PAYMENT_ID,
+		VERSION,
+		CREATE_TIME,
+		LAST_UPDATE_TIME
+		FROM
+		CQRS_CPL_ORDER
+	</sql>
+
+    <select id="findAll" resultMap="result">
+        <include refid="sql_select"/>
+    </select>
+
+    <select id="findById" resultMap="result">
+        <include refid="sql_select"/>
+        <![CDATA[
+		WHERE ORDER_ID=#{id} AND USER_ID = #{userId}
+		]]>
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </select>
+
+    <insert id="insert"
+            useGeneratedKeys="true" keyProperty="id.id" keyColumn="ORDER_ID"
+            >
+        INSERT INTO CQRS_CPL_ORDER
+        (USER_ID,PAYMENT_ID,CONTENT,VERSION)
+        VALUES
+        (#{id.userId},#{payment.id},#{content},#{version})
+    </insert>
+
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id.id">
+        INSERT INTO CQRS_CPL_ORDER
+        (USER_ID,PAYMENT_ID,CONTENT,VERSION)
+        VALUES
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            (#{item.id.userId},#{item.bookingPayment.id},#{item.content},#{item.version})
+        </foreach>
+    </insert>
+
+    <update id="update">
+		UPDATE
+		CQRS_CPL_ORDER
+		SET
+		CONTENT=#{content},
+		PAYMENT_ID=#{payment.id},
+		VERSION=#{version}
+		WHERE
+		ORDER_ID=#{id.id} and VERSION = #{version}-1
+		AND USER_ID=#{id.userId}
+	</update>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_CPL_ORDER
+        SET
+        CONTENT=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_ID=#{item.id.id} AND USER_ID=#{item.id.userId} AND VERSION = #{item.version}-1
+            THEN  #{item.content}
+        </foreach>
+        ELSE CONTENT END,
+
+        PAYMENT_ID=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_ID=#{item.id.id} AND USER_ID=#{item.id.userId} AND VERSION = #{item.version}-1
+            THEN  #{item.bookingPayment.id}
+        </foreach>
+        ELSE PAYMENT_ID END,
+
+        VERSION=#{item.version}
+
+        WHERE
+        <foreach item="item" index="index" collection="list" separator="OR">
+            (ORDER_ID=#{item.id.id} AND USER_ID=#{item.id.userId} AND VERSION = #{item.version}-1)
+        </foreach>
+
+    </update>
+
+    <delete id="delete">
+        DELETE FROM
+        CQRS_CPL_ORDER WHERE ORDER_ID=#{id.id}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_CPL_ORDER WHERE ORDER_ID in
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id.id}
+        </foreach>
+    </delete>
+
+</mapper>

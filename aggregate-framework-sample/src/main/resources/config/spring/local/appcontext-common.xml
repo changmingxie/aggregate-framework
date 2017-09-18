@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:component-scan base-package="org.aggregateframework"></context:component-scan>
+
+    <context:property-placeholder location="classpath:config.properties"/>
+
+    <bean id="disruptorConfig" class="org.aggregateframework.spring.support.DisruptorParameterConfig">
+        <property name="payloadDisruptorConfigs">
+            <list>
+                <bean class="org.aggregateframework.context.PayloadDisruptorConfig">
+                    <constructor-arg index="0">
+                        <value>org.aggregateframework.sample.quickstart.command.domain.event.OrderPlacedEvent</value>
+                    </constructor-arg>
+                    <constructor-arg index="1" type="int">
+                        <value>4096</value>
+                    </constructor-arg>
+                    <constructor-arg index="2" type="int">
+                        <value>100</value>
+                    </constructor-arg>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+
+
+    <bean id="transactionManager"
+          class="org.aggregateframework.spring.datasource.SessionDataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!--<bean id="sessionDataSourceTransactionManager"-->
+          <!--class="org.springframework.jdbc.datasource.DataSourceTransactionManager">-->
+        <!--<property name="dataSource" ref="dataSource"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="cacheStoreTransactionManager"-->
+          <!--class="org.aggregateframework.ignite.transaction.CacheStoreTransactionManager">-->
+        <!--<property name="platformTransactionManager" ref="sessionDataSourceTransactionManager"/>-->
+    <!--</bean>-->
+
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close" lazy-init="false">
+        <property name="driverClass" value="${jdbc.driverClassName}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="initialPoolSize" value="${c3p0.initialPoolSize}"/>
+        <property name="minPoolSize" value="${c3p0.minPoolSize}"/>
+        <property name="maxPoolSize" value="${c3p0.maxPoolSize}"/>
+        <property name="acquireIncrement" value="${c3p0.acquireIncrement}"/>
+        <property name="maxIdleTime" value="${c3p0.maxIdleTime}"/>
+        <property name="checkoutTimeout" value="${c3p0.checkoutTimeout}"/>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath*:config/sqlmap/main/mybatis-*.xml"/>
+    </bean>
+
+
+</beans>

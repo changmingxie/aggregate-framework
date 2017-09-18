@@ -24,6 +24,7 @@ public class DomainObjectUtils {
     public static final String ID = "id";
     public static final String VERSION = "version";
     public static final String IS_DELETED = "isDeleted";
+    public static final String IS_NEW = "isNew";
     public static final String CREATE_TIME = "createTime";
     public static final String LAST_UPDATE_TIME = "lastUpdateTime";
 
@@ -75,14 +76,20 @@ public class DomainObjectUtils {
     }
 
     public static void setField(DomainObject entity, String fieldName, Object value) {
-        Field idField = ReflectionUtils.findField(entity.getClass(), fieldName);
-        ReflectionUtils.makeAccessible(idField);
-        ReflectionUtils.setField(idField, entity, value);
+        Field field = ReflectionUtils.findField(entity.getClass(), fieldName);
+        ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.setField(field, entity, value);
+    }
+
+    public static Object getFieldValue(DomainObject entity, String fieldName) {
+        Field field = ReflectionUtils.findField(entity.getClass(), fieldName);
+        ReflectionUtils.makeAccessible(field);
+        return ReflectionUtils.getField(field,entity);
     }
 
     public static <E extends DomainObject<I>, I extends Serializable> Map<Field, List<DomainObject<Serializable>>> getOneToOneValues(Collection<E> entities) {
 
-        Map<Field, List<DomainObject<Serializable>>> allOneToOneFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<DomainObject<Serializable>>> allOneToOneFieldValuesMap = new LinkedHashMap<Field, List<DomainObject<Serializable>>>();
 
         for (E entity : entities) {
 
@@ -105,7 +112,7 @@ public class DomainObjectUtils {
     public static <E extends DomainObject<I>, I extends Serializable> Map<Field, List<DomainObject<Serializable>>> getOneToManyAttributeValues(
             Collection<E> entities) {
 
-        Map<Field, List<DomainObject<Serializable>>> attributeValues = new HashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<DomainObject<Serializable>>> attributeValues = new LinkedHashMap<Field, List<DomainObject<Serializable>>>();
 
         for (E entity : entities) {
 
@@ -135,7 +142,7 @@ public class DomainObjectUtils {
     public static <E extends DomainObject<I>, I extends Serializable> Map<Field, DomainObject<Serializable>> getOneToOneAttributeValues(
             E entity) {
 
-        Map<Field, DomainObject<Serializable>> attributes = new HashMap<Field, DomainObject<Serializable>>();
+        Map<Field, DomainObject<Serializable>> attributes = new LinkedHashMap<Field, DomainObject<Serializable>>();
 
         List<Field> oneToOneFields = getOneToOneFields(entity.getClass());
 

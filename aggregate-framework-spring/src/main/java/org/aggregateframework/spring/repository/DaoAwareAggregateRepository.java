@@ -1,9 +1,7 @@
 package org.aggregateframework.spring.repository;
 
 import org.aggregateframework.SystemException;
-import org.aggregateframework.utils.CollectionUtils;
-import org.aggregateframework.utils.DomainObjectUtils;
-import org.aggregateframework.utils.ReflectionUtils;
+import org.aggregateframework.dao.AggregateDao;
 import org.aggregateframework.dao.AggregateRootDao;
 import org.aggregateframework.dao.CollectiveDomainObjectDao;
 import org.aggregateframework.dao.DomainObjectDao;
@@ -12,6 +10,9 @@ import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.repository.TraversalAggregateRepository;
 import org.aggregateframework.spring.context.DaoFactory;
 import org.aggregateframework.spring.entity.DaoAwareQuery;
+import org.aggregateframework.utils.CollectionUtils;
+import org.aggregateframework.utils.DomainObjectUtils;
+import org.aggregateframework.utils.ReflectionUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -152,9 +153,9 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
 
         Field mappedByField = getMappedByField(entityClass, oneToManyField);
         ReflectionUtils.makeAccessible(mappedByField);
-        Map<I, List<DomainObject<Serializable>>> identifyOneToManyEntityMap = new HashMap<I, List<DomainObject<Serializable>>>();
+        Map<I, List<DomainObject<Serializable>>> identifyOneToManyEntityMap = new LinkedHashMap<I, List<DomainObject<Serializable>>>();
 
-        Map<Serializable, DomainObject<Serializable>> oneToManyEntityMap = new HashMap<Serializable, DomainObject<Serializable>>();
+        Map<Serializable, DomainObject<Serializable>> oneToManyEntityMap = new LinkedHashMap<Serializable, DomainObject<Serializable>>();
 
         for (DomainObject<Serializable> entity : oneToManyComponents) {
             oneToManyEntityMap.put(entity.getId(), entity);
@@ -189,13 +190,21 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
 
     private <S extends DomainObject<I>, I extends Serializable> Method findAggregateQueryMethodInComponentDao(DomainObjectDao dao, Class<S> targetEntityClass, Field oneToManyField) {
 
-        Class<?>[] daoInterfaces = dao.getClass().getInterfaces();
-
         Class<?> domainObjectDaoClass = null;
-        for (Class<?> clazz : daoInterfaces) {
-            if (DomainObjectDao.class.isAssignableFrom(clazz)) {
-                domainObjectDaoClass = clazz;
-                break;
+
+        AggregateDao aggregateDao = dao.getClass().getAnnotation(AggregateDao.class);
+
+        if (aggregateDao != null) {
+            domainObjectDaoClass = dao.getClass();
+        } else {
+
+            Class<?>[] daoInterfaces = dao.getClass().getInterfaces();
+
+            for (Class<?> clazz : daoInterfaces) {
+                if (DomainObjectDao.class.isAssignableFrom(clazz)) {
+                    domainObjectDaoClass = clazz;
+                    break;
+                }
             }
         }
 

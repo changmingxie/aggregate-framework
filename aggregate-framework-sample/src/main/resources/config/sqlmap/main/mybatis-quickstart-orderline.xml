@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.aggregateframework.sample.quickstart.command.infrastructure.dao.OrderLineDao">
+
+    <resultMap id="result" type="org.aggregateframework.sample.quickstart.command.domain.entity.OrderLine">
+        <id property="id" column="ORDER_LINE_ID"/>
+        <result property="productId" column="PRODUCT_ID"/>
+        <result property="price" column="PRICE"/>
+        <result property="pricedOrder.id" column="ORDER_ID"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+    </resultMap>
+
+    <sql id="sql_select">
+		SELECT
+		ORDER_LINE_ID,
+		PRODUCT_ID,
+		ORDER_ID,
+		PRICE,
+		CREATE_TIME,
+		LAST_UPDATE_TIME
+		FROM
+		CQRS_QCK_ORDER_LINE
+	</sql>
+
+    <select id="findAll" resultMap="result">
+        <include refid="sql_select"/>
+    </select>
+
+    <select id="findById" resultMap="result">
+        <include refid="sql_select"/>
+        <![CDATA[
+		WHERE ORDER_LINE_ID=#{id}
+		]]>
+    </select>
+
+    <select id="findByIds" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_LINE_ID IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </select>
+
+    <select id="findByOrderId" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE ORDER_ID = #{orderId}
+    </select>
+
+    <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO CQRS_QCK_ORDER_LINE
+        (PRODUCT_ID,PRICE,ORDER_ID,CREATE_TIME,LAST_UPDATE_TIME)
+        VALUES
+        <foreach item="item" index="index" collection="list"
+                 separator=",">
+            (#{item.productId},#{item.price},#{item.pricedOrder.id},#{item.createTime},#{item.lastUpdateTime})
+        </foreach>
+    </insert>
+
+    <update id="updateAll">
+
+        UPDATE
+        CQRS_QCK_ORDER_LINE
+        SET
+        PRICE=CASE
+        <foreach item="item" index="index" collection="list" separator="">
+            WHEN ORDER_LINE_ID=#{item.id}
+            THEN #{item.price}
+        </foreach>
+        ELSE PRICE END
+        WHERE
+        <foreach item="item" index="index" collection="list" separator="OR">
+            (ORDER_LINE_ID=#{item.id})
+        </foreach>
+
+    </update>
+
+    <delete id="deleteAll">
+        DELETE FROM
+        CQRS_QCK_ORDER_LINE WHERE ORDER_LINE_ID in
+        <foreach item="item" index="index" collection="list" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
+
+
+</mapper>

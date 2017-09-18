@@ -7,4 +7,5 @@
 
     <bean class="org.aggregateframework.spring.eventhandling.AnnotationEventListenerBeanPostProcessor"/>
 
+
 </beans>

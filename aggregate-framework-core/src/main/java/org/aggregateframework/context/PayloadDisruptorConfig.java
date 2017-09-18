@@ -9,7 +9,7 @@ public class PayloadDisruptorConfig {
 
     private Class payloadType;
 
-    private int ringBufferSize = 2048;
+    private int ringBufferSize = 1024;
 
     private int workPoolSize = 100;
 

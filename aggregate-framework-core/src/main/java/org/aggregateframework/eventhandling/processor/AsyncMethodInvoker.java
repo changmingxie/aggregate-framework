@@ -12,7 +12,7 @@ import org.aggregateframework.eventhandling.processor.async.AsyncEvent;
 import org.aggregateframework.eventhandling.processor.async.AsyncEventFactory;
 import org.aggregateframework.eventhandling.processor.async.RetryEvent;
 import org.aggregateframework.eventhandling.processor.async.RetryEventFactory;
-import org.aggregateframework.eventhandling.processor.retry.*;
+import org.aggregateframework.retry.*;
 import org.aggregateframework.utils.ReflectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

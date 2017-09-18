@@ -4,6 +4,7 @@ import org.aggregateframework.SystemException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 /**
@@ -45,6 +46,7 @@ public abstract class ObjectUtils {
     /**
      * Return whether the given throwable is a checked exception:
      * that is, neither a RuntimeException nor an Error.
+     *
      * @param ex the throwable to check
      * @return whether the throwable is a checked exception
      * @see Exception
@@ -58,7 +60,8 @@ public abstract class ObjectUtils {
     /**
      * Check whether the given exception is compatible with the exceptions
      * declared in a throws clause.
-     * @param ex the exception to checked
+     *
+     * @param ex                 the exception to checked
      * @param declaredExceptions the exceptions declared in the throws clause
      * @return whether the given exception is compatible
      */
@@ -79,6 +82,7 @@ public abstract class ObjectUtils {
     /**
      * Return whether the given array is empty: that is, <code>null</code>
      * or of zero length.
+     *
      * @param array the array to check
      * @return whether the given array is empty
      */
@@ -88,8 +92,9 @@ public abstract class ObjectUtils {
 
     /**
      * Check whether the given array contains the given element.
-     * @param array the array to check (may be <code>null</code>,
-     * in which case the return value will always be <code>false</code>)
+     *
+     * @param array   the array to check (may be <code>null</code>,
+     *                in which case the return value will always be <code>false</code>)
      * @param element the element to check for
      * @return whether the element has been found in the given array
      */
@@ -108,16 +113,16 @@ public abstract class ObjectUtils {
     /**
      * Append the given Object to the given array, returning a new array
      * consisting of the input array contents plus the given Object.
+     *
      * @param array the array to append to (can be <code>null</code>)
-     * @param obj the Object to append
+     * @param obj   the Object to append
      * @return the new array (of the same component type; never <code>null</code>)
      */
     public static Object[] addObjectToArray(Object[] array, Object obj) {
         Class compType = Object.class;
         if (array != null) {
             compType = array.getClass().getComponentType();
-        }
-        else if (obj != null) {
+        } else if (obj != null) {
             compType = obj.getClass();
         }
         int newArrLength = (array != null ? array.length + 1 : 1);
@@ -134,6 +139,7 @@ public abstract class ObjectUtils {
      * object array (if necessary of primitive wrapper objects).
      * <p>A <code>null</code> source value will be converted to an
      * empty Object array.
+     *
      * @param source the (potentially primitive) array
      * @return the corresponding object array (never <code>null</code>)
      * @throws IllegalArgumentException if the parameter is not an array
@@ -171,6 +177,7 @@ public abstract class ObjectUtils {
      * <code>null</code>.
      * <p>Compares arrays with <code>Arrays.equals</code>, performing an equality
      * check based on the array elements rather than the array reference.
+     *
      * @param o1 first Object to compare
      * @param o2 second Object to compare
      * @return whether the given objects are equal
@@ -186,6 +193,15 @@ public abstract class ObjectUtils {
         if (o1.equals(o2)) {
             return true;
         }
+
+        if (o1 instanceof BigDecimal && o2 instanceof BigDecimal) {
+            BigDecimal first = ((BigDecimal) o1).stripTrailingZeros();
+            BigDecimal second = ((BigDecimal) (o2)).stripTrailingZeros();
+            if (first.equals(second)) {
+                return true;
+            }
+        }
+
         if (o1.getClass().isArray() && o2.getClass().isArray()) {
             if (o1 instanceof Object[] && o2 instanceof Object[]) {
                 return Arrays.equals((Object[]) o1, (Object[]) o2);
@@ -224,6 +240,7 @@ public abstract class ObjectUtils {
      * this method will delegate to any of the <code>nullSafeHashCode</code>
      * methods for arrays in this class. If the object is <code>null</code>,
      * this method returns 0.
+     *
      * @see #nullSafeHashCode(Object[])
      * @see #nullSafeHashCode(boolean[])
      * @see #nullSafeHashCode(byte[])
@@ -416,6 +433,7 @@ public abstract class ObjectUtils {
 
     /**
      * Return the same value as <code>{@link Boolean#hashCode()}</code>.
+     *
      * @see Boolean#hashCode()
      */
     public static int hashCode(boolean bool) {
@@ -424,6 +442,7 @@ public abstract class ObjectUtils {
 
     /**
      * Return the same value as <code>{@link Double#hashCode()}</code>.
+     *
      * @see Double#hashCode()
      */
     public static int hashCode(double dbl) {
@@ -433,6 +452,7 @@ public abstract class ObjectUtils {
 
     /**
      * Return the same value as <code>{@link Float#hashCode()}</code>.
+     *
      * @see Float#hashCode()
      */
     public static int hashCode(float flt) {
@@ -441,6 +461,7 @@ public abstract class ObjectUtils {
 
     /**
      * Return the same value as <code>{@link Long#hashCode()}</code>.
+     *
      * @see Long#hashCode()
      */
     public static int hashCode(long lng) {
@@ -454,6 +475,7 @@ public abstract class ObjectUtils {
 
     /**
      * Return a String representation of an object's overall identity.
+     *
      * @param obj the object (may be <code>null</code>)
      * @return the object's identity as String representation,
      * or an empty String if the object was <code>null</code>
@@ -467,6 +489,7 @@ public abstract class ObjectUtils {
 
     /**
      * Return a hex String form of an object's identity hash code.
+     *
      * @param obj the object
      * @return the object's identity code in hex notation
      */
@@ -479,6 +502,7 @@ public abstract class ObjectUtils {
      * not <code>null</code>; otherwise returns an empty String.
      * <p>Differs from {@link #nullSafeToString(Object)} in that it returns
      * an empty String rather than "null" for a <code>null</code> value.
+     *
      * @param obj the object to build a display String for
      * @return a display String representation of <code>obj</code>
      * @see #nullSafeToString(Object)
@@ -493,6 +517,7 @@ public abstract class ObjectUtils {
     /**
      * Determine the class name for the given object.
      * <p>Returns <code>"null"</code> if <code>obj</code> is <code>null</code>.
+     *
      * @param obj the object to introspect (may be <code>null</code>)
      * @return the corresponding class name
      */
@@ -504,6 +529,7 @@ public abstract class ObjectUtils {
      * Return a String representation of the specified Object.
      * <p>Builds a String representation of the contents in case of an array.
      * Returns <code>"null"</code> if <code>obj</code> is <code>null</code>.
+     *
      * @param obj the object to build a String representation for
      * @return a String representation of <code>obj</code>
      */
@@ -551,6 +577,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -566,8 +593,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
             buffer.append(String.valueOf(array[i]));
@@ -582,6 +608,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -597,8 +624,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
 
@@ -614,6 +640,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -629,8 +656,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
             buffer.append(array[i]);
@@ -645,6 +671,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -660,8 +687,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
             buffer.append("'").append(array[i]).append("'");
@@ -676,6 +702,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -691,8 +718,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
 
@@ -708,6 +734,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -723,8 +750,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
 
@@ -740,6 +766,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -755,8 +782,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
             buffer.append(array[i]);
@@ -771,6 +797,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -786,8 +813,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
             buffer.append(array[i]);
@@ -802,6 +828,7 @@ public abstract class ObjectUtils {
      * enclosed in curly braces (<code>"{}"</code>). Adjacent elements are separated
      * by the characters <code>", "</code> (a comma followed by a space). Returns
      * <code>"null"</code> if <code>array</code> is <code>null</code>.
+     *
      * @param array the array to build a String representation for
      * @return a String representation of <code>array</code>
      */
@@ -817,8 +844,7 @@ public abstract class ObjectUtils {
         for (int i = 0; i < length; i++) {
             if (i == 0) {
                 buffer.append(ARRAY_START);
-            }
-            else {
+            } else {
                 buffer.append(ARRAY_ELEMENT_SEPARATOR);
             }
             buffer.append(array[i]);

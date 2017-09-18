@@ -2,12 +2,12 @@ package org.aggregateframework.repository;
 
 import org.aggregateframework.OptimisticLockException;
 import org.aggregateframework.SystemException;
+import org.aggregateframework.cache.IdentifiedEntityMap;
 import org.aggregateframework.entity.AbstractDomainObject;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.CompositeId;
 import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.session.AggregateContext;
-import org.aggregateframework.session.IdentifiedEntityMap;
 import org.aggregateframework.utils.CollectionUtils;
 import org.aggregateframework.utils.DomainObjectUtils;
 import org.aggregateframework.utils.ReflectionUtils;
@@ -52,6 +52,8 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         if (!CollectionUtils.isEmpty(insertEntities)) {
             AggregateContext aggregateContext = new AggregateContext();
             insertDomainObject(this.aggregateType, insertEntities, aggregateContext);
+
+            //put into localCache and originalCache
         }
 
         if (!CollectionUtils.isEmpty(updateEntities)) {
@@ -61,6 +63,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             AggregateContext aggregateContext = new AggregateContext();
             updateDomainObject(this.aggregateType, currentAndOriginalEntityPairs, aggregateContext);
             compareAndSetRootVersion(currentAndOriginalEntityPairs, aggregateContext);
+            //put into localCache
         }
 
         return entities;
@@ -192,6 +195,12 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             throw new OptimisticLockException();
         }
 
+        for (E entity : entities) {
+            if (DomainObjectUtils.getFieldValue(entity, DomainObjectUtils.IS_NEW) != null) {
+                DomainObjectUtils.setField(entity, DomainObjectUtils.IS_NEW, false);
+            }
+        }
+
         aggregateContext.setAggregateChanged(true);
         aggregateContext.getEntityMap().put(entityClass, entities);
 
@@ -212,6 +221,9 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
             if (!DomainObjectUtils.equal(entity, originalEntity)) {
                 setCreateTimeOrLastUpdateTime(entity);
+                if (entity instanceof AggregateRoot) {
+                    DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, ((AggregateRoot) entity).getVersion() + 1L);
+                }
                 updateEntities.add(entity);
             } else {
                 aggregateContext.getEntityMap().put(entityClass, entity);
@@ -270,9 +282,9 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
     private <E extends DomainObject<I>, I extends Serializable> void updateOneToOneAttributes(List<Pair<E, E>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
 
-        Map<Field, List<DomainObject<Serializable>>> allNeedInsertFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
-        Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> allNeedUpdateFieldValuesMap = new HashMap<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>>();
-        Map<Field, List<DomainObject<Serializable>>> allNeedRemovedFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<DomainObject<Serializable>>> allNeedInsertFieldValuesMap = new LinkedHashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> allNeedUpdateFieldValuesMap = new LinkedHashMap<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>>();
+        Map<Field, List<DomainObject<Serializable>>> allNeedRemovedFieldValuesMap = new LinkedHashMap<Field, List<DomainObject<Serializable>>>();
 
         for (Pair<E, E> pair : currentAndOriginalEntityPairs) {
 
@@ -340,9 +352,9 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
     private <E extends DomainObject<I>, I extends Serializable> void updateOneToManyAttributes(List<Pair<E, E>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
 
-        Map<Field, List<DomainObject<Serializable>>> allNeedInsertFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
-        Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> allNeedUpdateFieldValuesMap = new HashMap<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>>();
-        Map<Field, List<DomainObject<Serializable>>> allNeedRemoveFieldValuesMap = new HashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<DomainObject<Serializable>>> allNeedInsertFieldValuesMap = new LinkedHashMap<Field, List<DomainObject<Serializable>>>();
+        Map<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>> allNeedUpdateFieldValuesMap = new LinkedHashMap<Field, List<Pair<DomainObject<Serializable>, DomainObject<Serializable>>>>();
+        Map<Field, List<DomainObject<Serializable>>> allNeedRemoveFieldValuesMap = new LinkedHashMap<Field, List<DomainObject<Serializable>>>();
 
         for (Pair<E, E> pair : currentAndOriginalEntityPairs) {
 
@@ -358,8 +370,8 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
                 Collection<DomainObject<Serializable>> originalValues = originalFieldValuesMap.get(field);
                 Collection<DomainObject<Serializable>> currentValues = currentFieldValuesMap.get(field);
 
-                Map<Serializable, DomainObject<Serializable>> currentValueMap = new HashMap<Serializable, DomainObject<Serializable>>();
-                Map<Serializable, DomainObject<Serializable>> originalValueMap = new HashMap<Serializable, DomainObject<Serializable>>();
+                Map<Serializable, DomainObject<Serializable>> currentValueMap = new LinkedHashMap<Serializable, DomainObject<Serializable>>();
+                Map<Serializable, DomainObject<Serializable>> originalValueMap = new LinkedHashMap<Serializable, DomainObject<Serializable>>();
 
                 for (DomainObject<Serializable> currentValue : currentValues) {
                     if (!currentValue.isNew()) {
@@ -435,7 +447,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
             Class<DomainObject<Serializable>> oneToOneComponentClass = (Class<DomainObject<Serializable>>) field.getType();
 
-            Map<Serializable, E> oneToOneComponentIdAndEntityMap = new HashMap<Serializable, E>();
+            Map<Serializable, E> oneToOneComponentIdAndEntityMap = new LinkedHashMap<Serializable, E>();
 
             for (E entity : entities) {
                 try {
@@ -449,7 +461,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
 
             List<DomainObject<Serializable>> values = doFindAll(oneToOneComponentClass, oneToOneComponentIdAndEntityMap.keySet(), identifiedEntityMap);
 
-            Map<Serializable, DomainObject<Serializable>> valueIdMap = new HashMap<Serializable, DomainObject<Serializable>>();
+            Map<Serializable, DomainObject<Serializable>> valueIdMap = new LinkedHashMap<Serializable, DomainObject<Serializable>>();
 
             for (DomainObject<Serializable> value : values) {
                 valueIdMap.put(value.getId(), value);
@@ -481,7 +493,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         Class<E> entityClass = (Class<E>) entities.get(0).getClass();
         List<Field> oneToManyFields = DomainObjectUtils.getOneToManyFields(entityClass);
 
-        Map<I, E> entityIdMap = new HashMap<I, E>();
+        Map<I, E> entityIdMap = new LinkedHashMap<I, E>();
         for (E entity : entities) {
             entityIdMap.put(entity.getId(), entity);
         }
@@ -595,7 +607,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
     private List<Pair<T, T>> buildCurrentAndOriginalEntityPairs(List<T> updateEntities) {
         List<Pair<T, T>> currentAndOriginalEntityPairs = new ArrayList<Pair<T, T>>();
 
-        Map<ID, T> needFetchIdEntityMap = new HashMap<ID, T>();
+        Map<ID, T> needFetchIdEntityMap = new LinkedHashMap<ID, T>();
 
         for (T updateEntity : updateEntities) {
             T originalEntity = sessionFactory.requireClientSession().findOriginalCopy(this.aggregateType, updateEntity.getId());
@@ -608,9 +620,10 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         }
 
         if (!CollectionUtils.isEmpty(needFetchIdEntityMap.keySet())) {
-            List<T> originalEntities = doFindAll(needFetchIdEntityMap.keySet());
 
-            for (T originalEntity : originalEntities) {
+            Collection<T> fetchedEntitiesFromStore = findFromStore(needFetchIdEntityMap.keySet());
+
+            for (T originalEntity : fetchedEntitiesFromStore) {
                 currentAndOriginalEntityPairs.add(new ImmutablePair<T, T>(needFetchIdEntityMap.get(originalEntity.getId()), originalEntity));
             }
         }
@@ -666,6 +679,11 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             T originalEntity = currentAndOriginalEntityPair.getRight();
 
             if (DomainObjectUtils.equal(entity, originalEntity) && aggregateContext.isAggregateChanged()) {
+
+                setCreateTimeOrLastUpdateTime(entity);
+                if (entity instanceof AggregateRoot) {
+                    DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
+                }
                 needUpdateRootEntities.add(entity);
                 needUpdateVersionEntities.add(entity);
             }
@@ -682,11 +700,11 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             }
         }
 
-        if (!CollectionUtils.isEmpty(needUpdateVersionEntities)) {
-            for (T entity : needUpdateVersionEntities) {
-                DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
-            }
-        }
+//        if (!CollectionUtils.isEmpty(needUpdateVersionEntities)) {
+//            for (T entity : needUpdateVersionEntities) {
+//                DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
+//            }
+//        }
     }
 
     private void replaceComponentsWithFetchedComponents(IdentifiedEntityMap identifiedEntityMap, Class<DomainObject<Serializable>> oneToManyEntityClass, List<DomainObject<Serializable>> allOneToManyComponents, List<DomainObject<Serializable>> duplicatedFetchedComponents, List<DomainObject<Serializable>> alreadyFetchedComponents) {

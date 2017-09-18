@@ -8,16 +8,11 @@ import java.util.Date;
  */
 public abstract class AbstractSimpleDomainObject<ID extends Serializable> extends AbstractDomainObject<ID> {
 
-    private ID id;
+    private static final long serialVersionUID = 5891480982236336994L;
 
     private Date createTime;
 
     private Date lastUpdateTime;
-
-    @Override
-    public ID getId() {
-        return id;
-    }
 
     @Override
     public Date getCreateTime() {
@@ -27,9 +22,5 @@ public abstract class AbstractSimpleDomainObject<ID extends Serializable> extend
     @Override
     public Date getLastUpdateTime() {
         return lastUpdateTime;
-    }
-
-    public void setId(ID id) {
-        this.id = id;
     }
 }
