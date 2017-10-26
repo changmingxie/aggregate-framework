@@ -3,6 +3,7 @@ package org.aggregateframework.utils;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.pool.KryoCallback;
 import com.esotericsoftware.kryo.pool.KryoFactory;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import org.objenesis.strategy.StdInstantiatorStrategy;
@@ -30,7 +31,6 @@ public class KryoSerializationUtils {
     static KryoPool pool = new KryoPool.Builder(factory).softReferences().build();
 
     static {
-
 
         for (int i = 0; i < PRE_INIT_KRYO_INSTANCE; i++) {
             Kryo kryo = pool.borrow();
@@ -78,12 +78,12 @@ public class KryoSerializationUtils {
 
     public static <T> T clone(final T object) {
 
-        return getInstance().copy(object);
+//        return getInstance().copy(object);
 
-//        return pool.run(new KryoCallback<T>() {
-//            public T execute(Kryo kryo) {
-//                return kryo.copy(object);
-//            }
-//        });
+        return pool.run(new KryoCallback<T>() {
+            public T execute(Kryo kryo) {
+                return kryo.copy(object);
+            }
+        });
     }
 }
