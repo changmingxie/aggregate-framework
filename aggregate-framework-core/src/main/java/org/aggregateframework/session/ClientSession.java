@@ -43,5 +43,5 @@ public interface ClientSession {
 
     void addPostInvoker(EventInvokerEntry eventInvokerEntry);
 
-    <T extends AggregateRoot<ID>, ID extends Serializable> void attachL2Cache(L2Cache<T, ID> l2Cache);
+    <T extends AggregateRoot<ID>, ID extends Serializable> void attachL2Cache(Class<T> aggregateType, L2Cache<T, ID> l2Cache);
 }

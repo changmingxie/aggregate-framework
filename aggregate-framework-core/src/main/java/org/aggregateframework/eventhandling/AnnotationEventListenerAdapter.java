@@ -1,10 +1,11 @@
 package org.aggregateframework.eventhandling;
 
+import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
-import org.aggregateframework.utils.ReflectionUtils;
-import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.session.LocalSessionFactory;
+import org.aggregateframework.utils.ReflectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -70,13 +71,50 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
             if (classes != null && classes.length > 0) {
                 for (Class<?> clazz : classes) {
                     if (clazz.equals(event.getPayloadType())) {
-                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(),method, this.target, event.getPayload());
+                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(), method, this.target, event.getPayload());
                         handle(eventInvokerEntry);
 
                         break;
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public void preHandle(EventMessage event) {
+        for (Method method : methods) {
+
+            Class<?>[] classes = method.getParameterTypes();
+            if (classes != null && classes.length > 0) {
+                for (Class<?> clazz : classes) {
+                    if (clazz.equals(event.getPayloadType())) {
+                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(), method, this.target, event.getPayload());
+                        preHandle(eventInvokerEntry);
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+
+    private void handle(EventInvokerEntry eventInvokerEntry) {
+        EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
+
+        if (eventHandler.postAfterTransaction()) {
+            LocalSessionFactory.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
+        } else {
+            EventHandlerProcessor.proceed(eventInvokerEntry);
+        }
+    }
+
+    private void preHandle(EventInvokerEntry eventInvokerEntry) {
+        EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
+
+        if (StringUtils.isNotEmpty(eventHandler.transactionCheckMethod())) {
+            EventHandlerProcessor.prepare(eventInvokerEntry);
         }
     }
 
@@ -110,16 +148,4 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
     }
 
 
-    private void handle(EventInvokerEntry eventInvokerEntry) {
-        EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
-//        if (eventHandler == null) {
-//            return;
-//        }
-
-        if (eventHandler.postAfterTransaction()) {
-            LocalSessionFactory.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
-        } else {
-            EventHandlerProcessor.proceed(eventInvokerEntry);
-        }
-    }
 }

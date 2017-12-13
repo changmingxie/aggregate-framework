@@ -51,7 +51,7 @@ public class SessionIgniteTransactionManager extends SpringTransactionManager {
 //        } else {
 //            sessionFactory.registerClientSession(new UnitOfWork());
 //        }
-        sessionFactory.registerClientSession();
+        sessionFactory.registerClientSession(true);
     }
 
     @Override

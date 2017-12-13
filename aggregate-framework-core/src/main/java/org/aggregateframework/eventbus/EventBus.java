@@ -13,4 +13,6 @@ public interface EventBus {
     public void publish(EventMessage[] events);
 
     public void subscribe(EventListener eventListener);
+
+    void prepare(EventMessage[] messages);
 }

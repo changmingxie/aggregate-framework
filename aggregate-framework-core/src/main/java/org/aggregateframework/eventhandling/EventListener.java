@@ -10,4 +10,6 @@ import org.aggregateframework.domainevent.EventMessage;
 public interface EventListener {
 
     void handle(EventMessage event);
+
+    void preHandle(EventMessage event);
 }

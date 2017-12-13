@@ -1,6 +1,8 @@
 package org.aggregateframework.eventhandling.processor.async;
 
 
+import org.mengyun.compensable.transaction.Transaction;
+
 import java.lang.reflect.Method;
 
 /**
@@ -16,14 +18,17 @@ public class RetryEvent {
 
     private Object[] params;
 
+    private Transaction transaction;
+
     private Throwable throwable;
 
-    public void reset(Class payloadType,Throwable throwable, Method method, Object target, Object[] params) {
+    public void reset(Class payloadType, Throwable throwable, Method method, Object target, Transaction transaction, Object[] params) {
         this.payloadType = payloadType;
         this.throwable = throwable;
         this.method = method;
         this.target = target;
         this.params = params;
+        this.transaction = transaction;
     }
 
     public Method getMethod() {
@@ -44,5 +49,9 @@ public class RetryEvent {
 
     public Class getPayloadType() {
         return payloadType;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
     }
 }

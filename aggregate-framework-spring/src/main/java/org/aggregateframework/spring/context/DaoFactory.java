@@ -5,8 +5,11 @@ import org.aggregateframework.dao.AggregateDao;
 import org.aggregateframework.dao.DomainObjectDao;
 import org.aggregateframework.entity.AbstractDomainObject;
 import org.aggregateframework.entity.DomainObject;
+import org.mengyun.commons.bean.FactoryBuilder;
+import org.mengyun.commons.context.SpringBeanFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -37,11 +40,11 @@ public class DaoFactory {
 
                 if (foundDao == null) {
 
-                    Map<String, DomainObjectDao> daos = SpringObjectFactory.getApplicationContext().getBeansOfType(DomainObjectDao.class);
+                    Map<String, DomainObjectDao> daos = FactoryBuilder.getFactory(SpringBeanFactory.class).getBeansOfType(DomainObjectDao.class);
 
                     for (DomainObjectDao<E, ID> dao : daos.values()) {
 
-                        AggregateDao aggregateDao = dao.getClass().getAnnotation(AggregateDao.class);
+                        AggregateDao aggregateDao = AnnotationUtils.findAnnotation(dao.getClass(), AggregateDao.class);
 
                         if (aggregateDao != null && isEntityClassMatch(aggregateDao.value(), entityClass)) {
                             foundDao = dao;

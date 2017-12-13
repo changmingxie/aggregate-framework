@@ -1,8 +1,6 @@
 package org.aggregateframework.sample.quickstart.command.eventhandler;
 
-import org.aggregateframework.eventhandling.annotation.Backoff;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
-import org.aggregateframework.eventhandling.annotation.Retryable;
 import org.aggregateframework.sample.hierarchicalmodel.command.domain.repository.DeliveryOrderRepository;
 import org.aggregateframework.sample.quickstart.command.domain.event.PaymentConfirmedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +19,17 @@ public class PaymentHandler {
 
     AtomicInteger counter = new AtomicInteger();
 
-    @EventHandler(asynchronous = true, postAfterTransaction = true)
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2))
+    @EventHandler(asynchronous = true, postAfterTransaction = true, transactionCheckMethod = "checkPaymentTransaction")
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
 
-//        System.out.println("count:" + counter.incrementAndGet());
+        System.out.println("count:" + counter.incrementAndGet());
+
+        throw new RuntimeException();
 //        LockSupport.parkNanos(1000 * 1000 * 500);
+    }
+
+    public boolean checkPaymentTransaction(PaymentConfirmedEvent event) {
+        return true;
     }
 
     public void recoverPaymentConfirmedEvent(PaymentConfirmedEvent event) {

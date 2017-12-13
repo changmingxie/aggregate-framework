@@ -7,7 +7,7 @@ package org.aggregateframework.session;
  */
 public interface SessionFactory {
 
-    boolean registerClientSession();
+    boolean registerClientSession(boolean requireNew);
 
     ClientSession requireClientSession();
 

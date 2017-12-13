@@ -13,6 +13,7 @@ import org.aggregateframework.spring.entity.DaoAwareQuery;
 import org.aggregateframework.utils.CollectionUtils;
 import org.aggregateframework.utils.DomainObjectUtils;
 import org.aggregateframework.utils.ReflectionUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -192,7 +193,7 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
 
         Class<?> domainObjectDaoClass = null;
 
-        AggregateDao aggregateDao = dao.getClass().getAnnotation(AggregateDao.class);
+        AggregateDao aggregateDao = AnnotationUtils.findAnnotation(dao.getClass(), AggregateDao.class);
 
         if (aggregateDao != null) {
             domainObjectDaoClass = dao.getClass();

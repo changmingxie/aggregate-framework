@@ -4,11 +4,11 @@ import org.aggregateframework.OptimisticLockException;
 import org.aggregateframework.ignite.store.TransactionalCacheStoreAdapter;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 import org.aggregateframework.sample.quickstart.command.infrastructure.dao.OrderDao;
-import org.aggregateframework.spring.context.SpringObjectFactory;
 import org.aggregateframework.utils.DomainObjectUtils;
 import org.apache.ignite.cache.store.CacheStoreSession;
 import org.apache.ignite.lang.IgniteBiInClosure;
 import org.apache.ignite.resources.CacheStoreSessionResource;
+import org.mengyun.commons.bean.FactoryBuilder;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.cache.Cache;
@@ -41,7 +41,7 @@ public class IgniteOrderStore extends TransactionalCacheStoreAdapter<Long, Price
     @Override
     public void loadCache(IgniteBiInClosure<Long, PricedOrder> clo, Object... args) {
 
-        List<PricedOrder> pricedOrders = SpringObjectFactory.getBean(OrderDao.class).findAll();
+        List<PricedOrder> pricedOrders = FactoryBuilder.factoryOf(OrderDao.class).getInstance().findAll();
 
         for (PricedOrder pricedOrder : pricedOrders) {
             clo.apply(pricedOrder.getId(), pricedOrder);
@@ -58,9 +58,9 @@ public class IgniteOrderStore extends TransactionalCacheStoreAdapter<Long, Price
     public void doWrite(Cache.Entry<? extends Long, ? extends PricedOrder> entry) throws CacheWriterException {
 
         try {
-            int effectedCount = SpringObjectFactory.getBean(OrderDao.class).insert(entry.getValue());
+            int effectedCount = FactoryBuilder.factoryOf(OrderDao.class).getInstance().insert(entry.getValue());
         } catch (DuplicateKeyException e) {
-            int effectedCount = SpringObjectFactory.getBean(OrderDao.class).updateAll(Arrays.asList(entry.getValue()));
+            int effectedCount = FactoryBuilder.factoryOf(OrderDao.class).getInstance().updateAll(Arrays.asList(entry.getValue()));
 
             if (effectedCount < 1) {
                 throw new OptimisticLockException();
@@ -80,7 +80,7 @@ public class IgniteOrderStore extends TransactionalCacheStoreAdapter<Long, Price
             entities.add(pricedOrder.getValue());
         }
 
-        SpringObjectFactory.getBean(OrderDao.class).insertAll(entities);
+        FactoryBuilder.factoryOf(OrderDao.class).getInstance().insertAll(entities);
     }
 
     @Override

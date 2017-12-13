@@ -3,11 +3,11 @@ package org.aggregateframework.sample.inmemory;
 import org.aggregateframework.ignite.store.TransactionalCacheStoreAdapter;
 import org.aggregateframework.sample.quickstart.command.domain.entity.OrderLine;
 import org.aggregateframework.sample.quickstart.command.infrastructure.dao.OrderLineDao;
-import org.aggregateframework.spring.context.SpringObjectFactory;
 import org.apache.ignite.cache.affinity.AffinityKey;
 import org.apache.ignite.cache.store.CacheStoreSession;
 import org.apache.ignite.lang.IgniteBiInClosure;
 import org.apache.ignite.resources.CacheStoreSessionResource;
+import org.mengyun.commons.bean.FactoryBuilder;
 
 import javax.cache.Cache;
 import javax.cache.integration.CacheLoaderException;
@@ -30,7 +30,7 @@ public class IgniteOrderLineStore extends TransactionalCacheStoreAdapter<Affinit
     @Override
     public void loadCache(IgniteBiInClosure<AffinityKey, OrderLine> clo, Object... args) {
 
-        List<OrderLine> orderLines = SpringObjectFactory.getBean(OrderLineDao.class).findAll();
+        List<OrderLine> orderLines = FactoryBuilder.factoryOf(OrderLineDao.class).getInstance().findAll();
 
         for (OrderLine orderLine : orderLines) {
             clo.apply(new AffinityKey(orderLine.getId(), orderLine.getPricedOrder().getId()), orderLine);
@@ -40,7 +40,7 @@ public class IgniteOrderLineStore extends TransactionalCacheStoreAdapter<Affinit
     @Override
     public void doWrite(Cache.Entry<? extends AffinityKey, ? extends OrderLine> entry) throws CacheWriterException {
 
-        SpringObjectFactory.getBean(OrderLineDao.class).insert(entry.getValue());
+        FactoryBuilder.factoryOf(OrderLineDao.class).getInstance().insert(entry.getValue());
     }
 
     @Override

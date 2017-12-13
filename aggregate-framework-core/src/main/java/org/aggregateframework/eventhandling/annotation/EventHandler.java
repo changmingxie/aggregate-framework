@@ -16,4 +16,10 @@ public @interface EventHandler {
     boolean asynchronous() default false;
 
     boolean postAfterTransaction() default false;
+
+    String transactionCheckMethod() default "";
+
+    String transactionRepository() default "transactionRepository";
+    
+    long timeout() default 2l;
 }

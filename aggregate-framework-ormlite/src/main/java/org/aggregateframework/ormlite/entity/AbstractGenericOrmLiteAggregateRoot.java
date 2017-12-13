@@ -13,6 +13,7 @@ import java.util.Date;
  */
 public class AbstractGenericOrmLiteAggregateRoot<ID extends Serializable> extends AbstractAggregateRoot<ID> {
 
+    private static final long serialVersionUID = -4219108002986899177L;
     @DatabaseField(columnName = "ID", generatedId = true)
     private ID id;
 

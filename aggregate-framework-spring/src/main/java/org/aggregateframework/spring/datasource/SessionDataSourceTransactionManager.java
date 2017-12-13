@@ -42,7 +42,7 @@ public class SessionDataSourceTransactionManager extends DataSourceTransactionMa
 //        } else {
 //            sessionFactory.registerClientSession(new UnitOfWork());
 //        }
-        sessionFactory.registerClientSession();
+        sessionFactory.registerClientSession(true);
     }
 
     @Override

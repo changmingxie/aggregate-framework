@@ -1,16 +1,15 @@
 package org.aggregateframework.session;
 
 import org.aggregateframework.cache.IdentifiedEntityMap;
+import org.aggregateframework.cache.L2Cache;
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.entity.AggregateRoot;
+import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
-import org.aggregateframework.cache.L2Cache;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -27,7 +26,7 @@ public abstract class AbstractClientSession implements ClientSession {
     protected final IdentifiedEntityMap removeFromL2CacheIdentifiedEntityMap = new IdentifiedEntityMap();
     protected final IdentifiedEntityMap writeToL2CacheIdentifiedEntityMap = new IdentifiedEntityMap();
 
-    private L2Cache l2Cache;
+    private Map<Class<? extends AggregateRoot>, L2Cache> l2CacheMap = new HashMap<Class<? extends AggregateRoot>, L2Cache>();
 
     @Override
     public void flush() {
@@ -83,14 +82,14 @@ public abstract class AbstractClientSession implements ClientSession {
 
 
     @Override
-    public <T extends AggregateRoot<ID>, ID extends Serializable> void attachL2Cache(L2Cache<T, ID> l2Cache) {
-        this.l2Cache = l2Cache;
+    public <T extends AggregateRoot<ID>, ID extends Serializable> void attachL2Cache(Class<T> aggregateType, L2Cache<T, ID> l2Cache) {
+        l2CacheMap.put(aggregateType, l2Cache);
     }
 
     public void addPostInvoker(EventInvokerEntry eventInvokerEntry) {
         eventInvokerEntryQueue.add(eventInvokerEntry);
     }
-
+    
     @Override
     public void postHandle() {
         while (!eventInvokerEntryQueue.isEmpty()) {
@@ -115,10 +114,26 @@ public abstract class AbstractClientSession implements ClientSession {
     @Override
     public void flushToL2Cache() {
 
-        if (l2Cache != null) {
-            l2Cache.remove(removeFromL2CacheIdentifiedEntityMap.getAllEntities());
-            l2Cache.write(writeToL2CacheIdentifiedEntityMap.getAllEntities());
+        Map<Class<? extends DomainObject>, Map<Serializable, DomainObject>> removedAggregateTypeEntityMap = removeFromL2CacheIdentifiedEntityMap.getAggregateTypeEntityMap();
+
+        for (Map.Entry<Class<? extends DomainObject>, Map<Serializable, DomainObject>> entry : removedAggregateTypeEntityMap.entrySet()) {
+
+            L2Cache l2Cache = l2CacheMap.get(entry.getKey());
+            if (l2Cache != null) {
+                l2Cache.remove(entry.getValue().values());
+            }
         }
+
+        Map<Class<? extends DomainObject>, Map<Serializable, DomainObject>> updatedAggregateTypeEntityMap = writeToL2CacheIdentifiedEntityMap.getAggregateTypeEntityMap();
+
+        for (Map.Entry<Class<? extends DomainObject>, Map<Serializable, DomainObject>> entry : updatedAggregateTypeEntityMap.entrySet()) {
+
+            L2Cache l2Cache = l2CacheMap.get(entry.getKey());
+            if (l2Cache != null) {
+                l2Cache.write(entry.getValue().values());
+            }
+        }
+
         removeFromL2CacheIdentifiedEntityMap.clear();
         writeToL2CacheIdentifiedEntityMap.clear();
     }
@@ -135,16 +150,20 @@ public abstract class AbstractClientSession implements ClientSession {
 
             AggregateEntry aggregateEntry = thisAggregateQueue.poll();
 
-            aggregateEntry.saveAggregate();
-
-            currentAggregateQueue = aggregateEntry.getChildren();
-
             List<EventMessage> messageList = new ArrayList<EventMessage>(aggregateEntry.getUncommittedDomainEvents());
+
+            EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
+
+            aggregateEntry.getEventBus().prepare(messages);
+
+            aggregateEntry.saveAggregate();
 
             aggregateEntry.commitDomainEvents();
 
-            EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
             aggregateEntry.getEventBus().publish(messages);
+
+
+            currentAggregateQueue = aggregateEntry.getChildren();
 
             recursiveCommit();
 

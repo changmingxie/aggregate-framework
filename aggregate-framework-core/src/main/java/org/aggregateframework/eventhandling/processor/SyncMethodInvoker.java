@@ -2,11 +2,9 @@ package org.aggregateframework.eventhandling.processor;
 
 import org.aggregateframework.SystemException;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
-import org.aggregateframework.eventhandling.annotation.Retryable;
-import org.aggregateframework.retry.*;
-import org.apache.commons.lang3.StringUtils;
+import org.mengyun.commons.bean.FactoryBuilder;
+import org.mengyun.compensable.transaction.repository.TransactionRepository;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -31,65 +29,26 @@ public class SyncMethodInvoker {
         return INSTANCE;
     }
 
-    public void invoke(EventInvokerEntry eventInvokerEntry) {
+    public void invoke(final EventInvokerEntry eventInvokerEntry) {
+
         final Method method = eventInvokerEntry.getMethod();
         final Object target = eventInvokerEntry.getTarget();
         final Object[] params = eventInvokerEntry.getParams();
 
-        final Retryable retryable = method.getAnnotation(Retryable.class);
 
-        if (retryable == null) {
-            try {
-                method.invoke(target, params);
-            } catch (IllegalAccessException e) {
-                throw new SystemException(e);
-            } catch (InvocationTargetException e) {
-                if (e.getCause() != null) {
-                    if (e.getCause() instanceof RuntimeException) {
-                        throw (RuntimeException) (e.getCause());
-                    }
-                }
+        try {
 
-                throw new SystemException(e);
-            }
-        } else {
+            method.invoke(target, params);
 
-            final PolicyBuilder policyBuilder = new PolicyBuilder();
-            RetryTemplate retryTemplate = new RetryTemplate();
+            if (eventInvokerEntry.getTransaction() != null) {
 
-            RetryPolicy retryPolicy = policyBuilder.getRetryPolicy(retryable);
-            retryTemplate.setRetryPolicy(retryPolicy);
-            retryTemplate.setBackOffPolicy(policyBuilder.getBackoffPolicy(retryable.backoff()));
+                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionRepository.class).getInstance();
 
-            RetryContext retryContext = retryPolicy.requireRetryContext();
-
-            RetryCallback<Object> retryCallback = new RetryCallback<Object>() {
-                @Override
-                public Object doWithRetry(RetryContext context) {
-                    try {
-                        return method.invoke(target, params);
-                    } catch (IllegalAccessException e) {
-                        throw new SystemException(e);
-                    } catch (InvocationTargetException e) {
-                        if (e.getCause() != null) {
-                            if (e.getCause() instanceof RuntimeException) {
-                                throw (RuntimeException) (e.getCause());
-                            }
-                        }
-
-                        throw new SystemException(e);
-                    }
-                }
-            };
-
-            RecoveryCallback<Object> recoveryCallback = null;
-
-            if (StringUtils.isNotEmpty(retryable.recoverMethod())) {
-                recoveryCallback = new SimpleRecoveryCallback(target, retryable.recoverMethod(), method.getParameterTypes(), params);
+                transactionRepository.delete(eventInvokerEntry.getTransaction());
             }
 
-            retryTemplate.execute(retryContext, retryCallback, recoveryCallback);
-
+        } catch (Throwable e) {
+            throw new SystemException(e);
         }
     }
 }

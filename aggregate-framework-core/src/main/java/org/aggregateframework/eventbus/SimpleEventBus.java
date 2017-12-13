@@ -30,6 +30,17 @@ public class SimpleEventBus implements EventBus {
     }
 
     @Override
+    public void prepare(EventMessage[] events) {
+        if (!listeners.isEmpty()) {
+            for (EventMessage event : events) {
+                for (EventListener listener : listeners) {
+                    listener.preHandle(event);
+                }
+            }
+        }
+    }
+
+    @Override
     public void subscribe(EventListener eventListener) {
 
         if (eventListener instanceof SimpleEventListenerProxy) {
@@ -46,4 +57,6 @@ public class SimpleEventBus implements EventBus {
 
         listeners.add(eventListener);
     }
+
+
 }

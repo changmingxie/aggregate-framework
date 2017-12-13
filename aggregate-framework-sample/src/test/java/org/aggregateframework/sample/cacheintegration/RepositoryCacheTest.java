@@ -7,6 +7,7 @@ import org.aggregateframework.sample.quickstart.command.domain.repository.OrderR
 import org.aggregateframework.sample.quickstart.command.domain.repository.PaymentRepository;
 import org.aggregateframework.sample.quickstart.command.service.OrderService;
 import org.aggregateframework.spring.cache.RedisL2Cache;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
@@ -39,6 +40,12 @@ public class RepositoryCacheTest extends AbstractTestCase implements Serializabl
 
     @Autowired
     RedisL2Cache redisL2Cache;
+
+    @Before
+    public void before() {
+        orderRepository.deleteAll();
+        paymentRepository.deleteAll();
+    }
 
     @Test
     public void testFindAll() throws IOException {

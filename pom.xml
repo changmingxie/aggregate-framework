@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.aggregateframework</groupId>
     <artifactId>aggregate-framework</artifactId>
-    <version>2.9.7</version>
+    <version>2.9.12</version>
 
     <packaging>pom</packaging>
     <name>aggregate-framework</name>
@@ -28,9 +28,9 @@
         <!--</repo.internal.releases.url>-->
         <!--<repo.proxy.url>http://repo1.maven.org/maven2</repo.proxy.url>-->
 
-        <repo.internal.snapshots.url>http://repo1.maven.org/maven2
+        <repo.internal.snapshots.url>http://artifactory.ximalaya.com/artifactory/thirdparty-snapshots-local/
         </repo.internal.snapshots.url>
-        <repo.internal.releases.url>http://repo1.maven.org/maven2
+        <repo.internal.releases.url>http://artifactory.ximalaya.com/artifactory/thirdparty-releases-local/
         </repo.internal.releases.url>
         <repo.proxy.url>http://repo1.maven.org/maven2</repo.proxy.url>
 
@@ -70,6 +70,30 @@
                 <groupId>org.aggregateframework</groupId>
                 <artifactId>aggregate-framework-ignite</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mengyun</groupId>
+                <artifactId>commons-bean</artifactId>
+                <version>1.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mengyun</groupId>
+                <artifactId>commons-context</artifactId>
+                <version>1.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mengyun</groupId>
+                <artifactId>compensable-transaction-spring</artifactId>
+                <version>1.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mengyun</groupId>
+                <artifactId>compensable-transaction-core</artifactId>
+                <version>1.0.1</version>
             </dependency>
 
             <dependency>
@@ -354,21 +378,21 @@
                 <version>1.4</version>
             </dependency>
             <dependency>
-                <groupId>c3p0</groupId>
+                <groupId>com.mchange</groupId>
                 <artifactId>c3p0</artifactId>
-                <version>0.9.1.2</version>
+                <version>0.9.5-pre10</version>
             </dependency>
             <dependency>
                 <groupId>commons-fileupload</groupId>
                 <artifactId>commons-fileupload</artifactId>
                 <version>1.2.1</version>
             </dependency>
-            <!-- end of jakarta coommons -->
+            <!-- end of jakarta commons -->
 
             <dependency>
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
-                <version>3.3.2</version>
+                <version>3.3.7</version>
             </dependency>
 
             <dependency>

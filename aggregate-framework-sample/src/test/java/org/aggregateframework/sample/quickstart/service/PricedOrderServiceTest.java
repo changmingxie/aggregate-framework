@@ -1,6 +1,12 @@
 package org.aggregateframework.sample.quickstart.service;
 
+import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import org.aggregateframework.sample.AbstractTestCase;
+import org.aggregateframework.sample.asynctest.RingBufferEvent;
+import org.aggregateframework.sample.asynctest.RingBufferLogEventHandler;
+import org.aggregateframework.sample.asynctest.RingBufferLogEventTranslator;
 import org.aggregateframework.sample.quickstart.command.domain.entity.Payment;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 import org.aggregateframework.sample.quickstart.command.domain.repository.OrderRepository;
@@ -16,6 +22,9 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by changming.xie on 4/13/16.
@@ -89,21 +98,21 @@ public class PricedOrderServiceTest extends AbstractTestCase {
 
         Long kryoStartTime = System.currentTimeMillis();
         PricedOrder clonedOrder = KryoSerializationUtils.clone(pricedOrder);
-        System.out.println("kryo cost time:"+(System.currentTimeMillis()-kryoStartTime));
+        System.out.println("kryo cost time:" + (System.currentTimeMillis() - kryoStartTime));
 
-         kryoStartTime = System.currentTimeMillis();
-         clonedOrder = KryoSerializationUtils.clone(pricedOrder);
-        System.out.println("kryo cost time:"+(System.currentTimeMillis()-kryoStartTime));
+        kryoStartTime = System.currentTimeMillis();
+        clonedOrder = KryoSerializationUtils.clone(pricedOrder);
+        System.out.println("kryo cost time:" + (System.currentTimeMillis() - kryoStartTime));
 
         Assert.assertEquals(clonedOrder.getId(), pricedOrder.getId());
 
         Long jdkStartTime = System.currentTimeMillis();
         PricedOrder clonedOrder2 = SerializationUtils.clone(pricedOrder);
-        System.out.println("jdk cost time:"+(System.currentTimeMillis()-jdkStartTime));
+        System.out.println("jdk cost time:" + (System.currentTimeMillis() - jdkStartTime));
 
         Long jdkStartTime2 = System.currentTimeMillis();
         PricedOrder clonedOrder3 = SerializationUtils.clone(pricedOrder);
-        System.out.println("jdk cost time:"+(System.currentTimeMillis()-jdkStartTime2));
+        System.out.println("jdk cost time:" + (System.currentTimeMillis() - jdkStartTime2));
 
 
         Assert.assertEquals(clonedOrder2.getId(), pricedOrder.getId());

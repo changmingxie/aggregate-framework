@@ -1,9 +1,9 @@
 package org.aggregateframework.sample.quickstart.command.domain.entity;
 
 import org.aggregateframework.entity.AbstractSimpleAggregateRoot;
+import org.aggregateframework.sample.quickstart.command.domain.event.OrderConfirmedEvent;
 import org.aggregateframework.sample.quickstart.command.domain.event.OrderPlacedEvent;
 import org.aggregateframework.spring.entity.DaoAwareQuery;
-import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -16,13 +16,10 @@ import java.util.List;
 public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
     private static final long serialVersionUID = -4983024009689367049L;
 
-    @QuerySqlField(index = true)
     private Long id;
 
-    @QuerySqlField(index = true)
     private String merchantOrderNo;
 
-    @QuerySqlField
     private int statusId;
 
     @DaoAwareQuery(mappedBy = "pricedOrder", select = "findByOrderId")
@@ -40,9 +37,6 @@ public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
     @Override
     public void setId(Long id) {
         this.id = id;
-        for (OrderLine line : orderLines) {
-            line.setPricedOrder(this);
-        }
     }
 
     public PricedOrder(String merchantOrderNo) {
@@ -72,6 +66,7 @@ public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
 
     public void confirm(int statusId) {
         this.statusId = statusId;
+        this.apply(new OrderConfirmedEvent(this));
     }
 
     public String getMerchantOrderNo() {

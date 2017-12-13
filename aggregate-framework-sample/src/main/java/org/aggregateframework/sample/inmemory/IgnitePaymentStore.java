@@ -2,11 +2,11 @@ package org.aggregateframework.sample.inmemory;
 
 import org.aggregateframework.sample.quickstart.command.domain.entity.Payment;
 import org.aggregateframework.sample.quickstart.command.infrastructure.dao.PaymentDao;
-import org.aggregateframework.spring.context.SpringObjectFactory;
 import org.apache.ignite.cache.store.CacheStoreAdapter;
 import org.apache.ignite.cache.store.CacheStoreSession;
 import org.apache.ignite.lang.IgniteBiInClosure;
 import org.apache.ignite.resources.CacheStoreSessionResource;
+import org.mengyun.commons.bean.FactoryBuilder;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.cache.Cache;
@@ -30,7 +30,7 @@ public class IgnitePaymentStore extends CacheStoreAdapter<Long, Payment> impleme
 
     @Override
     public void loadCache(IgniteBiInClosure<Long, Payment> clo, Object... args) {
-        List<Payment> payments = SpringObjectFactory.getBean(PaymentDao.class).findAll();
+        List<Payment> payments = FactoryBuilder.factoryOf(PaymentDao.class).getInstance().findAll();
 
         for (Payment payment : payments) {
             clo.apply(payment.getId(), payment);
@@ -47,9 +47,9 @@ public class IgnitePaymentStore extends CacheStoreAdapter<Long, Payment> impleme
     public void write(Cache.Entry<? extends Long, ? extends Payment> entry) throws CacheWriterException {
 
         try {
-            SpringObjectFactory.getBean(PaymentDao.class).insert(entry.getValue());
+            FactoryBuilder.factoryOf(PaymentDao.class).getInstance().insert(entry.getValue());
         } catch (DuplicateKeyException exception) {
-            SpringObjectFactory.getBean(PaymentDao.class).updateAll(Arrays.asList(entry.getValue()));
+            FactoryBuilder.factoryOf(PaymentDao.class).getInstance().updateAll(Arrays.asList(entry.getValue()));
         }
 
     }

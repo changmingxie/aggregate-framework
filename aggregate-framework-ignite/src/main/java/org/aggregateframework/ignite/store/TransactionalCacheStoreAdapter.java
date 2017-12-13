@@ -1,8 +1,8 @@
 package org.aggregateframework.ignite.store;
 
 import org.aggregateframework.ignite.transaction.CacheStoreTransactionManager;
-import org.aggregateframework.spring.context.SpringObjectFactory;
 import org.apache.ignite.cache.store.CacheStoreAdapter;
+import org.mengyun.commons.bean.FactoryBuilder;
 
 import javax.cache.Cache;
 import javax.cache.integration.CacheWriterException;
@@ -18,7 +18,7 @@ public abstract class TransactionalCacheStoreAdapter<K, V> extends CacheStoreAda
 
     @Override
     public final void write(Cache.Entry<? extends K, ? extends V> entry) throws CacheWriterException {
-        SpringObjectFactory.getBean(CacheStoreTransactionManager.class).ensureBegin();
+        FactoryBuilder.factoryOf(CacheStoreTransactionManager.class).getInstance().ensureBegin();
         doWrite(entry);
     }
 
@@ -34,7 +34,7 @@ public abstract class TransactionalCacheStoreAdapter<K, V> extends CacheStoreAda
 
     @Override
     public void sessionEnd(boolean commit) {
-        SpringObjectFactory.getBean(CacheStoreTransactionManager.class).commit(commit);
+        FactoryBuilder.factoryOf(CacheStoreTransactionManager.class).getInstance().commit(commit);
     }
 
     public void doWriteAll(Collection<Cache.Entry<? extends K, ? extends V>> entries) throws CacheWriterException {

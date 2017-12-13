@@ -1,5 +1,8 @@
 package org.aggregateframework.session;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 /**
  * User: changming.xie
  * Date: 14-7-29
@@ -9,34 +12,42 @@ public class LocalSessionFactory implements SessionFactory {
 
     public static SessionFactory INSTANCE = new LocalSessionFactory();
 
-    private static final ThreadLocal<SessionEntry> CURRENT = new ThreadLocal<SessionEntry>();
-
-    private static boolean isEmpty() {
-
-        SessionEntry session = CURRENT.get();
-        return session == null;
-    }
+    private static final ThreadLocal<Deque<SessionEntry>> CURRENT = new ThreadLocal<Deque<SessionEntry>>();
 
     @Override
-    public boolean registerClientSession() {
+    public boolean registerClientSession(boolean requireNew) {
 
-        if (CURRENT.get() == null) {
-            CURRENT.set(new SessionEntry(new UnitOfWork()));
+        if (requireNew) {
 
+            if (CURRENT.get() == null) {
+                CURRENT.set(new ArrayDeque<SessionEntry>());
+            }
+
+            CURRENT.get().push(new SessionEntry(new UnitOfWork()));
             return true;
-        }
+        } else {
 
-        return false;
+            if (CURRENT.get() == null) {
+                CURRENT.set(new ArrayDeque<SessionEntry>());
+                CURRENT.get().push(new SessionEntry(new UnitOfWork()));
+                return true;
+            } else if (CURRENT.get().peek() == null) {
+                CURRENT.get().push(new SessionEntry(new UnitOfWork()));
+                return true;
+            }
+
+            return false;
+        }
     }
 
     @Override
     public ClientSession requireClientSession() {
-        return CURRENT.get().getClientSession();
+        return CURRENT.get().peek().getClientSession();
     }
 
     @Override
     public void closeClientSession() {
-        CURRENT.set(null);
+        CURRENT.get().pop();
     }
 
     class SessionEntry {

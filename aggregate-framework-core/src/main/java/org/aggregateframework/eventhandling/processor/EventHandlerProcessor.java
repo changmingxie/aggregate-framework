@@ -1,13 +1,23 @@
 package org.aggregateframework.eventhandling.processor;
 
-import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.transaction.EventParticipant;
+import org.aggregateframework.eventhandling.transaction.EventTransaction;
+import org.aggregateframework.eventhandling.transaction.TransactionMethodInvocation;
 import org.aggregateframework.utils.ReflectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.mengyun.commons.bean.FactoryBuilder;
+import org.mengyun.compensable.transaction.Invocation;
+import org.mengyun.compensable.transaction.Transaction;
+import org.mengyun.compensable.transaction.TransactionType;
+import org.mengyun.compensable.transaction.repository.TransactionRepository;
 
 /**
  * Created by changmingxie on 12/2/15.
  */
 public class EventHandlerProcessor {
+
     public static void proceed(EventInvokerEntry eventInvokerEntry) {
 
         EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
@@ -15,6 +25,31 @@ public class EventHandlerProcessor {
             AsyncMethodInvoker.getInstance().invoke(eventInvokerEntry);
         } else {
             SyncMethodInvoker.getInstance().invoke(eventInvokerEntry);
+        }
+    }
+
+    public static void prepare(EventInvokerEntry entry) {
+
+        EventHandler eventHandler = ReflectionUtils.getAnnotation(entry.getMethod(), EventHandler.class);
+
+        if (StringUtils.isNotEmpty(eventHandler.transactionCheckMethod())) {
+
+            String transactionRepositoryName = eventHandler.transactionRepository();
+
+            TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionRepository.class).getInstance(transactionRepositoryName);
+
+            Transaction transaction = new EventTransaction(TransactionType.ROOT);
+
+            transactionRepository.create(transaction);
+
+            Invocation invocation = new TransactionMethodInvocation(entry.getTarget().getClass(), entry.getMethod().getName(), eventHandler.transactionCheckMethod(), entry.getMethod().getParameterTypes(), entry.getParams());
+            EventParticipant participant = new EventParticipant(invocation);
+
+            transaction.enlistParticipant(participant);
+
+            transactionRepository.update(transaction);
+
+            entry.setTransaction(transaction);
         }
     }
 }

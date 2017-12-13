@@ -1,5 +1,8 @@
 package org.aggregateframework.eventhandling.processor.async;
 
+import org.aggregateframework.eventhandling.EventInvokerEntry;
+import org.mengyun.compensable.transaction.Transaction;
+
 import java.lang.reflect.Method;
 
 /**
@@ -7,34 +10,15 @@ import java.lang.reflect.Method;
  */
 public class AsyncEvent {
 
-    private Class payloadType;
+    public static final AsyncEventFactory FACTORY = new AsyncEventFactory();
 
-    private Method method;
+    private EventInvokerEntry eventInvokerEntry;
 
-    private Object target;
-
-    private Object[] params;
-
-    public void reset(Class payloadType, Method method, Object target, Object... params) {
-        this.payloadType = payloadType;
-        this.method = method;
-        this.target = target;
-        this.params = params;
+    public void reset(EventInvokerEntry eventInvokerEntry) {
+        this.eventInvokerEntry = eventInvokerEntry;
     }
 
-    public Method getMethod() {
-        return method;
-    }
-
-    public Object getTarget() {
-        return target;
-    }
-
-    public Object[] getParams() {
-        return params;
-    }
-
-    public Class getPayloadType() {
-        return payloadType;
+    public EventInvokerEntry getEventInvokerEntry() {
+        return eventInvokerEntry;
     }
 }
