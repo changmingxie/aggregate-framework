@@ -42,7 +42,7 @@ public class PerformanceTest extends AbstractTestCase {
 
         List<Future> futures = new ArrayList<Future>();
 
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 100; i++) {
 
             Future future = executorService.submit(new Runnable() {
                 @Override
