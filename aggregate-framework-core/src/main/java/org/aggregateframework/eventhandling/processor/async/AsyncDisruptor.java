@@ -3,7 +3,9 @@ package org.aggregateframework.eventhandling.processor.async;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
@@ -17,16 +19,17 @@ public class AsyncDisruptor {
     private static final int SLEEP_MILLIS_BETWEEN_DRAIN_ATTEMPTS = 50;
     private static final int MAX_DRAIN_ATTEMPTS_BEFORE_SHUTDOWN = 200;
 
-    private static Map<Class, Disruptor<AsyncEvent>> disruptorMap = new ConcurrentHashMap<Class, Disruptor<AsyncEvent>>();
+    private static Map<Method, Disruptor<AsyncEvent>> disruptorMap = new ConcurrentHashMap<Method, Disruptor<AsyncEvent>>();
 
+    public static void ensureStart(Method method) {
 
-    public static void ensureStart(Class payloadType) {
+        if (!disruptorMap.containsKey(method)) {
+            synchronized (method.getDeclaringClass()) {
+                if (!disruptorMap.containsKey(method)) {
 
-        if (!disruptorMap.containsKey(payloadType)) {
-            synchronized (payloadType) {
-                if (!disruptorMap.containsKey(payloadType)) {
+                    EventHandler eventHandler = method.getAnnotation(EventHandler.class);
 
-                    int ringBufferSize = 4 * 1024;
+                    int ringBufferSize = eventHandler.asyncConfig().disruptorRingBufferSize();
 
                     final ThreadFactory threadFactory = new EventProcessThreadFactory("AsyncDisruptorEventProcessThreadFactory", true, Thread.NORM_PRIORITY) {
                         @Override
@@ -48,6 +51,8 @@ public class AsyncDisruptor {
                     disruptor.handleEventsWith(asyncEventHandlers);
 
                     disruptor.start();
+
+                    disruptorMap.put(method, disruptor);
                 }
             }
         }
@@ -59,7 +64,7 @@ public class AsyncDisruptor {
      */
     public static boolean stop(final long timeout, final TimeUnit timeUnit) {
 
-        Map<Class, Disruptor<AsyncEvent>> tempDisruptorMap = new ConcurrentHashMap<Class, Disruptor<AsyncEvent>>();
+        Map<Method, Disruptor<AsyncEvent>> tempDisruptorMap = new ConcurrentHashMap<Method, Disruptor<AsyncEvent>>();
 
         tempDisruptorMap.putAll(disruptorMap);
 
@@ -102,7 +107,7 @@ public class AsyncDisruptor {
 
     public static boolean tryPublish(AsyncEventTranslator eventTranslator) {
         try {
-            return disruptorMap.get(eventTranslator.getPayloadType()).getRingBuffer().tryPublishEvent(eventTranslator);
+            return disruptorMap.get(eventTranslator.getMethod()).getRingBuffer().tryPublishEvent(eventTranslator);
         } catch (final NullPointerException npe) {
             // LOG4J2-639: catch NPE if disruptor field was set to null in stop()
             return false;

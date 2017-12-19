@@ -3,6 +3,8 @@ package org.aggregateframework.eventhandling.processor.async;
 import com.lmax.disruptor.EventTranslator;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 
+import java.lang.reflect.Method;
+
 /**
  * Created by changming.xie on 11/24/17.
  */
@@ -19,7 +21,7 @@ public class AsyncEventTranslator implements EventTranslator<AsyncEvent> {
         this.eventInvokerEntry = eventInvokerEntry;
     }
 
-    public Class getPayloadType() {
-        return eventInvokerEntry.getPayloadType();
+    public Method getMethod() {
+        return eventInvokerEntry.getMethod();
     }
 }

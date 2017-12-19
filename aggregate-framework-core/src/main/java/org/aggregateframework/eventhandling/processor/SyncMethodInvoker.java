@@ -2,6 +2,7 @@ package org.aggregateframework.eventhandling.processor;
 
 import org.aggregateframework.SystemException;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.mengyun.commons.bean.FactoryBuilder;
 import org.mengyun.compensable.transaction.repository.TransactionRepository;
 
@@ -35,14 +36,14 @@ public class SyncMethodInvoker {
         final Object target = eventInvokerEntry.getTarget();
         final Object[] params = eventInvokerEntry.getParams();
 
-
         try {
-
-            method.invoke(target, params);
+                method.invoke(target, params);
 
             if (eventInvokerEntry.getTransaction() != null) {
 
-                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionRepository.class).getInstance();
+                EventHandler eventHandler = method.getAnnotation(EventHandler.class);
+
+                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionRepository.class).getInstance(eventHandler.transactionCheck().compensableTransactionRepository());
 
                 transactionRepository.delete(eventInvokerEntry.getTransaction());
             }

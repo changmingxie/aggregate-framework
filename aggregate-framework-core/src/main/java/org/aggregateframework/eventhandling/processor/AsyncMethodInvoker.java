@@ -38,11 +38,13 @@ public class AsyncMethodInvoker {
 
     public void invoke(EventInvokerEntry eventInvokerEntry) {
 
-        AsyncDisruptor.ensureStart(eventInvokerEntry.getPayloadType());
+        AsyncDisruptor.ensureStart(eventInvokerEntry.getMethod());
 
         AsyncEventTranslator eventTranslator = getCachedTranslator();
 
         eventTranslator.reset(eventInvokerEntry);
+
+        System.out.println(eventInvokerEntry.getMethod());
 
         if (!AsyncDisruptor.tryPublish(eventTranslator)) {
             handleRingBufferFull(eventInvokerEntry);

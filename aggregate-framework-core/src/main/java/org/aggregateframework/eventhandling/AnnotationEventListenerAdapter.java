@@ -89,6 +89,7 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
             if (classes != null && classes.length > 0) {
                 for (Class<?> clazz : classes) {
                     if (clazz.equals(event.getPayloadType())) {
+                        //TODO BUG, the transaction cannot put to handle.
                         EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(), method, this.target, event.getPayload());
                         preHandle(eventInvokerEntry);
 
@@ -113,7 +114,7 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
     private void preHandle(EventInvokerEntry eventInvokerEntry) {
         EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
 
-        if (StringUtils.isNotEmpty(eventHandler.transactionCheckMethod())) {
+        if (eventHandler.isTransactionMessage()) {
             EventHandlerProcessor.prepare(eventInvokerEntry);
         }
     }

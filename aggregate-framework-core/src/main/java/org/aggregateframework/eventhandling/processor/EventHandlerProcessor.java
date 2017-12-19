@@ -1,5 +1,6 @@
 package org.aggregateframework.eventhandling.processor;
 
+import org.aggregateframework.SystemException;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.transaction.EventParticipant;
@@ -32,9 +33,14 @@ public class EventHandlerProcessor {
 
         EventHandler eventHandler = ReflectionUtils.getAnnotation(entry.getMethod(), EventHandler.class);
 
-        if (StringUtils.isNotEmpty(eventHandler.transactionCheckMethod())) {
+        if (eventHandler.isTransactionMessage()) {
 
-            String transactionRepositoryName = eventHandler.transactionRepository();
+            if (StringUtils.isEmpty(eventHandler.transactionCheck().checkTransactionStatusMethod())) {
+
+                throw new SystemException("checkTransactionStatusMethod cannot be empty when isTransactionMessage is true");
+            }
+
+            String transactionRepositoryName = eventHandler.transactionCheck().compensableTransactionRepository();
 
             TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionRepository.class).getInstance(transactionRepositoryName);
 
@@ -42,7 +48,7 @@ public class EventHandlerProcessor {
 
             transactionRepository.create(transaction);
 
-            Invocation invocation = new TransactionMethodInvocation(entry.getTarget().getClass(), entry.getMethod().getName(), eventHandler.transactionCheckMethod(), entry.getMethod().getParameterTypes(), entry.getParams());
+            Invocation invocation = new TransactionMethodInvocation(entry.getTarget().getClass(), entry.getMethod().getName(), eventHandler.transactionCheck().checkTransactionStatusMethod(), entry.getMethod().getParameterTypes(), entry.getParams());
             EventParticipant participant = new EventParticipant(invocation);
 
             transaction.enlistParticipant(participant);

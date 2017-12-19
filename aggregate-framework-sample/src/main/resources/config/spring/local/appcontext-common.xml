@@ -51,7 +51,7 @@
 
     <bean class="org.mengyun.compensable.transaction.recovery.DefaultRecoverConfig">
         <property name="maxRetryCount" value="5"/>
-        <property name="recoverDuration" value="5"/>
+        <property name="recoverDuration" value="30"/>
         <property name="cronExpression" value="*/5 * * * * ?"/>
     </bean>
 

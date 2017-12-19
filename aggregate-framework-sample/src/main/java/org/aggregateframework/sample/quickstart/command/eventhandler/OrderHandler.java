@@ -1,6 +1,7 @@
 package org.aggregateframework.sample.quickstart.command.eventhandler;
 
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.annotation.TransactionCheck;
 import org.aggregateframework.sample.quickstart.command.domain.entity.Payment;
 import org.aggregateframework.sample.quickstart.command.domain.event.OrderConfirmedEvent;
 import org.aggregateframework.sample.quickstart.command.domain.event.OrderPlacedEvent;
@@ -33,7 +34,7 @@ public class OrderHandler {
     }
 
 
-    @EventHandler(asynchronous = true, postAfterTransaction = true, transactionCheckMethod = "checkOrderIsConfirmed",timeout = 2l)
+    @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = true, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkOrderIsConfirmed"))
     public void handleOrderConfirmedEvent(OrderConfirmedEvent event) {
 
         System.out.println("send to mq");

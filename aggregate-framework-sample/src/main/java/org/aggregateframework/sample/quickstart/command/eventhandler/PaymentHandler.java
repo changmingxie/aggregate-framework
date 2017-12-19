@@ -1,6 +1,7 @@
 package org.aggregateframework.sample.quickstart.command.eventhandler;
 
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.annotation.TransactionCheck;
 import org.aggregateframework.sample.hierarchicalmodel.command.domain.repository.DeliveryOrderRepository;
 import org.aggregateframework.sample.quickstart.command.domain.event.PaymentConfirmedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class PaymentHandler {
 
     AtomicInteger counter = new AtomicInteger();
 
-    @EventHandler(asynchronous = true, postAfterTransaction = true, transactionCheckMethod = "checkPaymentTransaction")
+    @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = true, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkPaymentTransaction"))
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
 
         System.out.println("count:" + counter.incrementAndGet());
