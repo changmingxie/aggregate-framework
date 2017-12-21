@@ -5,6 +5,8 @@ import org.aggregateframework.cache.L2Cache;
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.DomainObject;
+import org.aggregateframework.eventbus.LocalTransactionExecutor;
+import org.aggregateframework.eventbus.LocalTransactionState;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
 
@@ -89,7 +91,7 @@ public abstract class AbstractClientSession implements ClientSession {
     public void addPostInvoker(EventInvokerEntry eventInvokerEntry) {
         eventInvokerEntryQueue.add(eventInvokerEntry);
     }
-    
+
     @Override
     public void postHandle() {
         while (!eventInvokerEntryQueue.isEmpty()) {
@@ -148,19 +150,35 @@ public abstract class AbstractClientSession implements ClientSession {
 
             Queue<AggregateEntry> thisAggregateQueue = currentAggregateQueue;
 
-            AggregateEntry aggregateEntry = thisAggregateQueue.poll();
+            final AggregateEntry aggregateEntry = thisAggregateQueue.poll();
 
             List<EventMessage> messageList = new ArrayList<EventMessage>(aggregateEntry.getUncommittedDomainEvents());
 
             EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
 
-            aggregateEntry.getEventBus().prepare(messages);
 
-            aggregateEntry.saveAggregate();
+            aggregateEntry.getEventBus().publishInTransaction(messages, new LocalTransactionExecutor() {
 
-            aggregateEntry.commitDomainEvents();
+                @Override
+                public LocalTransactionState executeLocalTransactionBranch(EventMessage[] events) {
 
-            aggregateEntry.getEventBus().publish(messages);
+                    aggregateEntry.saveAggregate();
+
+                    aggregateEntry.commitDomainEvents();
+
+                    return LocalTransactionState.COMMIT_MESSAGE;
+                }
+            });
+
+//            // session begin
+//            aggregateEntry.getEventBus().prepare(messages);
+//
+//            aggregateEntry.saveAggregate();
+//
+//            aggregateEntry.commitDomainEvents();
+//
+//            aggregateEntry.getEventBus().publish(messages);
+//            // session end
 
 
             currentAggregateQueue = aggregateEntry.getChildren();

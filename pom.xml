@@ -12,8 +12,8 @@
         <module>aggregate-framework-core</module>
         <module>aggregate-framework-spring</module>
         <module>aggregate-framework-ormlite</module>
-        <module>aggregate-framework-sample</module>
         <module>aggregate-framework-ignite</module>
+        <module>aggregate-framework-tutorial-sample</module>
     </modules>
 
     <properties>

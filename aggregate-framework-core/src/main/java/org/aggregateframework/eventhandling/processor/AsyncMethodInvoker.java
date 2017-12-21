@@ -6,7 +6,6 @@ import org.aggregateframework.eventhandling.processor.async.AsyncEventTranslator
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,8 +42,6 @@ public class AsyncMethodInvoker {
         AsyncEventTranslator eventTranslator = getCachedTranslator();
 
         eventTranslator.reset(eventInvokerEntry);
-
-        System.out.println(eventInvokerEntry.getMethod());
 
         if (!AsyncDisruptor.tryPublish(eventTranslator)) {
             handleRingBufferFull(eventInvokerEntry);

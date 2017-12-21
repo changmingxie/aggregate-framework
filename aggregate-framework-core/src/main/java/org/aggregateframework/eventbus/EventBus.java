@@ -9,10 +9,8 @@ import org.aggregateframework.eventhandling.EventListener;
  * Time: 下午5:14
  */
 public interface EventBus {
-
-    public void publish(EventMessage[] events);
-
+    
     public void subscribe(EventListener eventListener);
 
-    void prepare(EventMessage[] messages);
+    void publishInTransaction(EventMessage[] messages, LocalTransactionExecutor localTransactionExecutor);
 }

@@ -2,16 +2,10 @@ package org.aggregateframework.eventhandling;
 
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
-import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
-import org.aggregateframework.session.LocalSessionFactory;
 import org.aggregateframework.utils.ReflectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: changming.xie
@@ -62,61 +56,28 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
         return target.getClass();
     }
 
-    @Override
-    public void handle(EventMessage event) {
+    public List<EventInvokerEntry> matchHandler(EventMessage event) {
+
+        List<EventInvokerEntry> eventInvokerEntries = new ArrayList<EventInvokerEntry>();
 
         for (Method method : methods) {
 
             Class<?>[] classes = method.getParameterTypes();
+
             if (classes != null && classes.length > 0) {
+
                 for (Class<?> clazz : classes) {
                     if (clazz.equals(event.getPayloadType())) {
-                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(), method, this.target, event.getPayload());
-                        handle(eventInvokerEntry);
 
+                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(), method, this.target, event.getPayload());
+                        eventInvokerEntries.add(eventInvokerEntry);
                         break;
                     }
                 }
             }
         }
-    }
 
-    @Override
-    public void preHandle(EventMessage event) {
-        for (Method method : methods) {
-
-            Class<?>[] classes = method.getParameterTypes();
-            if (classes != null && classes.length > 0) {
-                for (Class<?> clazz : classes) {
-                    if (clazz.equals(event.getPayloadType())) {
-                        //TODO BUG, the transaction cannot put to handle.
-                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(event.getPayloadType(), method, this.target, event.getPayload());
-                        preHandle(eventInvokerEntry);
-
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-
-    private void handle(EventInvokerEntry eventInvokerEntry) {
-        EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
-
-        if (eventHandler.postAfterTransaction()) {
-            LocalSessionFactory.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
-        } else {
-            EventHandlerProcessor.proceed(eventInvokerEntry);
-        }
-    }
-
-    private void preHandle(EventInvokerEntry eventInvokerEntry) {
-        EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
-
-        if (eventHandler.isTransactionMessage()) {
-            EventHandlerProcessor.prepare(eventInvokerEntry);
-        }
+        return eventInvokerEntries;
     }
 
     @Override

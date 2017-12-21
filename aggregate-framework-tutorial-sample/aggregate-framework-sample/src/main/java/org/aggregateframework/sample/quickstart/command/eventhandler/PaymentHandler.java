@@ -20,17 +20,17 @@ public class PaymentHandler {
 
     AtomicInteger counter = new AtomicInteger();
 
-    @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = true, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkPaymentTransaction"))
+    @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = false, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkPaymentTransaction"))
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
 
         System.out.println("count:" + counter.incrementAndGet());
 
-//        throw new RuntimeException();
+        throw new RuntimeException();
 //        LockSupport.parkNanos(1000 * 1000 * 500);
     }
 
     public boolean checkPaymentTransaction(PaymentConfirmedEvent event) {
-        return true;
+        return false;
     }
 
     public void recoverPaymentConfirmedEvent(PaymentConfirmedEvent event) {
