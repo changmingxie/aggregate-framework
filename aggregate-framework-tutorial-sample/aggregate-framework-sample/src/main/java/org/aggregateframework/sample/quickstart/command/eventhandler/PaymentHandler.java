@@ -25,7 +25,7 @@ public class PaymentHandler {
 
         System.out.println("count:" + counter.incrementAndGet());
 
-        throw new RuntimeException();
+//        throw new RuntimeException();
 //        LockSupport.parkNanos(1000 * 1000 * 500);
     }
 
