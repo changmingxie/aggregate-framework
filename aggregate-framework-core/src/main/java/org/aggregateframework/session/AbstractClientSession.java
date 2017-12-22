@@ -5,8 +5,8 @@ import org.aggregateframework.cache.L2Cache;
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.DomainObject;
-import org.aggregateframework.eventbus.LocalTransactionExecutor;
-import org.aggregateframework.eventbus.LocalTransactionState;
+import org.aggregateframework.transaction.LocalTransactionExecutor;
+import org.aggregateframework.transaction.LocalTransactionState;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
 

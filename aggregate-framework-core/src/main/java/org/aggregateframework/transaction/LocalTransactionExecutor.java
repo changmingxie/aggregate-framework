@@ -1,4 +1,4 @@
-package org.aggregateframework.eventbus;
+package org.aggregateframework.transaction;
 
 import org.aggregateframework.domainevent.EventMessage;
 

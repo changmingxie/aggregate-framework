@@ -7,6 +7,7 @@ import org.aggregateframework.eventhandling.SimpleEventListenerProxy;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
 import org.aggregateframework.session.LocalSessionFactory;
+import org.aggregateframework.transaction.LocalTransactionExecutor;
 import org.aggregateframework.utils.ReflectionUtils;
 
 import java.util.ArrayList;

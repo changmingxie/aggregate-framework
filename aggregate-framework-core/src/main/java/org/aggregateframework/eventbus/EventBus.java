@@ -2,6 +2,7 @@ package org.aggregateframework.eventbus;
 
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.eventhandling.EventListener;
+import org.aggregateframework.transaction.LocalTransactionExecutor;
 
 /**
  * User: changming.xie
