@@ -194,6 +194,9 @@ public abstract class AbstractClientSession implements ClientSession {
         eventInvokerEntryQueue.clear();
 
         localCacheIdentifiedEntityMap.clear();
+        originalCopyIdentifiedEntityMap.clear();
+        removeFromL2CacheIdentifiedEntityMap.clear();
+        writeToL2CacheIdentifiedEntityMap.clear();
     }
 
 }

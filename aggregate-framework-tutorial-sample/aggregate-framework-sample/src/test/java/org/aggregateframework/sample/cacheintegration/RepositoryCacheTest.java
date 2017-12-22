@@ -60,18 +60,18 @@ public class RepositoryCacheTest extends AbstractTestCase implements Serializabl
     }
 
 
-//    @Test
+    @Test
     public void testPrepare() throws ExecutionException, InterruptedException {
 
         ExecutorService executorService = Executors.newFixedThreadPool(200);
 
         List<Future> futures = new ArrayList<Future>();
 
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 100; i++) {
             Future future = executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    for (int j = 0; j < 1000; j++) {
+                    for (int j = 0; j < 100; j++) {
                         PricedOrder pricedOrder = orderService.placeOrder(1, 10);
                     }
                 }
