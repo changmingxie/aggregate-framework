@@ -22,13 +22,11 @@
         <java.target.version>1.6</java.target.version>
         <project.encoding>UTF-8</project.encoding>
         <slf4j.version>1.7.9</slf4j.version>
-        <repo.internal.snapshots.url>http://repo1.maven.org/maven2
-        </repo.internal.snapshots.url>
-        <repo.internal.releases.url>http://repo1.maven.org/maven2
+        <repo.internal.releases.url>http://artifactory.ximalaya.com/artifactory/ximalaya-releases
         </repo.internal.releases.url>
+        <repo.internal.snapshots.url>http://artifactory.ximalaya.com/artifactory/ximalaya-snapshots
+        </repo.internal.snapshots.url>
         <repo.proxy.url>http://repo1.maven.org/maven2</repo.proxy.url>
-        
-
         <repo.external.url>http://repo1.maven.org/maven2</repo.external.url>
         <servlet.version>2.4</servlet.version>
         <spring.version>3.2.12.RELEASE</spring.version>
@@ -70,25 +68,25 @@
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>commons-bean</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>commons-context</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>compensable-transaction-spring</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>compensable-transaction-core</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.0</version>
             </dependency>
 
             <dependency>
