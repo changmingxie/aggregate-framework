@@ -5,5 +5,5 @@ package org.aggregateframework.eventhandling.annotation;
  */
 public @interface AsyncConfig {
 
-    int disruptorRingBufferSize() default 1024;
+    int disruptorRingBufferSize() default 2048;
 }

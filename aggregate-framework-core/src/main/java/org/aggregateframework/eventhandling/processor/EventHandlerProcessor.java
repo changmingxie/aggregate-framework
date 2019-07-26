@@ -46,14 +46,14 @@ public class EventHandlerProcessor {
 
             Transaction transaction = new EventTransaction(TransactionType.ROOT);
 
-            transactionRepository.create(transaction);
-
             Invocation invocation = new TransactionMethodInvocation(entry.getTarget().getClass(), entry.getMethod().getName(), eventHandler.transactionCheck().checkTransactionStatusMethod(), entry.getMethod().getParameterTypes(), entry.getParams());
             EventParticipant participant = new EventParticipant(invocation);
 
             transaction.enlistParticipant(participant);
 
-            transactionRepository.update(transaction);
+            //transactionRepository.update(transaction);
+
+            transactionRepository.create(transaction);
 
             entry.setTransaction(transaction);
         }

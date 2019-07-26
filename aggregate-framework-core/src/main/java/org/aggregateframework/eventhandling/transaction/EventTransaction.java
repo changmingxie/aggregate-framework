@@ -29,7 +29,7 @@ public class EventTransaction implements Transaction<EventParticipant>, Serializ
 
     private long version = 1;
 
-    EventParticipant participant = null;
+    private EventParticipant participant = null;
 
     private Map<String, Object> attachments = new ConcurrentHashMap<String, Object>();
 
@@ -128,5 +128,13 @@ public class EventTransaction implements Transaction<EventParticipant>, Serializ
     @Override
     public void setVersion(long version) {
         this.version = version;
+    }
+
+    public EventParticipant getParticipant() {
+        return participant;
+    }
+
+    public void setParticipant(EventParticipant participant) {
+        this.participant = participant;
     }
 }

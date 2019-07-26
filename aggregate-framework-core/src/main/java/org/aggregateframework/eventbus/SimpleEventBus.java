@@ -27,15 +27,14 @@ public class SimpleEventBus implements EventBus {
     private final Set<EventListener> listeners = new CopyOnWriteArraySet<EventListener>();
 
     @Override
-    public void publishInTransaction(EventMessage[] messages, LocalTransactionExecutor localTransactionExecutor) {
+    public void publishInTransaction(List<EventMessage> messages, LocalTransactionExecutor localTransactionExecutor) {
 
         List<EventInvokerEntry> eventInvokerEntries = new ArrayList<EventInvokerEntry>();
 
         if (!listeners.isEmpty()) {
-            for (EventMessage event : messages) {
-                for (EventListener listener : listeners) {
-                    eventInvokerEntries.addAll(listener.matchHandler(event));
-                }
+
+            for (EventListener listener : listeners) {
+                eventInvokerEntries.addAll(listener.matchHandler(messages));
             }
         }
 

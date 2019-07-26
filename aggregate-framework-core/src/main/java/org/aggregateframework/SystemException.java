@@ -1,5 +1,7 @@
 package org.aggregateframework;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * @author changming.xie
  */
@@ -20,5 +22,18 @@ public class SystemException extends RuntimeException {
 
     public SystemException(String message, Throwable e) {
         super(message, e);
+    }
+
+    public Throwable getOriginThrowable() {
+        Throwable t = getCause();
+        if (t == null) {
+            return null;
+        }
+
+        if (t instanceof InvocationTargetException) {
+            return t.getCause();
+        }
+
+        return t;
     }
 }

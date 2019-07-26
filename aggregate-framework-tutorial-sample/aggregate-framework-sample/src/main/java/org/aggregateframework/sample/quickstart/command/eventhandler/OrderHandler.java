@@ -11,6 +11,8 @@ import org.aggregateframework.sample.quickstart.command.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Created by changming.xie on 4/7/16.
  */
@@ -25,6 +27,12 @@ public class OrderHandler {
     PaymentRepository paymentRepository;
 
     @EventHandler
+    public void handleOrderCreatedEvent(List<OrderPlacedEvent> events) {
+
+       System.out.println(events);
+    }
+
+    @EventHandler
     public void handleOrderCreatedEvent(OrderPlacedEvent event) {
 
         Payment payment = PaymentFactory.buildPayment(event.getPricedOrder().getId(),
@@ -37,8 +45,22 @@ public class OrderHandler {
     @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = true, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkOrderIsConfirmed"))
     public void handleOrderConfirmedEvent(OrderConfirmedEvent event) {
 
-        System.out.println("send to mq");
+        System.out.println("order confirmed event handled");
     }
+
+
+    @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = true, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkOrderIsConfirmed"))
+    public void handleOrderConfirmedEvent(List<OrderConfirmedEvent> events) {
+
+        System.out.println("transactional send to mq list,size:"+events.size());
+    }
+
+    @EventHandler(asynchronous = true)
+    public void handleOrderConfirmedEvent2(List<OrderConfirmedEvent> events) {
+
+        System.out.println("send to mq list,size:"+events.size());
+    }
+
 
 
     public boolean checkOrderIsConfirmed(OrderConfirmedEvent event) {
