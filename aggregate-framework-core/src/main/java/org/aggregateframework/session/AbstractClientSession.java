@@ -5,10 +5,10 @@ import org.aggregateframework.cache.L2Cache;
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.DomainObject;
-import org.aggregateframework.transaction.LocalTransactionExecutor;
-import org.aggregateframework.transaction.LocalTransactionState;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
+import org.aggregateframework.transaction.LocalTransactionExecutor;
+import org.aggregateframework.transaction.LocalTransactionState;
 
 import java.io.Serializable;
 import java.util.*;
@@ -154,13 +154,10 @@ public abstract class AbstractClientSession implements ClientSession {
 
             List<EventMessage> messageList = new ArrayList<EventMessage>(aggregateEntry.getUncommittedDomainEvents());
 
-            EventMessage[] messages = messageList.toArray(new EventMessage[messageList.size()]);
-
-
-            aggregateEntry.getEventBus().publishInTransaction(messages, new LocalTransactionExecutor() {
+            aggregateEntry.getEventBus().publishInTransaction(messageList, new LocalTransactionExecutor() {
 
                 @Override
-                public LocalTransactionState executeLocalTransactionBranch(EventMessage[] events) {
+                public LocalTransactionState executeLocalTransactionBranch(List<EventMessage> events) {
 
                     aggregateEntry.saveAggregate();
 
@@ -169,17 +166,6 @@ public abstract class AbstractClientSession implements ClientSession {
                     return LocalTransactionState.COMMIT_MESSAGE;
                 }
             });
-
-//            // session begin
-//            aggregateEntry.getEventBus().prepare(messages);
-//
-//            aggregateEntry.saveAggregate();
-//
-//            aggregateEntry.commitDomainEvents();
-//
-//            aggregateEntry.getEventBus().publish(messages);
-//            // session end
-
 
             currentAggregateQueue = aggregateEntry.getChildren();
 

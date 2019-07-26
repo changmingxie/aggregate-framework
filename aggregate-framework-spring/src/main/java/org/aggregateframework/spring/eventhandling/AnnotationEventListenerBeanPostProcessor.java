@@ -94,6 +94,11 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
 
     }
 
+    @Override
+    public boolean requiresDestruction(Object o) {
+        return false;
+    }
+
     private boolean isPostProcessingCandidate(Class<?> targetClass) {
 
         return hasEventHandlerMethod(targetClass);

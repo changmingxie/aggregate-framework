@@ -44,11 +44,15 @@ public class AsyncMethodInvoker {
         eventTranslator.reset(eventInvokerEntry);
 
         if (!AsyncDisruptor.tryPublish(eventTranslator)) {
+            logger.warn("agg ring buffer is full, eventHandler will be execute in sync mode, {}.{}",
+                    eventInvokerEntry.getTarget().getClass().getSimpleName(),
+                    eventInvokerEntry.getMethod().getName());
             handleRingBufferFull(eventInvokerEntry);
         }
 
         return;
     }
+
 
     private void handleRingBufferFull(EventInvokerEntry eventInvokerEntry) {
         SyncMethodInvoker.getInstance().invoke(eventInvokerEntry);

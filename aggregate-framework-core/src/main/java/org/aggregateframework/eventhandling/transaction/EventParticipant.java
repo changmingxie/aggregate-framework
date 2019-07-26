@@ -11,7 +11,6 @@ public class EventParticipant implements Participant {
 
     private static final long serialVersionUID = 2869353273179002268L;
 
-
     private TransactionXid xid;
 
     private Invocation invocation;
@@ -33,5 +32,21 @@ public class EventParticipant implements Participant {
 
     public void proceed() throws Throwable {
         this.invocation.proceed();
+    }
+
+    public TransactionXid getXid() {
+        return xid;
+    }
+
+    public void setXid(TransactionXid xid) {
+        this.xid = xid;
+    }
+
+    public Invocation getInvocation() {
+        return invocation;
+    }
+
+    public void setInvocation(Invocation invocation) {
+        this.invocation = invocation;
     }
 }

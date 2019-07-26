@@ -90,6 +90,13 @@ public class RedisL2Cache<T extends AggregateRoot<ID>, ID extends Serializable> 
 
                             operations.opsForHash().put(cacheKey, entity.getVersion(), entity);
 
+                            if (entity.getVersion() > 1) {
+                                // clean up entities with old versions
+                                for (long i = 1L; i < entity.getVersion(); i++) {
+                                    operations.opsForHash().delete(cacheKey, i);
+                                }
+                            }
+
                             operations.expire(cacheKey, expireTimeInSecond, TimeUnit.SECONDS);
                         }
                         return null;

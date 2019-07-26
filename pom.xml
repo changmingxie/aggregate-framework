@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.aggregateframework</groupId>
     <artifactId>aggregate-framework</artifactId>
-    <version>2.10.1</version>
+    <version>2.10.10</version>
 
     <packaging>pom</packaging>
     <name>aggregate-framework</name>
@@ -14,6 +14,7 @@
         <module>aggregate-framework-ormlite</module>
         <module>aggregate-framework-ignite</module>
         <module>aggregate-framework-tutorial-sample</module>
+        <module>aggregate-framework-test</module>
     </modules>
 
     <properties>
@@ -22,16 +23,16 @@
         <java.target.version>1.6</java.target.version>
         <project.encoding>UTF-8</project.encoding>
         <slf4j.version>1.7.9</slf4j.version>
-        <repo.internal.snapshots.url>http://repo1.maven.org/maven2
+        <repo.internal.snapshots.url>http://artifactory.ximalaya.com/artifactory/thirdparty-snapshots-local/
         </repo.internal.snapshots.url>
-        <repo.internal.releases.url>http://repo1.maven.org/maven2
+        <repo.internal.releases.url>http://artifactory.ximalaya.com/artifactory/thirdparty-releases-local/
         </repo.internal.releases.url>
         <repo.proxy.url>http://repo1.maven.org/maven2</repo.proxy.url>
         
 
         <repo.external.url>http://repo1.maven.org/maven2</repo.external.url>
         <servlet.version>2.4</servlet.version>
-        <spring.version>3.2.12.RELEASE</spring.version>
+        <spring.version>4.3.22.RELEASE</spring.version>
         <struts.version>2.3.16.3</struts.version>
         <ormlite.version>4.48</ormlite.version>
         <ignite.version>1.8.0</ignite.version>
@@ -68,27 +69,33 @@
             </dependency>
 
             <dependency>
+                <groupId>org.aggregateframework</groupId>
+                <artifactId>aggregate-framework-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>commons-bean</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>commons-context</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>compensable-transaction-spring</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.6</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mengyun</groupId>
                 <artifactId>compensable-transaction-core</artifactId>
-                <version>1.0.1</version>
+                <version>1.1.6</version>
             </dependency>
 
             <dependency>
@@ -126,23 +133,16 @@
             </dependency>
 
             <dependency>
-                <groupId>org.aspectj</groupId>
-                <artifactId>aspectjtools</artifactId>
-                <version>1.7.3</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.springframework.data</groupId>
                 <artifactId>spring-data-redis</artifactId>
-                <version>1.5.0.RELEASE</version>
+                <version>2.0.13.RELEASE</version>
             </dependency>
 
-            <dependency>
-                <groupId>redis.clients</groupId>
-                <artifactId>jedis</artifactId>
-                <version>2.5.2</version>
-            </dependency>
-
+            <!--<dependency>-->
+                <!--<groupId>redis.clients</groupId>-->
+                <!--<artifactId>jedis</artifactId>-->
+                <!--<version>2.9.0</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>org.apache.ignite</groupId>
@@ -192,13 +192,6 @@
                 <artifactId>powermock-api-mockito</artifactId>
                 <version>1.4.10</version>
                 <scope>test</scope>
-            </dependency>
-
-
-            <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>1.2.14</version>
             </dependency>
 
             <dependency>
@@ -318,12 +311,6 @@
             <!-- end of struts2 -->
 
             <!-- begining of db -->
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>1.1.102</version>
-                <scope>test</scope>
-            </dependency>
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
@@ -636,13 +623,6 @@
                 <groupId>org.piccentercloud</groupId>
                 <artifactId>piccenter-storage-api</artifactId>
                 <version>1.0.1</version>
-            </dependency>
-
-
-            <dependency>
-                <groupId>org.piccentercloud</groupId>
-                <artifactId>piccenter-storage-api</artifactId>
-                <version>0.0.1</version>
             </dependency>
 
             <!--axis2-->

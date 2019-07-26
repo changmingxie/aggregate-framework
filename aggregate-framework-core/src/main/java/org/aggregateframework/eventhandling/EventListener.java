@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface EventListener {
 
-    List<EventInvokerEntry> matchHandler(EventMessage event);
+    List<EventInvokerEntry> matchHandler(List<EventMessage> event);
 }
