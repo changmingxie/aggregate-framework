@@ -35,7 +35,7 @@
         <spring.version>4.3.22.RELEASE</spring.version>
         <struts.version>2.3.16.3</struts.version>
         <ormlite.version>4.48</ormlite.version>
-        <ignite.version>1.8.0</ignite.version>
+        <ignite.version>2.8.1</ignite.version>
 
     </properties>
 
