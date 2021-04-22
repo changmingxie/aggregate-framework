@@ -16,7 +16,7 @@
         <env>test</env>
         <!--mybati 3.2.8.1:come from mybatis 3.2.8, and replace the Jdbc3KeyGenerator class with the same class in mybatis 3.4.0.
         the Jdbc3KeyGenerator class in mybatis 3.4.0 support update multiple rows with auto key (mybatis 3.4.0 has changed) set to beans.-->
-        <mybatis-version>3.2.8.1</mybatis-version>
+        <mybatis-version>3.5.6</mybatis-version>
     </properties>
 
     <dependencies>
