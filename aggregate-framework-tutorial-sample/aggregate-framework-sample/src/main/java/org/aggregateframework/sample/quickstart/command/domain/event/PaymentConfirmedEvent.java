@@ -8,13 +8,13 @@ import java.io.Serializable;
 public class PaymentConfirmedEvent implements Serializable {
 
     private static final long serialVersionUID = -5599479410994660047L;
-    private Long orderId;
+    private String paymentNo;
 
-    public PaymentConfirmedEvent(Long orderId) {
-        this.orderId = orderId;
+    public PaymentConfirmedEvent(String paymentNo) {
+        this.paymentNo = paymentNo;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public String getPaymentNo() {
+        return paymentNo;
     }
 }

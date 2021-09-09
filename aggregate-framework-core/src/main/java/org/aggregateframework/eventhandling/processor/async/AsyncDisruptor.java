@@ -4,6 +4,7 @@ import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.utils.EventHandlerUtils;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class AsyncDisruptor {
 
                     EventHandler eventHandler = method.getAnnotation(EventHandler.class);
 
-                    int ringBufferSize = eventHandler.asyncConfig().disruptorRingBufferSize();
+                    int ringBufferSize = eventHandler.asyncConfig().ringBufferSize();
 
                     final ThreadFactory threadFactory = new EventProcessThreadFactory("AsyncDisruptorEventProcessThreadFactory", true, Thread.NORM_PRIORITY) {
                         @Override
@@ -39,7 +40,9 @@ public class AsyncDisruptor {
                         }
                     };
 
-                    WaitStrategy waitStrategy = new TimeoutBlockingWaitStrategy(10l, TimeUnit.MILLISECONDS);
+//                    WaitStrategy waitStrategy = new TimeoutBlockingWaitStrategy(10l, TimeUnit.MILLISECONDS);
+
+                    WaitStrategy waitStrategy = new BlockingWaitStrategy();
 
                     Disruptor<AsyncEvent> disruptor = new Disruptor<AsyncEvent>(AsyncEvent.FACTORY, ringBufferSize, threadFactory, ProducerType.MULTI, waitStrategy);
 
@@ -47,8 +50,24 @@ public class AsyncDisruptor {
 
                     disruptor.setDefaultExceptionHandler(errorHandler);
 
-                    final AsyncEventHandler[] asyncEventHandlers = {new AsyncEventHandler()};
-                    disruptor.handleEventsWith(asyncEventHandlers);
+                    if (EventHandlerUtils.isBatchEventHandler(method)) {
+
+                        AsyncBatchEventHandler asyncBatchEventHandler = new AsyncBatchEventHandler();
+                        disruptor.handleEventsWith(asyncBatchEventHandler);
+
+                    } else {
+
+                        int workPoolSize = eventHandler.asyncConfig().workPoolSize();
+
+                        AsyncEventHandler[] asyncEventHandlers = new AsyncEventHandler[workPoolSize];
+                        for (int i = 0; i < workPoolSize; i++) {
+                            asyncEventHandlers[i] = new AsyncEventHandler(i, workPoolSize);
+                        }
+
+//                        disruptor.handleEventsWith(asyncEventHandlers);
+
+                        disruptor.handleEventsWithWorkerPool(asyncEventHandlers);
+                    }
 
                     disruptor.start();
 
@@ -107,10 +126,16 @@ public class AsyncDisruptor {
 
     public static boolean tryPublish(AsyncEventTranslator eventTranslator) {
         try {
-            return disruptorMap.get(eventTranslator.getMethod()).getRingBuffer().tryPublishEvent(eventTranslator);
+            Method method = eventTranslator.getEventInvokerEntry().getMethod();
+            return disruptorMap.get(method).getRingBuffer().tryPublishEvent(eventTranslator);
         } catch (final NullPointerException npe) {
             // LOG4J2-639: catch NPE if disruptor field was set to null in stop()
             return false;
         }
+    }
+
+    public static void publish(AsyncEventTranslator eventTranslator) {
+        Method method = eventTranslator.getEventInvokerEntry().getMethod();
+        disruptorMap.get(method).getRingBuffer().publishEvent(eventTranslator);
     }
 }

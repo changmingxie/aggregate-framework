@@ -10,6 +10,10 @@ import java.io.Serializable;
 public class OrderConfirmedEvent implements Serializable {
     private static final long serialVersionUID = 5747983401748068456L;
 
+    private String no;
+
     public OrderConfirmedEvent(PricedOrder pricedOrder) {
+
+        this.no = pricedOrder.getMerchantOrderNo();
     }
 }

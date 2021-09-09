@@ -1,104 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+        http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
-    <context:property-placeholder location="classpath:config.properties"/>
+    <context:component-scan base-package="org.aggregateframework.sample.web" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.RestController"/>
+    </context:component-scan>
 
-    <context:component-scan base-package="org.aggregateframework.sample"/>
-
-    <!--<bean id="transactionManager"-->
-    <!--class="org.aggregateframework.ignite.datasource.IgniteDataSourceTransactionManager">-->
-    <!--<property name="dataSource" ref="dataSource"/>-->
-    <!--<property name="gridName" value="${ignite.grid.name}"/>-->
-    <!--</bean>-->
-
-    <!--<bean id="tccCompensableAspect" class="org.aggregateframework.sample.inmemory.aspect.AdapterAspect">-->
-    <!--</bean>-->
-
-    <!--<bean id="igniteStart" class="org.aggregateframework.ignite.store.IgniteCacheStarter">-->
-    <!--<property name="cacheLoader" ref="cacheLoader"/>-->
-    <!--<property name="gridName" value="${ignite.grid.name}"/>-->
-    <!--</bean>-->
-
-    <!--<bean id="cacheLoader" class="org.aggregateframework.sample.inmemory.InMemoryCacheLoader"/>-->
-
-    <!--<bean id="transactionManager"-->
-    <!--class="org.aggregateframework.ignite.transaction.SessionIgniteTransactionManager">-->
-    <!--<property name="gridName" value="${ignite.grid.name}"/>-->
-    <!--</bean>-->
-
-
-    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
-        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
-        <property name="order" value="1"/>
-        <property name="viewResolvers">
-            <list>
-                <!-- ===================================================== -->
-                <!-- ViewResolver For FreeMarker -->
-                <!-- ===================================================== -->
-                <bean id="freemarkerResolver"
-                      class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
-
-                    <property name="suffix" value=".ftl"/>
-                    <property name="contentType" value="text/html;charset=utf-8"/>
-                    <property name="viewClass">
-                        <value>org.springframework.web.servlet.view.freemarker.FreeMarkerView</value>
-                    </property>
-                </bean>
-            </list>
-        </property>
-
-        <property name="defaultViews">
-            <list>
-                <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
-            </list>
-        </property>
-    </bean>
-
-    <bean id="contentNegotiationManager"
-          class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
-        <property name="favorParameter" value="false"/>
-        <property name="ignoreAcceptHeader" value="true"/>
-        <property name="favorPathExtension" value="true"/>
-        <property name="mediaTypes">
-            <value>
-                json=application/json
-                html=text/html
-            </value>
-        </property>
-        <property name="defaultContentType" value="text/html"/>
-    </bean>
-
-    <bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
-        <property name="templateLoaderPath">
-            <value>/WEB-INF/ftl/</value>
-        </property>
-        <property name="freemarkerSettings"><!-- 设置FreeMarker环境属性 -->
-            <props>
-                <prop key="template_update_delay">5</prop>
-                <!--刷新模板的周期，单位为秒 -->
-                <prop key="default_encoding">UTF-8</prop>
-                <!--模板的编码格式 -->
-                <prop key="locale">UTF-8</prop>
-                <!-- 本地化设置 -->
-                <prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
-                <prop key="time_format">HH:mm:ss</prop>
-                <prop key="number_format">0.####</prop>
-                <prop key="boolean_format">true,false</prop>
-                <prop key="whitespace_stripping">true</prop>
-                <prop key="tag_syntax">auto_detect</prop>
-                <prop key="url_escaping_charset">UTF-8</prop>
-                <prop key="classic_compatible">true</prop>
-            </props>
-        </property>
-
-    </bean>
-
-    <bean id="fmXmlEscape" class="freemarker.template.utility.XmlEscape"/>
-
-    <bean id="fmHtmlEscape" class="freemarker.template.utility.HtmlEscape"/>
+    <mvc:annotation-driven/>
 
 </beans>

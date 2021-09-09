@@ -50,11 +50,11 @@ public class Payment extends AbstractSimpleAggregateRoot<Long> {
 
     }
 
-    public Payment(long orderId, String paymentNo, BigDecimal totalAmount) {
+    public Payment(Long orderId, String paymentNo, BigDecimal totalAmount) {
         this.orderId = orderId;
         this.paymentNo = paymentNo;
         this.totalAmount = totalAmount;
-        this.apply(new PaymentConfirmedEvent(this.orderId));
+        this.apply(new PaymentConfirmedEvent(paymentNo));
     }
 
     @Override

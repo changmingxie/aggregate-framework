@@ -1,13 +1,6 @@
 package org.aggregateframework.sample.quickstart.service;
 
-import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 import org.aggregateframework.sample.AbstractTestCase;
-import org.aggregateframework.sample.asynctest.RingBufferEvent;
-import org.aggregateframework.sample.asynctest.RingBufferLogEventHandler;
-import org.aggregateframework.sample.asynctest.RingBufferLogEventTranslator;
-import org.aggregateframework.sample.quickstart.command.domain.entity.Payment;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 import org.aggregateframework.sample.quickstart.command.domain.repository.OrderRepository;
 import org.aggregateframework.sample.quickstart.command.domain.repository.PaymentRepository;
@@ -22,9 +15,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Random;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by changming.xie on 4/13/16.
@@ -42,33 +32,11 @@ public class PricedOrderServiceTest extends AbstractTestCase {
     OrderRepository orderRepository;
 
     @Test
-    public void testUpdateAndVersionChanged() throws InterruptedException {
-
-        PricedOrder pricedOrder = orderService.placeOrder(1, 10);
-
-        Payment payment;
-        do {
-            payment = paymentRepository.findByPaymentNo(String.format("p000%s", pricedOrder.getId()));
-
-            if (payment == null) {
-                Thread.sleep(1000);
-                continue;
-            }
-            paymentRepository.save(payment);
-            break;
-        } while (true);
-
-        Payment payment2 = paymentRepository.findByPaymentNo(String.format("p000%s", pricedOrder.getId()));
-
-        Assert.assertEquals(payment.getVersion(), payment2.getVersion());
-    }
-
-    @Test
     @Transactional
     @Rollback(false)
     public void given_existed_order_when_update_component_then_version_updated() throws InterruptedException {
 
-        PricedOrder pricedOrder = orderService.placeOrder(1, 10);
+        PricedOrder pricedOrder = orderService.placeOrder(1, 10,1);
 
         orderRepository.flush();
 
@@ -92,9 +60,10 @@ public class PricedOrderServiceTest extends AbstractTestCase {
     }
 
     @Test
-    public void testSerialize() {
+    public void given_priced_order_when_clone_then_println_out_the_cost_time() {
 
-        PricedOrder pricedOrder = orderService.placeOrder(1, 10);
+        PricedOrder pricedOrder = orderService.placeOrder(1, 10,1);
+
 
         Long kryoStartTime = System.currentTimeMillis();
         PricedOrder clonedOrder = KryoSerializationUtils.clone(pricedOrder);
@@ -116,6 +85,8 @@ public class PricedOrderServiceTest extends AbstractTestCase {
 
 
         Assert.assertEquals(clonedOrder2.getId(), pricedOrder.getId());
+
+//        for (; ; ) ;
     }
 
 

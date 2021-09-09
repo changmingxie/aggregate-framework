@@ -1,9 +1,6 @@
 package org.aggregateframework.eventhandling.processor.async;
 
 import org.aggregateframework.eventhandling.EventInvokerEntry;
-import org.mengyun.compensable.transaction.Transaction;
-
-import java.lang.reflect.Method;
 
 /**
  * Created by changmingxie on 12/2/15.
@@ -20,5 +17,9 @@ public class AsyncEvent {
 
     public EventInvokerEntry getEventInvokerEntry() {
         return eventInvokerEntry;
+    }
+
+    public void clear() {
+        eventInvokerEntry = null;
     }
 }

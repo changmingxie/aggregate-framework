@@ -36,6 +36,12 @@
     </select>
 
 
+    <select id="findByNo" resultMap="result">
+        <include refid="sql_select"/>
+        WHERE MERCHANT_ORDER_NO = #{no}
+    </select>
+
+
     <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO CQRS_QCK_ORDER
         (STATUS_ID,MERCHANT_ORDER_NO,CREATE_TIME,LAST_UPDATE_TIME,VERSION)

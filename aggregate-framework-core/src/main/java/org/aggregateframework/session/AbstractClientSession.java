@@ -13,6 +13,7 @@ import org.aggregateframework.transaction.LocalTransactionState;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author changming.xie
@@ -20,15 +21,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public abstract class AbstractClientSession implements ClientSession {
 
     protected Queue<AggregateEntry> currentAggregateQueue = new ConcurrentLinkedQueue<AggregateEntry>();
-
-    protected Queue<EventInvokerEntry> eventInvokerEntryQueue = new ConcurrentLinkedQueue<EventInvokerEntry>();
+    protected Queue<EventInvokerEntry> postEventInvokerEntryQueue = new ConcurrentLinkedQueue<EventInvokerEntry>();
+    protected Set<EventInvokerEntry> transactionalEventInvokerEntrySet = new ConcurrentSkipListSet<EventInvokerEntry>();
+//    protected Set<AggregateEntry> allAggregateEntrySet = new ConcurrentSkipListSet<AggregateEntry>();
 
     protected final IdentifiedEntityMap localCacheIdentifiedEntityMap = new IdentifiedEntityMap();
     protected final IdentifiedEntityMap originalCopyIdentifiedEntityMap = new IdentifiedEntityMap();
     protected final IdentifiedEntityMap removeFromL2CacheIdentifiedEntityMap = new IdentifiedEntityMap();
     protected final IdentifiedEntityMap writeToL2CacheIdentifiedEntityMap = new IdentifiedEntityMap();
 
-    private Map<Class<? extends AggregateRoot>, L2Cache> l2CacheMap = new HashMap<Class<? extends AggregateRoot>, L2Cache>();
+    private final Map<Class<? extends AggregateRoot>, L2Cache> l2CacheMap = new HashMap<Class<? extends AggregateRoot>, L2Cache>();
 
     @Override
     public void flush() {
@@ -39,7 +41,7 @@ public abstract class AbstractClientSession implements ClientSession {
     public void commit() {
         try {
             doCommit();
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
             doRollback();
             throw e;
         } finally {
@@ -60,7 +62,7 @@ public abstract class AbstractClientSession implements ClientSession {
 
     @Override
     public <T extends AggregateRoot<ID>, ID extends Serializable> T removeFromLocalCache(T entity) {
-        localCacheIdentifiedEntityMap.remove((Class<T>) entity.getClass(), entity.getId());
+        localCacheIdentifiedEntityMap.remove(entity.getClass(), entity.getId());
         return null;
     }
 
@@ -89,13 +91,24 @@ public abstract class AbstractClientSession implements ClientSession {
     }
 
     public void addPostInvoker(EventInvokerEntry eventInvokerEntry) {
-        eventInvokerEntryQueue.add(eventInvokerEntry);
+        postEventInvokerEntryQueue.add(eventInvokerEntry);
+    }
+
+    public void addTransactionalInvoker(EventInvokerEntry eventInvokerEntry) {
+        transactionalEventInvokerEntrySet.add(eventInvokerEntry);
     }
 
     @Override
     public void postHandle() {
-        while (!eventInvokerEntryQueue.isEmpty()) {
-            EventHandlerProcessor.proceed(eventInvokerEntryQueue.poll());
+        try {
+
+            SessionFactoryHelper.INSTANCE.startNewSessionFactory();
+
+            while (!postEventInvokerEntryQueue.isEmpty()) {
+                EventHandlerProcessor.proceed(postEventInvokerEntryQueue.poll());
+            }
+        } finally {
+            SessionFactoryHelper.INSTANCE.closeSessionFactory();
         }
     }
 
@@ -176,13 +189,21 @@ public abstract class AbstractClientSession implements ClientSession {
     }
 
     private void doRollback() {
-        currentAggregateQueue.clear();
-        eventInvokerEntryQueue.clear();
 
-        localCacheIdentifiedEntityMap.clear();
-        originalCopyIdentifiedEntityMap.clear();
-        removeFromL2CacheIdentifiedEntityMap.clear();
-        writeToL2CacheIdentifiedEntityMap.clear();
+        try {
+            for (EventInvokerEntry eventInvokerEntry : transactionalEventInvokerEntrySet) {
+                EventHandlerProcessor.cancel(eventInvokerEntry);
+            }
+        } finally {
+            currentAggregateQueue.clear();
+            postEventInvokerEntryQueue.clear();
+            transactionalEventInvokerEntrySet.clear();
+
+            localCacheIdentifiedEntityMap.clear();
+            originalCopyIdentifiedEntityMap.clear();
+            removeFromL2CacheIdentifiedEntityMap.clear();
+            writeToL2CacheIdentifiedEntityMap.clear();
+        }
     }
 
 }

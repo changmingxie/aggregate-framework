@@ -1,8 +1,8 @@
 package org.aggregateframework.sample.complexmodel.command.service;
 
+import org.aggregateframework.sample.complexmodel.command.domain.entity.BookingOrder;
 import org.aggregateframework.sample.complexmodel.command.domain.entity.BookingPayment;
 import org.aggregateframework.sample.complexmodel.command.domain.entity.SeatAvailability;
-import org.aggregateframework.sample.complexmodel.command.domain.entity.BookingOrder;
 import org.aggregateframework.sample.complexmodel.command.domain.repository.JpaOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

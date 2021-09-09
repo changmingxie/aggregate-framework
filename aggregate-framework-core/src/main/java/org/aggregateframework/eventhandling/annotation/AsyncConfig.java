@@ -5,5 +5,11 @@ package org.aggregateframework.eventhandling.annotation;
  */
 public @interface AsyncConfig {
 
-    int disruptorRingBufferSize() default 2048;
+    QueueFullPolicy queueFullPolicy() default QueueFullPolicy.SYNCHRONOUS;
+
+    int ringBufferSize() default 4096;
+
+    int workPoolSize() default 24;
+
+    int maxBatchSize() default 1024;
 }

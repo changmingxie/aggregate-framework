@@ -28,7 +28,7 @@ public class HierarchyPricedOrderDaoTest extends AbstractTestCase {
 
 
     @Test
-    public void testInsertAll() {
+    public void given_new_entities_when_insertAll_then_generated_id_valid() {
         List<HierarchicalOrder> entities = buildHierarchicalOrders();
         hierarchicalOrderDao.insertAll(entities);
 
@@ -38,7 +38,7 @@ public class HierarchyPricedOrderDaoTest extends AbstractTestCase {
     }
 
     @Test
-    public void testFindAll() {
+    public void given_new_entities_and_insertAll_when_findAll_then_all_found() {
 
         List<HierarchicalOrder> entities = buildHierarchicalOrders();
         hierarchicalOrderDao.insertAll(entities);
@@ -51,7 +51,7 @@ public class HierarchyPricedOrderDaoTest extends AbstractTestCase {
     }
 
     @Test
-    public void testFindByIds() {
+    public void given_new_inserted_entities_when_findByIds_then_all_found() {
         List<HierarchicalOrder> entities = buildHierarchicalOrders();
         hierarchicalOrderDao.insertAll(entities);
 

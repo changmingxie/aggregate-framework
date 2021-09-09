@@ -6,13 +6,10 @@ import org.aggregateframework.eventhandling.AnnotationEventListenerAdapter;
 import org.aggregateframework.eventhandling.EventListener;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.processor.AsyncMethodInvoker;
-import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.IntroductionInfo;
-import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
@@ -20,7 +17,6 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -28,19 +24,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Date: 14-6-13
  * Time: 上午10:46
  */
-public class AnnotationEventListenerBeanPostProcessor implements DestructionAwareBeanPostProcessor, ApplicationContextAware, ApplicationListener<ContextClosedEvent> {
+public class AnnotationEventListenerBeanPostProcessor implements BeanPostProcessor, ApplicationContextAware, ApplicationListener<ContextClosedEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(AnnotationEventListenerBeanPostProcessor.class);
 
-    private EventBus eventBus = null;
+    private EventBus eventBus = SimpleEventBus.INSTANCE;
+    ;
     private ApplicationContext applicationContext;
 
     public AnnotationEventListenerBeanPostProcessor() {
-        eventBus = SimpleEventBus.INSTANCE;
-    }
-
-    public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
     }
 
     @Override
@@ -63,40 +55,11 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
     }
 
     private void subscrible(EventListener proxy) {
-        ensureEventBusInitialized();
         eventBus.subscribe(proxy);
     }
 
-    @SuppressWarnings({"unchecked"})
-    private void ensureEventBusInitialized() {
-        // if no EventBus is set, find one in the application context
-        if (eventBus == null) {
-            Map<String, SimpleEventBus> beans = getApplicationContext().getBeansOfType(SimpleEventBus.class);
-            if (beans.size() != 1) {
-                throw new IllegalStateException(
-                        "If no specific EventBus is provided, the application context must "
-                                + "contain exactly one bean of type EventBus. The current application context has: "
-                                + beans.size());
-            } else {
-                this.eventBus = beans.entrySet().iterator().next().getValue();
-            }
-        }
-    }
-
     private EventListener createEventListenerProxy(Object annotatedHandler, boolean proxyTargetClass, ClassLoader classLoader) {
-
-        AnnotationEventListenerAdapter annotationEventListenerAdapter = new AnnotationEventListenerAdapter(annotatedHandler);
-        return annotationEventListenerAdapter;
-    }
-
-    @Override
-    public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-
-    }
-
-    @Override
-    public boolean requiresDestruction(Object o) {
-        return false;
+        return new AnnotationEventListenerAdapter(annotatedHandler);
     }
 
     private boolean isPostProcessingCandidate(Class<?> targetClass) {
@@ -104,18 +67,10 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
         return hasEventHandlerMethod(targetClass);
     }
 
-    private boolean isNotEventHandlerSubclass(Class<?> targetClass) {
-        return !EventListener.class.isAssignableFrom(targetClass);
-    }
-
     private boolean hasEventHandlerMethod(Class<?> beanClass) {
         final AtomicBoolean result = new AtomicBoolean(false);
         ReflectionUtils.doWithMethods(beanClass, new HasEventHandlerAnnotationMethodCallback(result));
         return result.get();
-    }
-
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
     }
 
     @Override
@@ -148,31 +103,6 @@ public class AnnotationEventListenerBeanPostProcessor implements DestructionAwar
             if (method.isAnnotationPresent(EventHandler.class)) {
                 result.set(true);
             }
-        }
-    }
-
-    private class AdapterIntroductionInterceptor implements IntroductionInfo, IntroductionInterceptor {
-
-        private AnnotationEventListenerAdapter annotationEventListenerAdapter;
-
-        public AdapterIntroductionInterceptor(AnnotationEventListenerAdapter annotationEventListenerAdapter) {
-
-            this.annotationEventListenerAdapter = annotationEventListenerAdapter;
-        }
-
-        @Override
-        public Object invoke(MethodInvocation invocation) throws Throwable {
-            return invocation.getMethod().invoke(annotationEventListenerAdapter, invocation.getArguments());
-        }
-
-        @Override
-        public boolean implementsInterface(Class aClass) {
-            return true;
-        }
-
-        @Override
-        public Class[] getInterfaces() {
-            return new Class[]{EventListener.class};
         }
     }
 }

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+    <context:component-scan base-package="org.aggregateframework.sample"/>
+    <context:property-placeholder location="classpath:zk.properties"/>
+
+<!--    <bean id="transactionManager"-->
+<!--          class="org.aggregateframework.spring.datasource.SessionDataSourceTransactionManager">-->
+<!--        <property name="dataSource" ref="dataSource"/>-->
+<!--    </bean>-->
+
+        <bean id="transactionManager"
+              class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+            <property name="dataSource" ref="dataSource"/>
+        </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+    <jdbc:embedded-database id="dataSource" type="H2">
+        <jdbc:script location="classpath:h2.sql" execution="INIT"/>
+    </jdbc:embedded-database>
+
+
+<!--    <util:properties id="jdbc" location="classpath:jdbc.properties"/>-->
+
+<!--    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"-->
+<!--          destroy-method="close" lazy-init="false">-->
+<!--        <property name="driverClass" value="#{jdbc['jdbc.driverClassName']}"/>-->
+<!--        <property name="jdbcUrl" value="#{jdbc['jdbc.url']}"/>-->
+<!--        <property name="user" value="#{jdbc['jdbc.username']}"/>-->
+<!--        <property name="password" value="#{jdbc['jdbc.password']}"/>-->
+<!--        <property name="initialPoolSize" value="#{jdbc['c3p0.initialPoolSize']}"/>-->
+<!--        <property name="minPoolSize" value="#{jdbc['c3p0.minPoolSize']}"/>-->
+<!--        <property name="maxPoolSize" value="#{jdbc['c3p0.maxPoolSize']}"/>-->
+<!--        <property name="acquireIncrement" value="#{jdbc['c3p0.acquireIncrement']}"/>-->
+<!--        <property name="maxIdleTime" value="#{jdbc['c3p0.maxIdleTime']}"/>-->
+<!--        <property name="checkoutTimeout" value="#{jdbc['c3p0.checkoutTimeout']}"/>-->
+<!--    </bean>-->
+
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath*:config/sqlmap/main/mybatis-*.xml"/>
+    </bean>
+
+
+</beans>

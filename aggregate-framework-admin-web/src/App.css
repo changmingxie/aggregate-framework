@@ -1,0 +1,57 @@
+.ant-form .ant-col.ant-form-item-label {
+    width: 100px;
+}
+
+.search-panel .ant-form .ant-col.ant-form-item-label {
+    width: auto;
+}
+
+.page-loading {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3;
+}
+
+.page-loading .ant-spin-spinning {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: 200px auto 0;
+}
+
+.ant-table.ant-table-bordered tbody > tr > td .content, .ant-table.ant-table-bordered tfoot > tr > td .content {
+    word-break: break-word;
+    height: 130px;
+    width: 250px;
+    overflow: hidden;
+}
+
+.ant-table.ant-table-bordered tbody > tr > td .content .text, .ant-table.ant-table-bordered tfoot > tr > td .content .text {
+    word-break: break-word;
+    height: 100px;
+    overflow: hidden;
+}
+
+.ant-modal-confirm-body .anticon svg {
+    display: none;
+}
+
+.site-layout-content {
+  padding: 20px;
+  height: 100%;
+  background-color: #fff;
+}
+
+#root {
+  height: 100%;
+}
+
+.layout {
+  height: 100%;
+}

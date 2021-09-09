@@ -23,12 +23,12 @@ public class PricedOrderServiceTest extends AbstractTestCase {
     OrderRepository orderRepository;
 
     @Test
-    public void test() {
+    public void given_new_priced_order_when_confirm_and_place_order_then_all_called_suceed() {
 
         List<PricedOrder> pricedOrders = new ArrayList<PricedOrder>();
 
 
-        PricedOrder pricedOrder = orderService.placeOrder(1, 10);
+        PricedOrder pricedOrder = orderService.placeOrder(1, 10,1);
 
         pricedOrder.confirm(2);
 
@@ -36,7 +36,7 @@ public class PricedOrderServiceTest extends AbstractTestCase {
 
         pricedOrders.add(pricedOrder);
 
-        pricedOrder = orderService.placeOrder(1, 20);
+        pricedOrder = orderService.placeOrder(1, 20,1);
 
         pricedOrder.confirm(2);
 

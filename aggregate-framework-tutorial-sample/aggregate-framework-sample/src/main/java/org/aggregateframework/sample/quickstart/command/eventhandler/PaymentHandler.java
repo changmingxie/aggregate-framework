@@ -22,11 +22,20 @@ public class PaymentHandler {
 
     @EventHandler(asynchronous = true, postAfterTransaction = true, isTransactionMessage = false, transactionCheck = @TransactionCheck(checkTransactionStatusMethod = "checkPaymentTransaction"))
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
-
-        System.out.println("count:" + counter.incrementAndGet());
-
 //        throw new RuntimeException();
 //        LockSupport.parkNanos(1000 * 1000 * 500);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("&&&&&& payment begin async single handle &&&&&&");
+        stringBuilder.append("\r\n");
+
+        stringBuilder.append("sync single call payment no:" + event.getPaymentNo());
+        stringBuilder.append("\r\n");
+
+        stringBuilder.append("&&&&&& payment end sync single handle &&&&&&");
+        stringBuilder.append("\r\n");
+
+        System.out.println(stringBuilder.toString());
     }
 
     public boolean checkPaymentTransaction(PaymentConfirmedEvent event) {

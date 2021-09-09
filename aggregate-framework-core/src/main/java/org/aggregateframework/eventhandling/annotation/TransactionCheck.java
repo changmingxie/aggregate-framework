@@ -6,6 +6,4 @@ package org.aggregateframework.eventhandling.annotation;
 public @interface TransactionCheck {
 
     String checkTransactionStatusMethod() default "";
-
-    String compensableTransactionRepository() default "transactionRepository";
 }

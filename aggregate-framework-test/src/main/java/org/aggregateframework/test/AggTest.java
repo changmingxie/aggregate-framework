@@ -24,7 +24,7 @@ public class AggTest {
             AggTest.class.wait();
         }
 
-        Thread.sleep(3*1000);
+        Thread.sleep(3 * 1000L);
 
         Log logger = LogFactory.getLog(AggTest.class);
         if (lastException != null) {

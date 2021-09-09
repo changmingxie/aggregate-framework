@@ -6,11 +6,14 @@ import org.aggregateframework.eventhandling.EventListener;
 import org.aggregateframework.eventhandling.SimpleEventListenerProxy;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.processor.EventHandlerProcessor;
-import org.aggregateframework.session.LocalSessionFactory;
+import org.aggregateframework.session.SessionFactoryHelper;
 import org.aggregateframework.transaction.LocalTransactionExecutor;
 import org.aggregateframework.utils.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -21,6 +24,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Time: 下午8:16
  */
 public class SimpleEventBus implements EventBus {
+
+    static final Logger log = LoggerFactory.getLogger(SimpleEventBus.class.getSimpleName());
 
     public static final EventBus INSTANCE = new SimpleEventBus();
 
@@ -37,6 +42,8 @@ public class SimpleEventBus implements EventBus {
                 eventInvokerEntries.addAll(listener.matchHandler(messages));
             }
         }
+        //按照order 排个序
+        Collections.sort(eventInvokerEntries);
 
         for (EventInvokerEntry eventInvokerEntry : eventInvokerEntries) {
             preHandle(eventInvokerEntry);
@@ -72,6 +79,7 @@ public class SimpleEventBus implements EventBus {
 
         if (eventHandler.isTransactionMessage()) {
             EventHandlerProcessor.prepare(eventInvokerEntry);
+            SessionFactoryHelper.INSTANCE.requireClientSession().addTransactionalInvoker(eventInvokerEntry);
         }
     }
 
@@ -79,7 +87,7 @@ public class SimpleEventBus implements EventBus {
         EventHandler eventHandler = ReflectionUtils.getAnnotation(eventInvokerEntry.getMethod(), EventHandler.class);
 
         if (eventHandler.postAfterTransaction()) {
-            LocalSessionFactory.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
+            SessionFactoryHelper.INSTANCE.requireClientSession().addPostInvoker(eventInvokerEntry);
         } else {
             EventHandlerProcessor.proceed(eventInvokerEntry);
         }

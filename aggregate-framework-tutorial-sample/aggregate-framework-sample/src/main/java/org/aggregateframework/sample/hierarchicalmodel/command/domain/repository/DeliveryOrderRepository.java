@@ -1,6 +1,6 @@
 package org.aggregateframework.sample.hierarchicalmodel.command.domain.repository;
 
-import org.aggregateframework.spring.repository.DaoAwareAggregateRepository;
+import org.aggregateframework.repository.DaoAwareAggregateRepository;
 import org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.DeliveryOrder;
 import org.springframework.stereotype.Repository;
 

@@ -1,12 +1,11 @@
 package org.aggregateframework.eventhandling;
 
-import org.aggregateframework.SystemException;
 import org.aggregateframework.domainevent.EventMessage;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.utils.EventHandlerUtils;
 import org.aggregateframework.utils.ReflectionUtils;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -17,7 +16,7 @@ import java.util.*;
  */
 public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy {
 
-    private Object target;
+    private final Object target;
     private List<Method> methods = null;
 
     public AnnotationEventListenerAdapter(Object target) {
@@ -63,6 +62,7 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
 
         Map<Class, List<Object>> eventMap = new LinkedHashMap<Class, List<Object>>();
 
+
         for (EventMessage event : events) {
 
             if (!eventMap.containsKey(event.getPayloadType())) {
@@ -76,38 +76,29 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
 
         for (Method method : methods) {
 
-            Type[] types = method.getGenericParameterTypes();
+            if (EventHandlerUtils.verifyEventHandler(method)) {
 
-            if (types != null && types.length > 0) {
+                Type type = method.getGenericParameterTypes()[0];
+                EventHandler eventHandler = method.getAnnotation(EventHandler.class);
 
-                for (Type type : types) {
+                for (Map.Entry<Class, List<Object>> entry : eventMap.entrySet()) {
 
-                    for (Map.Entry<Class, List<Object>> entry : eventMap.entrySet()) {
-
-                        if (isTypeEqual(type, entry.getKey())) {
-
-                            if (types.length > 1) {
-                                throw new SystemException(String.format("invalid method parameters, class:%s, method:%s", method.getClass().getName(), method.getName()));
-                            } else {
-                                for (Object param : entry.getValue()) {
-                                    EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(entry.getKey(), method, this.target, param);
-                                    eventInvokerEntries.add(eventInvokerEntry);
-                                }
-                            }
-                        } else if (isCollectionOfType(type, entry.getKey())) {
-
-                            if (types.length > 1) {
-                                throw new SystemException(String.format("invalid method parameters, class:%s, method:%s", method.getClass().getName(), method.getName()));
-                            } else {
-
-                                EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(entry.getKey(), method, this.target, entry.getValue());
-                                eventInvokerEntries.add(eventInvokerEntry);
-                            }
+                    if (EventHandlerUtils.isTypeEqual(type, entry.getKey())) {
+                        for (Object param : entry.getValue()) {
+                            EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(entry.getKey(),
+                                    method,
+                                    this.target,
+                                    eventHandler.order(),
+                                    param);
+                            eventInvokerEntries.add(eventInvokerEntry);
                         }
-                        //break;
-                    }
+                    } else if (EventHandlerUtils.isCollectionOfTypeEqual(type, entry.getKey())) {
 
-                    break;
+                        EventInvokerEntry eventInvokerEntry = new EventInvokerEntry(entry.getKey(), method, this.target,
+                                eventHandler.order(),
+                                entry.getValue());
+                        eventInvokerEntries.add(eventInvokerEntry);
+                    }
                 }
             }
         }
@@ -143,27 +134,4 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
         AnnotationEventListenerAdapter that = (AnnotationEventListenerAdapter) other;
         return this.target.equals(that.target);
     }
-
-    private boolean isCollectionOfType(Type type, Class targetClass) {
-
-        if (type instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType) type;
-
-            if ((parameterizedType.getRawType() instanceof Class)
-                    && Collection.class.isAssignableFrom((Class) parameterizedType.getRawType())) {
-                for (Type actualType : parameterizedType.getActualTypeArguments()) {
-                    if (actualType.equals(targetClass)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isTypeEqual(Type type, Class targetClass) {
-        return type.equals(targetClass);
-    }
-
 }

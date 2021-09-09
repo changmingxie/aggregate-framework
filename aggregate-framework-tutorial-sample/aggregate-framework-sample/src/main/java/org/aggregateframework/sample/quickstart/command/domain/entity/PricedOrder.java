@@ -1,9 +1,9 @@
 package org.aggregateframework.sample.quickstart.command.domain.entity;
 
 import org.aggregateframework.entity.AbstractSimpleAggregateRoot;
+import org.aggregateframework.entity.DaoAwareQuery;
 import org.aggregateframework.sample.quickstart.command.domain.event.OrderConfirmedEvent;
 import org.aggregateframework.sample.quickstart.command.domain.event.OrderPlacedEvent;
-import org.aggregateframework.spring.entity.DaoAwareQuery;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -22,7 +22,9 @@ public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
 
     private int statusId;
 
-    @DaoAwareQuery(mappedBy = "pricedOrder", select = "findByOrderId")
+//    private String newField = "2020";
+
+    @DaoAwareQuery(mappedBy = "pricedOrder",select = "findByOrderId")
     private List<OrderLine> orderLines = new ArrayList<OrderLine>();
 
     public PricedOrder() {
@@ -80,4 +82,12 @@ public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
     public int getStatusId() {
         return statusId;
     }
+//
+//    public String getNewField() {
+//        return newField;
+//    }
+//
+//    public void setNewField(String newField) {
+//        this.newField = newField;
+//    }
 }

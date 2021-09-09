@@ -2,14 +2,15 @@ package org.aggregateframework.test;
 
 import com.google.common.collect.Maps;
 import org.aggregateframework.eventhandling.EventHandlerListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 
 class EventHandlerTestListener implements EventHandlerListener {
 
-    static final Logger logger = Logger.getLogger(EventHandlerTestListener.class.getSimpleName());
+    static final Logger logger = LoggerFactory.getLogger(EventHandlerTestListener.class.getSimpleName());
 
     private EventHandlerRetryTestHandler methodHook;
     private Map<String, EventHandlerRetryConfig> methodConfig;
@@ -20,14 +21,13 @@ class EventHandlerTestListener implements EventHandlerListener {
     }
 
     public void addWatchedMethodName(String className, String methodName, EventHandlerRetryConfig config) {
-        methodConfig.put(className+"." + methodName, config);
+        methodConfig.put(className + "." + methodName, config);
     }
 
     @Override
     public boolean isActive() {
         return true;
     }
-
 
 
     @Override

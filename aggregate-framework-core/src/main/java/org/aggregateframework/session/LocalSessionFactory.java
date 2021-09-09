@@ -10,45 +10,42 @@ import java.util.Deque;
  */
 public class LocalSessionFactory implements SessionFactory {
 
-    public static SessionFactory INSTANCE = new LocalSessionFactory();
-
-    private static final ThreadLocal<Deque<SessionEntry>> CURRENT = new ThreadLocal<Deque<SessionEntry>>();
+    private final Deque<SessionEntry> sessionEntries = new ArrayDeque<SessionEntry>();
 
     @Override
-    public boolean registerClientSession(boolean requireNew) {
+    public void registerNewClientSession() {
+        sessionEntries.push(new SessionEntry(new UnitOfWork()));
+    }
 
-        if (requireNew) {
-
-            if (CURRENT.get() == null) {
-                CURRENT.set(new ArrayDeque<SessionEntry>());
-            }
-
-            CURRENT.get().push(new SessionEntry(new UnitOfWork()));
+    @Override
+    public boolean registerClientSessionIfAbsent() {
+        if (sessionEntries.peek() == null) {
+            sessionEntries.push(new SessionEntry(new UnitOfWork()));
             return true;
-        } else {
-
-            if (CURRENT.get() == null) {
-                CURRENT.set(new ArrayDeque<SessionEntry>());
-                CURRENT.get().push(new SessionEntry(new UnitOfWork()));
-                return true;
-            } else if (CURRENT.get().peek() == null) {
-                CURRENT.get().push(new SessionEntry(new UnitOfWork()));
-                return true;
-            }
-
-            return false;
         }
+        return false;
+    }
+
+    @Override
+    public boolean hasClientSessions() {
+        return sessionEntries.size() > 0;
+    }
+
+    @Override
+    public int clientSessionCount() {
+        return sessionEntries.size();
     }
 
     @Override
     public ClientSession requireClientSession() {
-        return CURRENT.get().peek().getClientSession();
+        return sessionEntries.peek().getClientSession();
     }
 
     @Override
     public void closeClientSession() {
-        CURRENT.get().pop();
+        sessionEntries.pop();
     }
+
 
     class SessionEntry {
 

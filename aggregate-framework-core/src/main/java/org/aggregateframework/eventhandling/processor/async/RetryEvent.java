@@ -1,7 +1,8 @@
 package org.aggregateframework.eventhandling.processor.async;
 
 
-import org.mengyun.compensable.transaction.Transaction;
+
+import org.aggregateframework.transaction.Transaction;
 
 import java.lang.reflect.Method;
 

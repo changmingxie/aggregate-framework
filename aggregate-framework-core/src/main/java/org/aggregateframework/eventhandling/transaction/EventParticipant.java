@@ -1,8 +1,9 @@
 package org.aggregateframework.eventhandling.transaction;
 
-import org.mengyun.compensable.transaction.Invocation;
-import org.mengyun.compensable.transaction.Participant;
-import org.mengyun.compensable.transaction.TransactionXid;
+
+import org.aggregateframework.transaction.Invocation;
+import org.aggregateframework.transaction.Participant;
+import org.aggregateframework.transaction.TransactionXid;
 
 /**
  * Created by changming.xie on 10/26/17.

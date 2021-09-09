@@ -442,6 +442,25 @@ public abstract class ReflectionUtils {
                 method.getParameterTypes().length == 0);
     }
 
+//    public static Class getParamClass(Method method) {
+//
+//        method.getParameterTypes();
+//
+//        if (type instanceof ParameterizedType) {
+//            ParameterizedType parameterizedType = (ParameterizedType) type;
+//
+//            if ((parameterizedType.getRawType() instanceof Class)
+//                    && Collection.class.isAssignableFrom((Class) parameterizedType.getRawType())) {
+//                for (Type actualType : parameterizedType.getActualTypeArguments()) {
+//                    if (actualType.equals(targetClass)) {
+//                        return true;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return false;
+//    }
 
     /**
      * Make the given field accessible, explicitly setting it accessible if necessary.

@@ -1,7 +1,8 @@
 package org.aggregateframework.eventhandling;
 
-import org.mengyun.commons.bean.FactoryBuilder;
-import org.mengyun.compensable.transaction.Invocation;
+
+import org.aggregateframework.factory.FactoryBuilder;
+import org.aggregateframework.transaction.Invocation;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

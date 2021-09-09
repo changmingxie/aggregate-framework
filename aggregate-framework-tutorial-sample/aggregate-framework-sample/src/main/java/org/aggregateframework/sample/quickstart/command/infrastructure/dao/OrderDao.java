@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface OrderDao extends CollectiveAggregateRootDao<PricedOrder, Long> {
     List<PricedOrder> findByPrice();
+
+    PricedOrder findByNo(String no);
 }

@@ -1,8 +1,10 @@
 package org.aggregateframework.sample.quickstart.command.domain.repository;
 
 import org.aggregateframework.cache.L2Cache;
+import org.aggregateframework.repository.DaoAwareAggregateRepository;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
-import org.aggregateframework.spring.repository.DaoAwareAggregateRepository;
+import org.aggregateframework.sample.quickstart.command.infrastructure.cache.PricedOrderL2Cache;
+import org.aggregateframework.sample.quickstart.command.infrastructure.dao.OrderDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
@@ -13,10 +15,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class OrderRepository extends DaoAwareAggregateRepository<PricedOrder, Long> {
 
-    @Autowired
+    @Autowired(required = false)
+    @Qualifier("pricedOrderRedisL2Cache")
     public void setL2Cacher(L2Cache<PricedOrder, Long> l2Cache) {
         super.setL2Cache(l2Cache);
     }
+
+    @Autowired
+    OrderDao orderDao;
 
     protected OrderRepository(Class<PricedOrder> aggregateType) {
         super(aggregateType);
@@ -26,7 +32,15 @@ public class OrderRepository extends DaoAwareAggregateRepository<PricedOrder, Lo
         this(PricedOrder.class);
     }
 
-    public PricedOrder findByMerchantOrderNo() {
-        return null;
+    public PricedOrder findByMerchantOrderNo(String no) {
+        PricedOrder order = ((PricedOrderL2Cache) this.l2Cache).findByNo(no);
+
+        if (order != null) {
+            return order;
+        }
+
+        order = orderDao.findByNo(no);
+        return findOne(order.getId());
+
     }
 }

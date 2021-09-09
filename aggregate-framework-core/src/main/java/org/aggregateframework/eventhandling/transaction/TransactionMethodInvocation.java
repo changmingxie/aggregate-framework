@@ -5,13 +5,15 @@ import com.esotericsoftware.kryo.KryoSerializable;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.aggregateframework.eventhandling.EventHandlerHook;
+import org.aggregateframework.factory.FactoryBuilder;
+import org.aggregateframework.transaction.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
-import org.mengyun.commons.bean.FactoryBuilder;
-import org.mengyun.compensable.transaction.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 
 /**
@@ -147,22 +149,22 @@ public class TransactionMethodInvocation extends MethodInvocation implements Kry
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         //in.defaultReadObject();
-        System.out.println("read object");
+//        System.out.println("read object");
         String className = (String)in.readObject();
-        System.out.println("read className: " + className);
+//        System.out.println("read className: " + className);
         try {
             setTargetClass(this.getClass().getClassLoader().loadClass(className));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         setMethodName((String)in.readObject());
-        System.out.println("read MethodName: " + getMethodName());
+//        System.out.println("read MethodName: " + getMethodName());
         setParameterTypes((Class[])in.readObject());
-        System.out.println("read ParameterTypes: ");
+//        System.out.println("read ParameterTypes: ");
         setArgs((Object[])in.readObject());
-        System.out.println("read args: ");
+//        System.out.println("read args: ");
         transactionCheckMethod = (String)in.readObject();
-        System.out.println("read transactionCheckMethod: " + transactionCheckMethod);
+//        System.out.println("read transactionCheckMethod: " + transactionCheckMethod);
     }
 
     public String getTransactionCheckMethod() {
@@ -171,20 +173,5 @@ public class TransactionMethodInvocation extends MethodInvocation implements Kry
 
     public void setTransactionCheckMethod(String transactionCheckMethod) {
         this.transactionCheckMethod = transactionCheckMethod;
-    }
-
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        File file = new File("person.out");
-
-        ObjectOutputStream oout = new ObjectOutputStream(new FileOutputStream(file));
-        TransactionMethodInvocation person = new TransactionMethodInvocation(TransactionMethodInvocation.class,
-                "main", "main", new Class[0], new Object[0]);
-        oout.writeObject(person);
-        oout.close();
-
-        ObjectInputStream oin = new ObjectInputStream(new FileInputStream(file));
-        Object newPerson = oin.readObject(); // 没有强制转换到Person类型
-        oin.close();
-        System.out.println(newPerson);
     }
 }

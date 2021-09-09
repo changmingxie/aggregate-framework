@@ -1,8 +1,6 @@
 package org.aggregateframework.sample.quickstart.command.domain.entity;
 
 import org.aggregateframework.entity.AbstractSimpleDomainObject;
-import org.apache.ignite.cache.affinity.AffinityKey;
-import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
 import java.math.BigDecimal;
 
@@ -14,17 +12,14 @@ public class OrderLine extends AbstractSimpleDomainObject<Long> {
 
     private int productId;
 
-    @QuerySqlField(index = true)
     private int price;
 
     private int quantity;
 
-    @QuerySqlField(index = true)
     private Long pricedOrderId;
 
     private PricedOrder pricedOrder;
 
-    @QuerySqlField(index = true)
     private Long id;
 
     public OrderLine() {
@@ -47,7 +42,8 @@ public class OrderLine extends AbstractSimpleDomainObject<Long> {
     }
 
     public BigDecimal getTotalAmount() {
-        return BigDecimal.valueOf(quantity * price);
+//        return BigDecimal.valueOf(quantity * price);
+        return new BigDecimal(quantity).multiply(new BigDecimal(price));
     }
 
     public int getProductId() {
@@ -68,7 +64,4 @@ public class OrderLine extends AbstractSimpleDomainObject<Long> {
         return pricedOrder;
     }
 
-    public AffinityKey<Long> getAffinityKey() {
-        return new AffinityKey(id, this.getPricedOrder().getId());
-    }
 }

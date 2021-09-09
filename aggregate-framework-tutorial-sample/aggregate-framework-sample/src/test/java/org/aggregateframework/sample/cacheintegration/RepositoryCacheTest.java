@@ -1,19 +1,14 @@
 package org.aggregateframework.sample.cacheintegration;
 
 import org.aggregateframework.sample.AbstractTestCase;
-import org.aggregateframework.sample.quickstart.command.domain.entity.Payment;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 import org.aggregateframework.sample.quickstart.command.domain.repository.OrderRepository;
 import org.aggregateframework.sample.quickstart.command.domain.repository.PaymentRepository;
 import org.aggregateframework.sample.quickstart.command.service.OrderService;
-import org.aggregateframework.spring.cache.RedisL2Cache;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,41 +33,26 @@ public class RepositoryCacheTest extends AbstractTestCase implements Serializabl
     @Autowired
     OrderService orderService;
 
-    @Autowired
-    RedisL2Cache redisL2Cache;
-
     @Before
     public void before() {
         orderRepository.deleteAll();
         paymentRepository.deleteAll();
     }
 
-    @Test
-    public void testFindAll() throws IOException {
-        List<PricedOrder> pricedOrders = orderRepository.findAll();
-
-        List<Payment> payments = paymentRepository.findAll();
-
-        redisL2Cache.remove(payments);
-
-        payments = paymentRepository.findAll();
-
-    }
-
 
     @Test
-    public void testPrepare() throws ExecutionException, InterruptedException {
+    public void given_mulitple_threads_when_concurrent_place_order_then_all_success() throws ExecutionException, InterruptedException {
 
         ExecutorService executorService = Executors.newFixedThreadPool(200);
 
         List<Future> futures = new ArrayList<Future>();
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             Future future = executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    for (int j = 0; j < 100; j++) {
-                        PricedOrder pricedOrder = orderService.placeOrder(1, 10);
+                    for (int j = 0; j < 1; j++) {
+                        PricedOrder pricedOrder = orderService.placeOrder(1, 10,j);
                     }
                 }
             });

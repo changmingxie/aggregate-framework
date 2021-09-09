@@ -5,7 +5,6 @@ import org.aggregateframework.entity.AggregateRoot;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by changming.xie on 9/17/17.

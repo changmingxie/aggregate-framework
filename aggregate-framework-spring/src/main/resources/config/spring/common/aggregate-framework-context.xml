@@ -3,8 +3,18 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean class="org.mengyun.commons.context.SpringBeanFactory"/>
+    <bean class="org.aggregateframework.spring.factory.SpringBeanFactory"/>
 
     <bean class="org.aggregateframework.spring.eventhandling.AnnotationEventListenerBeanPostProcessor"/>
+
+    <bean class="org.aggregateframework.spring.datasource.TransactionManagerAutoProxyCreator">
+        <property name="interceptorNames">
+            <list>
+                <value>transactionManagerInterceptor</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="transactionManagerInterceptor" class="org.aggregateframework.spring.datasource.TransactionManagerInterceptor"/>
 
 </beans>

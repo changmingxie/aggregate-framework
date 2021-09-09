@@ -1,7 +1,7 @@
 package org.aggregateframework.sample.complexmodel.command.domain.entity;
 
 import org.aggregateframework.entity.AbstractSimpleAggregateRoot;
-import org.aggregateframework.spring.entity.DaoAwareQuery;
+import org.aggregateframework.entity.DaoAwareQuery;
 import org.aggregateframework.sample.complexmodel.command.domain.event.OrderCreatedEvent;
 import org.aggregateframework.sample.complexmodel.command.domain.event.OrderUpdatedEvent;
 import org.aggregateframework.sample.complexmodel.command.domain.event.SeatAvailabilityRemovedEvent;
@@ -14,7 +14,7 @@ public class BookingOrder extends AbstractSimpleAggregateRoot<UserShardingId> {
     private static final long serialVersionUID = -1431035454011931259L;
     private String content;
 
-    @DaoAwareQuery(mappedBy = "bookingOrder", select = "findByOrderId")
+    @DaoAwareQuery(mappedBy = "bookingOrder",select = "findByOrderId")
     private List<SeatAvailability> seatAvailabilities = new ArrayList<SeatAvailability>();
 
     private BookingPayment bookingPayment;

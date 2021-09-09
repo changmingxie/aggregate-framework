@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 /**
  * Created by changming.xie on 4/7/16.
  */
@@ -19,9 +17,8 @@ public class OrderService {
     OrderRepository orderRepository;
 
     @Transactional
-    public PricedOrder placeOrder(int productId, int price) {
-        PricedOrder pricedOrder = OrderFactory.buildOrder(productId, price);
-
+    public PricedOrder placeOrder(int productId, int price,int i) {
+        PricedOrder pricedOrder = OrderFactory.buildOrder(productId, price,i);
         return orderRepository.save(pricedOrder);
     }
 
@@ -31,5 +28,9 @@ public class OrderService {
         pricedOrder.confirm(statusId);
         pricedOrder.getOrderLines().get(0).setPrice(statusId);
         orderRepository.save(pricedOrder);
+    }
+
+    public PricedOrder find(long orderId) {
+        return orderRepository.findOne(orderId);
     }
 }

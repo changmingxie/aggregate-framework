@@ -16,10 +16,9 @@
  */
 package org.aggregateframework.eventhandling.processor.async;
 
-import com.lmax.disruptor.LifecycleAware;
-import com.lmax.disruptor.Sequence;
-import com.lmax.disruptor.SequenceReportingEventHandler;
-import org.aggregateframework.eventhandling.processor.SyncMethodInvoker;
+import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
+import org.aggregateframework.eventhandling.processor.EventMethodInvoker;
 
 /**
  * This event handler gets passed messages from the RingBuffer as they become
@@ -28,52 +27,36 @@ import org.aggregateframework.eventhandling.processor.SyncMethodInvoker;
  * constructor.
  */
 public class AsyncEventHandler implements
-        SequenceReportingEventHandler<AsyncEvent>, LifecycleAware {
+        EventHandler<AsyncEvent>, WorkHandler<AsyncEvent> {
 
-    private static final int NOTIFY_PROGRESS_THRESHOLD = 50;
-    private Sequence sequenceCallback;
-    private int counter;
-    private long threadId = -1;
+    private final long ordinal;
+    private final long workPoolSize;
 
-    @Override
-    public void setSequenceCallback(final Sequence sequenceCallback) {
-        this.sequenceCallback = sequenceCallback;
+    public AsyncEventHandler(long ordinal, long workPoolSize) {
+        this.ordinal = ordinal;
+        this.workPoolSize = workPoolSize;
     }
 
     @Override
     public void onEvent(final AsyncEvent event, final long sequence,
                         final boolean endOfBatch) throws Exception {
 
-//        event.execute(endOfBatch);
-//        event.clear();
+        if ((sequence % workPoolSize) == ordinal) {
 
-        SyncMethodInvoker.getInstance().invoke(event.getEventInvokerEntry());
-
-        // notify the BatchEventProcessor that the sequence has progressed.
-        // Without this callback the sequence would not be progressed
-        // until the batch has completely finished.
-        if (++counter > NOTIFY_PROGRESS_THRESHOLD) {
-            sequenceCallback.set(sequence);
-            counter = 0;
+            try {
+                EventMethodInvoker.getInstance().invoke(event.getEventInvokerEntry());
+            } finally {
+                event.clear();
+            }
         }
     }
 
-    /**
-     * Returns the thread ID of the background consumer thread, or {@code -1} if the background thread has not started
-     * yet.
-     *
-     * @return the thread ID of the background consumer thread, or {@code -1}
-     */
-    public long getThreadId() {
-        return threadId;
-    }
-
     @Override
-    public void onStart() {
-        threadId = Thread.currentThread().getId();
-    }
-
-    @Override
-    public void onShutdown() {
+    public void onEvent(AsyncEvent event) throws Exception {
+        try {
+            EventMethodInvoker.getInstance().invoke(event.getEventInvokerEntry());
+        } finally {
+            event.clear();
+        }
     }
 }

@@ -2,8 +2,8 @@ package org.aggregateframework.sample.performancetest;
 
 import org.aggregateframework.eventhandling.processor.AsyncMethodInvoker;
 import org.aggregateframework.sample.AbstractTestCase;
-import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 import org.aggregateframework.sample.quickstart.command.domain.entity.Payment;
+import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 import org.aggregateframework.sample.quickstart.command.domain.factory.PaymentFactory;
 import org.aggregateframework.sample.quickstart.command.domain.repository.PaymentRepository;
 import org.aggregateframework.sample.quickstart.command.service.OrderService;
@@ -34,20 +34,21 @@ public class PerformanceTest extends AbstractTestCase {
     Random random = new Random();
 
     @Test
-    public void performance_test() throws ExecutionException, InterruptedException {
+    public void given_muitple_threads_when_placeOrder_then_all_called_succeed() throws ExecutionException, InterruptedException {
 
         long startTime = System.currentTimeMillis();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(200);
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
 
         List<Future> futures = new ArrayList<Future>();
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 5; i++) {
 
+            int finalI = i;
             Future future = executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    PricedOrder pricedOrder = orderService.placeOrder(1, 10);
+                    PricedOrder pricedOrder = orderService.placeOrder(1, 10, finalI);
                 }
             });
 
@@ -64,7 +65,7 @@ public class PerformanceTest extends AbstractTestCase {
     }
 
     @Test
-    public void performance_test2() throws ExecutionException, InterruptedException {
+    public void given_mulitple_threads_when_save_payments_then_all_called_success() throws ExecutionException, InterruptedException {
 
         long startTime = System.currentTimeMillis();
 
@@ -72,7 +73,7 @@ public class PerformanceTest extends AbstractTestCase {
 
         List<Future> futures = new ArrayList<Future>();
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
 
             Future future = executorService.submit(new Runnable() {
                 @Override

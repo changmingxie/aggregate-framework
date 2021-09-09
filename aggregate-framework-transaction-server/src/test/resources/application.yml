@@ -1,0 +1,9 @@
+spring:
+    application:
+        name: aggregate-framework-transaction-server
+server:
+    servlet:
+        context-path: /business-aggregate-admin
+
+zookeeper:
+    connect-string: 127.0.0.1:2181

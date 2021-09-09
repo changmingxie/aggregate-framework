@@ -6,58 +6,82 @@
 
     <parent>
         <groupId>org.aggregateframework</groupId>
-        <artifactId>aggregate-framework</artifactId>
-        <version>2.10.10</version>
+        <artifactId>aggregate-framework-parent</artifactId>
+        <version>${revision}</version>
+        <relativePath>../aggregate-framework-parent/pom.xml</relativePath>
     </parent>
 
-    <groupId>org.aggregateframework</groupId>
     <artifactId>aggregate-framework-core</artifactId>
-    <name>aggregate-framework-core</name>
-    <packaging>jar</packaging>
 
     <dependencies>
-
-
-        <dependency>
-            <groupId>com.lmax</groupId>
-            <artifactId>disruptor</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mengyun</groupId>
-            <artifactId>commons-bean</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mengyun</groupId>
-            <artifactId>compensable-transaction-core</artifactId>
-
-        </dependency>
-
-        <dependency>
-            <groupId>com.esotericsoftware</groupId>
-            <artifactId>kryo-shaded</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
+        </dependency>
 
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>io.codis.jodis</groupId>
+            <artifactId>jodis</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.rocksdb</groupId>
+            <artifactId>rocksdbjni</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
     </dependencies>
 
 </project>

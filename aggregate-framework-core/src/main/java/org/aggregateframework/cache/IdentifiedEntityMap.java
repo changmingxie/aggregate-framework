@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class IdentifiedEntityMap {
 
-    Map<Class<? extends DomainObject>, Map<Serializable, DomainObject>> aggregateTypeEntityMap = new LinkedHashMap<Class<? extends DomainObject>, Map<Serializable, DomainObject>>();
+    Map<Class<? extends DomainObject>, Map<Serializable, DomainObject>> aggregateTypeEntityMap = new LinkedHashMap<>();
 
 
     public <E extends DomainObject<ID>, ID extends Serializable> void put(Class<E> entityClass, Collection<E> entities) {

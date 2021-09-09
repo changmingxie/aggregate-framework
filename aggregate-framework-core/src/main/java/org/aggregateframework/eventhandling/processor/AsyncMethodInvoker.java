@@ -1,6 +1,8 @@
 package org.aggregateframework.eventhandling.processor;
 
 import org.aggregateframework.eventhandling.EventInvokerEntry;
+import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.eventhandling.annotation.QueueFullPolicy;
 import org.aggregateframework.eventhandling.processor.async.AsyncDisruptor;
 import org.aggregateframework.eventhandling.processor.async.AsyncEventTranslator;
 import org.slf4j.Logger;
@@ -13,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncMethodInvoker {
 
-    static final Logger logger = LoggerFactory.getLogger(AsyncMethodInvoker.class);
+    private static final Logger logger = LoggerFactory.getLogger(AsyncMethodInvoker.class);
 
     private static volatile AsyncMethodInvoker INSTANCE = null;
 
@@ -44,18 +46,36 @@ public class AsyncMethodInvoker {
         eventTranslator.reset(eventInvokerEntry);
 
         if (!AsyncDisruptor.tryPublish(eventTranslator)) {
-            logger.warn("agg ring buffer is full, eventHandler will be execute in sync mode, {}.{}",
+            logger.info(String.format("agg ring buffer is full, eventHandler will be executed according your QueueFullPolicy, %s.%s",
                     eventInvokerEntry.getTarget().getClass().getSimpleName(),
-                    eventInvokerEntry.getMethod().getName());
-            handleRingBufferFull(eventInvokerEntry);
+                    eventInvokerEntry.getMethod().getName()));
+            handleRingBufferFull(eventTranslator);
         }
 
         return;
     }
 
 
-    private void handleRingBufferFull(EventInvokerEntry eventInvokerEntry) {
-        SyncMethodInvoker.getInstance().invoke(eventInvokerEntry);
+    private void handleRingBufferFull(AsyncEventTranslator eventTranslator) {
+
+        EventInvokerEntry eventInvokerEntry = eventTranslator.getEventInvokerEntry();
+
+        EventHandler eventHandler = eventInvokerEntry.getMethod().getAnnotation(EventHandler.class);
+
+        final QueueFullPolicy queueFullPolicy = eventHandler.asyncConfig().queueFullPolicy();
+
+        switch (queueFullPolicy) {
+            case DISCARD:
+                break;
+            case ENQUEUE:
+                AsyncDisruptor.publish(eventTranslator);
+                break;
+            case SYNCHRONOUS:
+                EventMethodInvoker.getInstance().invoke(eventInvokerEntry);
+                break;
+            default:
+                throw new IllegalStateException("Unknown QueueFullPolicy " + queueFullPolicy);
+        }
     }
 
     private AsyncEventTranslator getCachedTranslator() {

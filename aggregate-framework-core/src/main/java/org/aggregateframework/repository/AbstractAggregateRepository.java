@@ -9,8 +9,7 @@ import org.aggregateframework.eventbus.SimpleEventBus;
 import org.aggregateframework.serializer.KryoPoolSerializer;
 import org.aggregateframework.serializer.ObjectSerializer;
 import org.aggregateframework.session.AggregateEntry;
-import org.aggregateframework.session.LocalSessionFactory;
-import org.aggregateframework.session.SessionFactory;
+import org.aggregateframework.session.SessionFactoryHelper;
 import org.aggregateframework.utils.Assert;
 import org.aggregateframework.utils.CollectionUtils;
 import org.aggregateframework.utils.DomainObjectUtils;
@@ -29,7 +28,7 @@ import java.util.List;
 public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, ID extends Serializable> implements AggregateRepository<T, ID> {
 
     protected final Class<T> aggregateType;
-    protected SessionFactory sessionFactory = LocalSessionFactory.INSTANCE;
+    protected SessionFactoryHelper sessionFactoryHelper = SessionFactoryHelper.INSTANCE;
     private EventBus eventBus = SimpleEventBus.INSTANCE;
     private SaveAggregateCallback<T> saveAggregateCallback = new SimpleSaveAggregateCallback();
 
@@ -73,11 +72,11 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
                 AggregateEntry<T> aggregateEntry = new AggregateEntry<T>(entities, saveAggregateCallback, eventBus);
 
-                sessionFactory.requireClientSession().registerAggregate(aggregateEntry);
+                sessionFactoryHelper.requireClientSession().registerAggregate(aggregateEntry);
 
                 for (T entity : entities) {
                     if (!entity.isNew()) {
-                        sessionFactory.requireClientSession().registerToLocalCache(entity);
+                        sessionFactoryHelper.requireClientSession().registerToLocalCache(entity);
                     }
                 }
 
@@ -92,7 +91,7 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
         execute(new Callback<Boolean>() {
             @Override
             public Boolean execute() {
-                sessionFactory.requireClientSession().flush();
+                sessionFactoryHelper.requireClientSession().flush();
                 return Boolean.TRUE;
             }
         });
@@ -142,7 +141,7 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
                 for (ID id : idsNeedFetch) {
 
-                    T localCachedEntity = sessionFactory.requireClientSession().findInLocalCache(aggregateType, id);
+                    T localCachedEntity = sessionFactoryHelper.requireClientSession().findInLocalCache(aggregateType, id);
 
                     if (localCachedEntity != null) {
 
@@ -159,7 +158,7 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
                     for (T entity : fetchedEntitiesFromStore) {
                         T localEntity = objectSerializer.clone(entity);
-                        sessionFactory.requireClientSession().registerToLocalCache(localEntity);
+                        sessionFactoryHelper.requireClientSession().registerToLocalCache(localEntity);
                         entities.add(localEntity);
                     }
                 }
@@ -236,7 +235,7 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
             for (T entity : fetchedEntities) {
                 entity.clearDomainEvents();
-                sessionFactory.requireClientSession().registerOriginalCopy(entity);
+                sessionFactoryHelper.requireClientSession().registerOriginalCopy(entity);
             }
         }
 
@@ -283,8 +282,8 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
                 doRemove(needRemoveAggregates);
 
-                sessionFactory.requireClientSession().attachL2Cache(aggregateType, l2Cache);
-                sessionFactory.requireClientSession().removeFromL2Cache(needRemoveAggregates);
+                sessionFactoryHelper.requireClientSession().attachL2Cache(aggregateType, l2Cache);
+                sessionFactoryHelper.requireClientSession().removeFromL2Cache(needRemoveAggregates);
 
             }
 
@@ -292,17 +291,17 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
                 doSave(needSaveAggregates);
 
-                sessionFactory.requireClientSession().attachL2Cache(aggregateType, l2Cache);
-                sessionFactory.requireClientSession().writeToL2Cache(needSaveAggregates);
+                sessionFactoryHelper.requireClientSession().attachL2Cache(aggregateType, l2Cache);
+                sessionFactoryHelper.requireClientSession().writeToL2Cache(needSaveAggregates);
             }
 
             for (T entity : aggregateRoots) {
-                sessionFactory.requireClientSession().registerToLocalCache(entity);
+                sessionFactoryHelper.requireClientSession().registerToLocalCache(entity);
             }
 
             for (T entity : newAggregates) {
                 T clonedEntity = objectSerializer.clone(entity);
-                sessionFactory.requireClientSession().registerOriginalCopy(clonedEntity);
+                sessionFactoryHelper.requireClientSession().registerOriginalCopy(clonedEntity);
             }
         }
 
@@ -310,23 +309,28 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
     private <E> E execute(Callback<E> callback) {
 
-        boolean success = sessionFactory.registerClientSession(false);
+        boolean success = sessionFactoryHelper.registerClientSessionIfAbsent();
 
         try {
 
             E result = callback.execute();
 
             if (success) {
-                sessionFactory.requireClientSession().commit();
-                sessionFactory.requireClientSession().flushToL2Cache();
-                sessionFactory.requireClientSession().postHandle();
+                sessionFactoryHelper.requireClientSession().commit();
+                sessionFactoryHelper.requireClientSession().flushToL2Cache();
+                sessionFactoryHelper.requireClientSession().postHandle();
             }
 
             return result;
 
+        } catch (Exception e) {
+            if (success) {
+                sessionFactoryHelper.requireClientSession().rollback();
+            }
+            throw e;
         } finally {
             if (success) {
-                sessionFactory.closeClientSession();
+                sessionFactoryHelper.closeClientSession();
             }
         }
     }

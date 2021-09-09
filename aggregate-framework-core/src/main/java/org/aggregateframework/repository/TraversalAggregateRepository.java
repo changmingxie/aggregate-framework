@@ -610,7 +610,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
         Map<ID, T> needFetchIdEntityMap = new LinkedHashMap<ID, T>();
 
         for (T updateEntity : updateEntities) {
-            T originalEntity = sessionFactory.requireClientSession().findOriginalCopy(this.aggregateType, updateEntity.getId());
+            T originalEntity = sessionFactoryHelper.requireClientSession().findOriginalCopy(this.aggregateType, updateEntity.getId());
 
             if (originalEntity == null) {
                 needFetchIdEntityMap.put(updateEntity.getId(), updateEntity);

@@ -1,7 +1,7 @@
 package org.aggregateframework.eventhandling.transaction;
 
 
-import org.mengyun.compensable.transaction.*;
+import org.aggregateframework.transaction.*;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -42,7 +42,7 @@ public class EventTransaction implements Transaction<EventParticipant>, Serializ
         this.transactionType = TransactionType.BRANCH;
     }
 
-    public EventTransaction(TransactionType transactionType) {
+    public  EventTransaction(TransactionType transactionType) {
         this.xid = new TransactionXid();
         this.status = TransactionStatus.TRYING;
         this.transactionType = transactionType;

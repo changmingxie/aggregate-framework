@@ -31,17 +31,21 @@ public interface ClientSession {
 
     <T extends AggregateRoot<ID>, ID extends Serializable> T registerOriginalCopy(T entity);
 
-    public <T extends AggregateRoot<ID>, ID extends Serializable> T findInLocalCache(Class<T> aggregateType, ID identifier);
+    <T extends AggregateRoot<ID>, ID extends Serializable> T findInLocalCache(Class<T> aggregateType, ID identifier);
 
-    public <T extends AggregateRoot<ID>, ID extends Serializable> T findOriginalCopy(Class<T> aggregateType, ID identifier);
+    <T extends AggregateRoot<ID>, ID extends Serializable> T findOriginalCopy(Class<T> aggregateType, ID identifier);
 
-    public <T extends AggregateRoot<ID>, ID extends Serializable> void removeFromL2Cache(List<T> entities);
+    <T extends AggregateRoot<ID>, ID extends Serializable> void removeFromL2Cache(List<T> entities);
 
-    public <T extends AggregateRoot<ID>, ID extends Serializable> void writeToL2Cache(List<T> entities);
+    <T extends AggregateRoot<ID>, ID extends Serializable> void writeToL2Cache(List<T> entities);
 
-    public void flushToL2Cache();
+    void flushToL2Cache();
 
     void addPostInvoker(EventInvokerEntry eventInvokerEntry);
 
+    void addTransactionalInvoker(EventInvokerEntry eventInvokerEntry);
+
     <T extends AggregateRoot<ID>, ID extends Serializable> void attachL2Cache(Class<T> aggregateType, L2Cache<T, ID> l2Cache);
+
+
 }

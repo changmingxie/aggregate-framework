@@ -1,7 +1,7 @@
 package org.aggregateframework.sample.complexmodel.command.domain.repository;
 
+import org.aggregateframework.repository.DaoAwareAggregateRepository;
 import org.aggregateframework.sample.complexmodel.command.domain.entity.BookingOrder;
-import org.aggregateframework.spring.repository.DaoAwareAggregateRepository;
 import org.aggregateframework.sample.complexmodel.command.domain.entity.UserShardingId;
 import org.springframework.stereotype.Repository;
 

@@ -17,15 +17,19 @@
 package org.aggregateframework.eventhandling.processor.async;
 
 import com.lmax.disruptor.ExceptionHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default disruptor exception handler for errors that occur in the AsyncLogger background thread.
  */
 public class EventProcessDefaultExceptionHandler implements ExceptionHandler<AsyncEvent> {
 
+    static final Logger logger = LoggerFactory.getLogger(EventProcessDefaultExceptionHandler.class);
 
     @Override
     public void handleEventException(Throwable throwable, long sequence, AsyncEvent event) {
+
         final StringBuilder sb = new StringBuilder(512);
         sb.append("EventProcess error handling event seq=").append(sequence).append(", value='");
         try {
@@ -33,21 +37,22 @@ public class EventProcessDefaultExceptionHandler implements ExceptionHandler<Asy
         } catch (final Exception ignored) {
             sb.append("[ERROR calling ").append(event.getClass()).append(".toString(): ");
             sb.append(ignored).append("]");
+        } finally {
+            event.clear();
         }
+
         sb.append("':");
-        System.err.println(sb);
-        throwable.printStackTrace();
+
+        logger.error(sb.toString(), throwable);
     }
 
     @Override
     public void handleOnStartException(final Throwable throwable) {
-        System.err.println("EventProcess error starting:");
-        throwable.printStackTrace();
+        logger.error("EventProcess error starting:", throwable);
     }
 
     @Override
     public void handleOnShutdownException(final Throwable throwable) {
-        System.err.println("EventProcess error shutting down:");
-        throwable.printStackTrace();
+        logger.error("EventProcess error  shutting down:", throwable);
     }
 }
