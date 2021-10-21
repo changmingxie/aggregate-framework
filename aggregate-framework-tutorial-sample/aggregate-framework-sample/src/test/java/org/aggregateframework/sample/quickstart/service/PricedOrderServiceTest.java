@@ -5,10 +5,7 @@ import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrde
 import org.aggregateframework.sample.quickstart.command.domain.repository.OrderRepository;
 import org.aggregateframework.sample.quickstart.command.domain.repository.PaymentRepository;
 import org.aggregateframework.sample.quickstart.command.service.OrderService;
-import org.aggregateframework.utils.KryoSerializationUtils;
-import org.apache.commons.lang3.SerializationUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
@@ -52,41 +49,6 @@ public class PricedOrderServiceTest extends AbstractTestCase {
 
         Assert.assertEquals(2, foundOrder.getVersion());
 
-    }
-
-    @Before
-    public void before() {
-        KryoSerializationUtils.getInstance();
-    }
-
-    @Test
-    public void given_priced_order_when_clone_then_println_out_the_cost_time() {
-
-        PricedOrder pricedOrder = orderService.placeOrder(1, 10,1);
-
-
-        Long kryoStartTime = System.currentTimeMillis();
-        PricedOrder clonedOrder = KryoSerializationUtils.clone(pricedOrder);
-        System.out.println("kryo cost time:" + (System.currentTimeMillis() - kryoStartTime));
-
-        kryoStartTime = System.currentTimeMillis();
-        clonedOrder = KryoSerializationUtils.clone(pricedOrder);
-        System.out.println("kryo cost time:" + (System.currentTimeMillis() - kryoStartTime));
-
-        Assert.assertEquals(clonedOrder.getId(), pricedOrder.getId());
-
-        Long jdkStartTime = System.currentTimeMillis();
-        PricedOrder clonedOrder2 = SerializationUtils.clone(pricedOrder);
-        System.out.println("jdk cost time:" + (System.currentTimeMillis() - jdkStartTime));
-
-        Long jdkStartTime2 = System.currentTimeMillis();
-        PricedOrder clonedOrder3 = SerializationUtils.clone(pricedOrder);
-        System.out.println("jdk cost time:" + (System.currentTimeMillis() - jdkStartTime2));
-
-
-        Assert.assertEquals(clonedOrder2.getId(), pricedOrder.getId());
-
-//        for (; ; ) ;
     }
 
 
