@@ -11,7 +11,7 @@
     <properties>
 
         <java.version>1.8</java.version>
-        <revision>3.3.14-SNAPSHOT</revision>
+        <revision>3.3.17-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -99,6 +99,5 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
 

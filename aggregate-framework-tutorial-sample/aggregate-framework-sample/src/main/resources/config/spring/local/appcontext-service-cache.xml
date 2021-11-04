@@ -30,6 +30,7 @@
 
     <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.sample.quickstart.command.infrastructure.cache.PricedOrderL2Cache">
         <property name="jedisPool" ref="jedisPool"/>
+        <property name="keyPrefix" value="AGGSAMPLE:PRICEDORDER:"/>
     </bean>
 
 <!--    <bean id="pricedOrderJodisL2Cache"-->
@@ -41,9 +42,9 @@
     <!--        <property name="redisTemplate" ref="redisTemplate"/>-->
     <!--    </bean>-->
 
-    <!--    <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.spring.cache.JedisClusterL2Cache">-->
-    <!--        <property name="jedisCluster" ref="jedisCluster"/>-->
-    <!--    </bean>-->
+<!--        <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.spring.cache.JedisClusterL2Cache">-->
+<!--            <property name="jedisCluster" ref="jedisCluster"/>-->
+<!--        </bean>-->
 
     <bean id="pricedOrderMultiLevelL2Cache" class="org.aggregateframework.cache.MultiLevelL2Cache">
         <property name="cachingProviders">

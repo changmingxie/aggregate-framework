@@ -3,7 +3,9 @@ package org.aggregateframework.serializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.util.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.util.Pool;
+import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +41,12 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
                 Kryo kryo = new Kryo();
                 kryo.setReferences(true);
                 kryo.setRegistrationRequired(false);
+
+                ((DefaultInstantiatorStrategy) kryo.getInstantiatorStrategy())
+                        .setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
+
+
+
                 initHook(kryo);
                 return kryo;
             }
@@ -52,32 +60,6 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
         for (Kryo kryo : preCreatedKryos) {
             kryoPool.free(kryo);
         }
-
-//        KryoFactory factory = new KryoFactory() {
-//            public Kryo create() {
-//                Kryo kryo = new Kryo();
-//                kryo.setReferences(true);
-//                kryo.setRegistrationRequired(false);
-////            kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
-////                kryo.setWarnUnregisteredClasses(true);
-//                //Fix the NPE bug when deserializing Collections.
-//                ((Kryo.DefaultInstantiatorStrategy) kryo.getInstantiatorStrategy())
-//                        .setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
-//                initHook(kryo);
-//                return kryo;
-//            }
-//        };
-//
-//        pool = new KryoPool.Builder(factory).softReferences().build();
-//
-//        List<Kryo> preCreatedKryos = new ArrayList<>();
-//        for (int i = 0; i < initPoolSize; i++) {
-//            preCreatedKryos.add(pool.borrow());
-//        }
-//
-//        for (Kryo kryo : preCreatedKryos) {
-//            pool.release(kryo);
-//        }
     }
 
     @Override

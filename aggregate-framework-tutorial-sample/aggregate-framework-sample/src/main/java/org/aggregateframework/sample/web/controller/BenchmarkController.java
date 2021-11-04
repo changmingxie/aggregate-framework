@@ -28,7 +28,7 @@ public class BenchmarkController {
 
         List<Callable<Void>> callables = new ArrayList<>();
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 10; i++) {
 
             int finalI = i;
             callables.add(new Callable() {

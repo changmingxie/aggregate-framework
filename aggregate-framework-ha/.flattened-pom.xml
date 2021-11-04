@@ -5,12 +5,12 @@
   <parent>
     <groupId>org.aggregateframework</groupId>
     <artifactId>aggregate-framework-parent</artifactId>
-    <version>3.3.13-SNAPSHOT</version>
+    <version>3.3.17-SNAPSHOT</version>
     <relativePath>../aggregate-framework-parent/pom.xml</relativePath>
   </parent>
   <groupId>org.aggregateframework.ha</groupId>
   <artifactId>aggregate-framework-ha</artifactId>
-  <version>3.3.13-SNAPSHOT</version>
+  <version>3.3.17-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
     <module>aggregate-framework-ha-core</module>

@@ -7,6 +7,7 @@ import org.aggregateframework.serializer.RegisterableKryoSerializer;
 import org.aggregateframework.transaction.repository.helper.CommandCallback;
 import org.aggregateframework.transaction.repository.helper.RedisCommands;
 import org.aggregateframework.utils.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ public abstract class AbstractRedisL2Cache<T extends AggregateRoot<ID>, ID exten
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractRedisL2Cache.class);
 
-    private static final String DEFAULT_KEY_PREFIX = "AGG:L2CACHEV2:";
+    private static final String DEFAULT_KEY_PREFIX = "AGG:L2CACHEV3:";
 
     protected ObjectSerializer<T> valueSerializer = new RegisterableKryoSerializer();
 
@@ -29,12 +30,17 @@ public abstract class AbstractRedisL2Cache<T extends AggregateRoot<ID>, ID exten
 
     protected int expireTimeInSecond = 60 * 30; //30 minute
 
-    protected String keyPrefix = DEFAULT_KEY_PREFIX;
+    protected String keyPrefix = null;
 
     protected boolean suppressErrors = true;
 
-    public void setSuppressErrors(boolean suppressErrors) {
-        this.suppressErrors = suppressErrors;
+
+    public ObjectSerializer<T> getValueSerializer() {
+        return valueSerializer;
+    }
+
+    public void setValueSerializer(ObjectSerializer<T> valueSerializer) {
+        this.valueSerializer = valueSerializer;
     }
 
     public void setMaxAttempts(int maxAttempts) {
@@ -45,14 +51,6 @@ public abstract class AbstractRedisL2Cache<T extends AggregateRoot<ID>, ID exten
         this.expireTimeInSecond = expireTimeInSecond;
     }
 
-    public ObjectSerializer<T> getValueSerializer() {
-        return valueSerializer;
-    }
-
-    public void setValueSerializer(ObjectSerializer<T> valueSerializer) {
-        this.valueSerializer = valueSerializer;
-    }
-
     public String getKeyPrefix() {
         return keyPrefix;
     }
@@ -61,8 +59,20 @@ public abstract class AbstractRedisL2Cache<T extends AggregateRoot<ID>, ID exten
         this.keyPrefix = keyPrefix;
     }
 
+    public void setSuppressErrors(boolean suppressErrors) {
+        this.suppressErrors = suppressErrors;
+    }
+
+
     protected String getKeyPrefix(Class aggregateType) {
-        return DEFAULT_KEY_PREFIX + aggregateType.getName() + ":";
+
+        String keyPrefix = getKeyPrefix();
+
+        if(StringUtils.isEmpty(keyPrefix)) {
+            return DEFAULT_KEY_PREFIX + aggregateType.getName() + ":";
+        } else {
+            return keyPrefix;
+        }
     }
 
     public abstract RedisCommands getRedisCommands();

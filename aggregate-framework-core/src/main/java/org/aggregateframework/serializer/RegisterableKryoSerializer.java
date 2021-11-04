@@ -39,22 +39,10 @@ public class RegisterableKryoSerializer<T> extends KryoPoolSerializer<T> {
 
     protected void initHook(Kryo kryo) {
         kryo.setWarnUnregisteredClasses(this.warnUnregisteredClasses);
-//        kryo.setDefaultSerializer(CompatibleFieldSerializer::new);
-//        kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
-//        SerializerFactory.CompatibleFieldSerializerFactory factory = new SerializerFactory.CompatibleFieldSerializerFactory() {
-//            public CompatibleFieldSerializer newSerializer (Kryo kryo, Class type) {
-//
-//                CompatibleFieldSerializer serializer = super.newSerializer(kryo, type);
-//                serializer.getCompatibleFieldSerializerConfig().setReadUnknownFieldData(true);
-//                serializer.getCompatibleFieldSerializerConfig().setChunkedEncoding(true);
-//
-//                return serializer;
-//            }
-//        };
+
         SerializerFactory.CompatibleFieldSerializerFactory factory = new SerializerFactory.CompatibleFieldSerializerFactory();
         factory.getConfig().setReadUnknownFieldData(true);
         factory.getConfig().setChunkedEncoding(true);
-
         kryo.setDefaultSerializer(factory);
 
         registerClasses(kryo, this.registerClasses);
