@@ -12,7 +12,7 @@ import java.util.List;
  * Time: 下午5:14
  */
 public interface EventBus {
-    
+
     public void subscribe(EventListener eventListener);
 
     void publishInTransaction(List<EventMessage> messages, LocalTransactionExecutor localTransactionExecutor);

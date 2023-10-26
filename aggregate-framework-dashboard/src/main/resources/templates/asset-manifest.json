@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/aggregate-framework-dashboard/static/css/main.013a3909.chunk.css",
+    "main.js": "/aggregate-framework-dashboard/static/js/main.7440f4f2.chunk.js",
+    "main.js.map": "/aggregate-framework-dashboard/static/js/main.7440f4f2.chunk.js.map",
+    "runtime-main.js": "/aggregate-framework-dashboard/static/js/runtime-main.f35c6c1a.js",
+    "runtime-main.js.map": "/aggregate-framework-dashboard/static/js/runtime-main.f35c6c1a.js.map",
+    "static/css/2.4f57d18e.chunk.css": "/aggregate-framework-dashboard/static/css/2.4f57d18e.chunk.css",
+    "static/js/2.ed2ac97b.chunk.js": "/aggregate-framework-dashboard/static/js/2.ed2ac97b.chunk.js",
+    "static/js/2.ed2ac97b.chunk.js.map": "/aggregate-framework-dashboard/static/js/2.ed2ac97b.chunk.js.map",
+    "index.html": "/aggregate-framework-dashboard/index.html",
+    "precache-manifest.e7deddcfaaf393866229d67dd48f1f16.js": "/aggregate-framework-dashboard/precache-manifest.e7deddcfaaf393866229d67dd48f1f16.js",
+    "service-worker.js": "/aggregate-framework-dashboard/service-worker.js",
+    "static/css/2.4f57d18e.chunk.css.map": "/aggregate-framework-dashboard/static/css/2.4f57d18e.chunk.css.map",
+    "static/css/main.013a3909.chunk.css.map": "/aggregate-framework-dashboard/static/css/main.013a3909.chunk.css.map",
+    "static/js/2.ed2ac97b.chunk.js.LICENSE.txt": "/aggregate-framework-dashboard/static/js/2.ed2ac97b.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.f35c6c1a.js",
+    "static/css/2.4f57d18e.chunk.css",
+    "static/js/2.ed2ac97b.chunk.js",
+    "static/css/main.013a3909.chunk.css",
+    "static/js/main.7440f4f2.chunk.js"
+  ]
+}

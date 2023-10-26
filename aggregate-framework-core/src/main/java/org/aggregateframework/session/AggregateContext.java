@@ -8,12 +8,11 @@ import org.aggregateframework.cache.IdentifiedEntityMap;
 public class AggregateContext {
 
     private IdentifiedEntityMap entityMap = new IdentifiedEntityMap();
+    private boolean isAggregateChanged;
 
     public IdentifiedEntityMap getEntityMap() {
         return entityMap;
     }
-
-    private boolean isAggregateChanged;
 
     public boolean isAggregateChanged() {
         return isAggregateChanged;

@@ -1,8 +1,8 @@
 package org.aggregateframework.cache;
 
-import org.aggregateframework.cache.helper.RedisTemplateCommands;
 import org.aggregateframework.entity.AggregateRoot;
-import org.aggregateframework.transaction.repository.helper.RedisCommands;
+import org.aggregateframework.persistent.redis.RedisCommands;
+import org.aggregateframework.persistent.redis.RedisTemplateCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.io.Serializable;

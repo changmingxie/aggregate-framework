@@ -1,5 +1,6 @@
 package org.aggregateframework.transaction.serializer;
 
+
 import org.aggregateframework.serializer.ObjectSerializer;
 import org.aggregateframework.transaction.Transaction;
 

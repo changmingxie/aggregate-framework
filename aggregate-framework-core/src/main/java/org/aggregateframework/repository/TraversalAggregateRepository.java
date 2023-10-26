@@ -1,12 +1,12 @@
 package org.aggregateframework.repository;
 
-import org.aggregateframework.OptimisticLockException;
-import org.aggregateframework.SystemException;
 import org.aggregateframework.cache.IdentifiedEntityMap;
 import org.aggregateframework.entity.AbstractDomainObject;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.CompositeId;
 import org.aggregateframework.entity.DomainObject;
+import org.aggregateframework.exception.OptimisticLockException;
+import org.aggregateframework.exception.SystemException;
 import org.aggregateframework.session.AggregateContext;
 import org.aggregateframework.utils.CollectionUtils;
 import org.aggregateframework.utils.DomainObjectUtils;
@@ -671,7 +671,7 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
     private void compareAndSetRootVersion(List<Pair<T, T>> currentAndOriginalEntityPairs, AggregateContext aggregateContext) {
 
         List<T> needUpdateRootEntities = new ArrayList<T>();
-        List<T> needUpdateVersionEntities = new ArrayList<T>();
+//        List<T> needUpdateVersionEntities = new ArrayList<T>();
 
         for (Pair<T, T> currentAndOriginalEntityPair : currentAndOriginalEntityPairs) {
 
@@ -681,16 +681,17 @@ public abstract class TraversalAggregateRepository<T extends AggregateRoot<ID>, 
             if (DomainObjectUtils.equal(entity, originalEntity) && aggregateContext.isAggregateChanged()) {
 
                 setCreateTimeOrLastUpdateTime(entity);
-                if (entity instanceof AggregateRoot) {
-                    DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
-                }
+                // entity is AggregateRoot, no need check it again!
+//                if (entity instanceof AggregateRoot) {
+                DomainObjectUtils.setField(entity, DomainObjectUtils.VERSION, entity.getVersion() + 1L);
+//                }
                 needUpdateRootEntities.add(entity);
-                needUpdateVersionEntities.add(entity);
+//                needUpdateVersionEntities.add(entity);
             }
 
-            if (!DomainObjectUtils.equal(entity, originalEntity)) {
-                needUpdateVersionEntities.add(entity);
-            }
+//            if (!DomainObjectUtils.equal(entity, originalEntity)) {
+//                needUpdateVersionEntities.add(entity);
+//            }
         }
 
         if (!CollectionUtils.isEmpty(needUpdateRootEntities)) {

@@ -1,8 +1,8 @@
 package org.aggregateframework.cache;
 
 import org.aggregateframework.entity.AggregateRoot;
-import org.aggregateframework.transaction.repository.helper.JedisClusterCommands;
-import org.aggregateframework.transaction.repository.helper.RedisCommands;
+import org.aggregateframework.persistent.redis.JedisClusterCommands;
+import org.aggregateframework.persistent.redis.RedisCommands;
 import redis.clients.jedis.JedisCluster;
 
 import java.io.Serializable;

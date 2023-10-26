@@ -1,0 +1,39 @@
+# dashbaord aggserver模式专项配置
+server:
+  servlet:
+    context-path: /aggregate-framework-dashboard
+  port: 22332
+
+logging:
+  level:
+    root: info
+spring:
+  application:
+    name: aggregate-framework-dashboard
+  resources:
+    static-locations: classpath:templates/
+    chain:
+      cache: false
+  freemarker:
+    enabled: true
+    cache: false
+    charset: UTF-8
+    suffix: .html
+    check-template-location: true
+    template-loader-path: classpath:/templates/
+  agg:
+    dashboard:
+      userName: admin
+      password: 123456
+      connection-mode: server
+    registry:
+      registry-type: direct  # 切换agg-server注册中心
+      registry-role: dashboard
+      direct:
+        addresses-for-dashboard: localhost:12332
+      nacos:
+        server-addr: localhost:8848
+      zookeeper:
+        connect-string: localhost:2181
+feign:
+  path: /aggregate-framework-server

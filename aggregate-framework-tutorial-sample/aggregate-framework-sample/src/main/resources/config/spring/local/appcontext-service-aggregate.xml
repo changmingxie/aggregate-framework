@@ -1,147 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:agg="http://www.aggregateframework.org/schema/agg"
        xmlns="http://www.springframework.org/schema/beans"
-       xmlns:util="http://www.springframework.org/schema/util" xmlns:agg="http://www.aggregateframework.org/schema/agg"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd   http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd http://www.aggregateframework.org/schema/agg http://www.aggregateframework.org/schema/agg.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd     http://www.aggregateframework.org/schema/agg http://www.aggregateframework.org/schema/agg.xsd">
+
+    <!--<agg:integration client-config="clientConfig"/>-->
+
+    <!--<bean class="org.aggregateframework.ClientConfig" id="clientConfig">-->
+    <!--    <property name="clientRegistryConfig">-->
+    <!--        <bean class="org.aggregateframework.properties.registry.ClientRegistryProperties">-->
+    <!--            &lt;!&ndash;<property name="direct">&ndash;&gt;-->
+    <!--            &lt;!&ndash;    <bean class="org.aggregateframework.discovery.registry.direct.DirectRegistryProperties">&ndash;&gt;-->
+    <!--            &lt;!&ndash;        <property name="serverAddresses" value="127.0.0.1:2332"/>&ndash;&gt;-->
+    <!--            &lt;!&ndash;    </bean>&ndash;&gt;-->
+    <!--            &lt;!&ndash;</property>&ndash;&gt;-->
+    <!--            <property name="nacos">-->
+    <!--                <bean class="org.aggregateframework.discovery.registry.nacos.NacosRegistryProperties"/>-->
+    <!--            </property>-->
+    <!--            <property name="registryType" value="nacos"/>-->
+    <!--        </bean>-->
+    <!--    </property>-->
+    <!--    <property name="storeConfig">-->
+    <!--        <bean class="org.aggregateframework.properties.store.StoreProperties">-->
+    <!--            <property name="domain" value="AGG:UT"/>-->
+    <!--            <property name="storageType" value="REMOTING"/>-->
+    <!--        </bean>-->
+    <!--    </property>-->
+    <!--</bean>-->
 
 
-    <!--    <bean class="org.aggregateframework.spring.support.SpringIntegrationConfiguration"/>-->
-
-    <agg:integration/>
-
-    <!-- recovery configuration -->
-    <bean class="org.aggregateframework.transaction.recovery.RecoverConfiguration">
-        <property name="transactionRepository" ref="transactionRepository"/>
-        <property name="recoverFrequency" ref="recoverFrequency"/>
-<!--        <property name="recoveryLock" ref="recoveryLock"/>-->
-    </bean>
-
-    <bean id="transactionRepository" class="org.aggregateframework.transaction.repository.SentinelTransactionRepository"
-          init-method="init" destroy-method="close">
-        <property name="workTransactionRepository" ref="redisTransactionRepository"/>
-        <property name="degradedTransactionRepository" ref="rocksDbTransactionRepository"/>
-        <property name="sentinelController" ref="sentinelController"/>
-    </bean>
-
-    <bean id="recoverFrequency" class="org.aggregateframework.transaction.recovery.DefaultRecoverFrequency">
-        <property name="maxRetryCount" value="30"/>
-        <property name="recoverDuration" value="10"/>
-        <property name="cronExpression" value="0/5 * * * * ? "/>
-        <property name="fetchPageSize" value="100"/>
-    </bean>
-
-<!--    <bean id="recoveryLock" class="org.aggregateframework.transaction.recovery.RedissonRecoveryLock" init-method="init">-->
-<!--        <property name="lockSuffixName" value="AGG:SAMPLEV3:"/>-->
-<!--        <property name="redissonClient" ref="redissonClient"/>-->
-<!--    </bean>-->
-
-    <!--    <bean id="jedisClusterTransactionRepository"-->
-    <!--          class="org.aggregateframework.transaction.repository.JedisClusterTransactionRepository">-->
-    <!--        <property name="domain" value="AGG:SAMPLEV3:"/>-->
-    <!--        <property name="jedisCluster" ref="jedisCluster"/>-->
-    <!--        <property name="serializer" ref="transactionSerializer"/>-->
-    <!--    </bean>-->
-
-    <bean id="redisTransactionRepository"
-          class="org.aggregateframework.transaction.repository.RedisTransactionRepository">
-        <property name="domain" value="AGG:SAMPLEV3:"/>
-        <property name="jedisPool" ref="jedisPool"/>
-    </bean>
-
-    <bean id="rocksDbTransactionRepository"
-          class="org.aggregateframework.transaction.repository.RocksDbTransactionRepository"
-          init-method="init"
-          destroy-method="close">
-        <property name="domain" value="AGG:SAMPLEV3:"/>
-        <property name="location" value="/tmp"/>
-    </bean>
-
-    <bean id="sentinelController" class="org.aggregateframework.ha.zookeeper.ZookeeperSentinelController">
-        <constructor-arg ref="curator"/>
-        <constructor-arg value="AGG:SAMPLEV3:"/>
-    </bean>
-
-
-    <bean id="transactionSerializer"
-          class="org.aggregateframework.transaction.serializer.RegisterableKryoTransactionSerializer">
-        <constructor-arg name="initPoolSize" value="300"/>
-        <constructor-arg name="registerClasses">
-            <list>
-                <value>org.aggregateframework.sample.quickstart.command.domain.event.OrderConfirmedEvent</value>
-                <value>org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder</value>
-                <value>org.aggregateframework.sample.quickstart.command.domain.entity.OrderLine</value>
-                <value>org.aggregateframework.sample.quickstart.command.domain.event.OrderPlacedEvent</value>
-            </list>
-        </constructor-arg>
-        <!--        <constructor-arg name="warnUnregisteredClasses" value="true"/>-->
-    </bean>
-
-    <bean id="jedisCluster" class="redis.clients.jedis.JedisCluster">
-        <constructor-arg>
-            <util:set>
-                <bean class="redis.clients.jedis.HostAndPort">
-                    <constructor-arg value="#{redis['clusterredis1.host']}"/>
-                    <constructor-arg value="#{redis['clusterredis1.port']}"/>
-                </bean>
-                <bean class="redis.clients.jedis.HostAndPort">
-                    <constructor-arg value="#{redis['clusterredis2.host']}"/>
-                    <constructor-arg value="#{redis['clusterredis2.port']}"/>
-                </bean>
-                <bean class="redis.clients.jedis.HostAndPort">
-                    <constructor-arg value="#{redis['clusterredis3.host']}"/>
-                    <constructor-arg value="#{redis['clusterredis3.port']}"/>
-                </bean>
-            </util:set>
-        </constructor-arg>
-        <constructor-arg type="int" value="#{redis['redis.connectionTimeout']}"/>
-        <constructor-arg type="int" value="#{redis['redis.soTimeout']}"/>
-        <constructor-arg type="int" value="3"/>
-        <constructor-arg value="#{redis['clusterredis.password']}"/>
-        <constructor-arg ref="poolConfig"/>
-    </bean>
-
-
-<!--    <redisson:client id="redissonClient">-->
-<!--        <redisson:single-server-->
-<!--                address="redis://127.0.0.1:6379"-->
-<!--                idle-connection-timeout="1000"-->
-<!--                connect-timeout="2000"-->
-<!--                timeout="300"-->
-<!--                retry-attempts="3"-->
-<!--                retry-interval="0"-->
-<!--                connection-minimum-idle-size="15"-->
-<!--                connection-pool-size="30"-->
-<!--                database="0"-->
-<!--        />-->
-<!--    </redisson:client>-->
-
-    <bean class="org.aggregateframework.ha.spring.SpringSmartAutoRegistryService">
-        <property name="registry" ref="registry"/>
-        <property name="registration" ref="registration"/>
-    </bean>
-
-    <bean id="registration" class="org.aggregateframework.ha.spring.RegistrationSpringFactory">
-        <property name="transactionRepository" ref="transactionRepository"/>
-        <property name="owners">
-            <list>
-                <bean class="org.aggregateframework.ha.registry.Owner">
-                    <property name="name" value="123"/>
-                    <property name="email" value="123@123.com"/>
-                </bean>
-            </list>
-        </property>
-        <property name="application" value="aggregate-framework-sample"/>
-    </bean>
-
-    <bean id="registry" class="org.aggregateframework.ha.zookeeper.ZookeeperRegistry">
-        <constructor-arg ref="curator"/>
-    </bean>
-
-
-    <bean id="curator" class="org.aggregateframework.ha.zookeeper.CuratorFactory" factory-method="make"
-          destroy-method="close">
-        <constructor-arg value="#{zk['zk.address']}"/>
-        <constructor-arg value="#{zk['zk.digest']}"/>
-    </bean>
 
 </beans>

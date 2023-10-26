@@ -1,39 +1,107 @@
 package org.aggregateframework.transaction;
 
-import javax.transaction.xa.Xid;
-import java.io.Serializable;
+import org.aggregateframework.xid.TransactionXid;
+import org.aggregateframework.xid.Xid;
+
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by changming.xie on 8/23/17.
  */
-public interface Transaction<T extends Participant> extends Serializable {
+public class Transaction {
 
-    Xid getXid();
+    private static final long serialVersionUID = 7291423944314337931L;
 
-    int getRetriedCount();
+    private long rowId = -1;
+    private Xid xid;
 
-    void setRetriedCount(int retriedCount);
+    private volatile int retriedCount = 0;
 
-    Date getCreateTime();
+    private Date createTime = new Date();
 
-    Date getLastUpdateTime();
+    private Date lastUpdateTime = new Date();
 
-    void setLastUpdateTime(Date date);
+    private long version = 1;
 
-    long getVersion();
+    private Participant participant = null;
 
-    void setVersion(long currentVersion);
+    private Map<String, String> attachments = new HashMap<>();
 
-    void setStatus(TransactionStatus status);
+    public Transaction() {
 
-    void commit() throws Throwable;
+    }
 
-    void rollback() throws Throwable;
+    public Transaction(Xid xid) {
+        this.xid = xid;
+    }
 
-    void enlistParticipant(T participant);
+    public void enlistParticipant(Participant participant) {
+        this.participant = participant;
+    }
 
-    TransactionType getTransactionType();
+    public void commit() {
+        this.participant.proceed();
+    }
 
-    TransactionStatus getStatus();
+    public Xid getXid() {
+        return xid;
+    }
+
+    public void setXid(TransactionXid xid) {
+        this.xid = xid;
+    }
+
+    public int getRetriedCount() {
+        return retriedCount;
+    }
+
+    public void setRetriedCount(int retriedCount) {
+        this.retriedCount = retriedCount;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getLastUpdateTime() {
+        return lastUpdateTime;
+    }
+
+    public void setLastUpdateTime(Date lastUpdateTime) {
+        this.lastUpdateTime = lastUpdateTime;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
+    }
+
+    public Participant getParticipant() {
+        return participant;
+    }
+
+    public void setParticipant(Participant participant) {
+        this.participant = participant;
+    }
+
+    public Map<String, String> getAttachments() {
+        return attachments;
+    }
+
+    public long getRowId() {
+        return rowId;
+    }
+
+    public void setRowId(long rowId) {
+        this.rowId = rowId;
+    }
 }

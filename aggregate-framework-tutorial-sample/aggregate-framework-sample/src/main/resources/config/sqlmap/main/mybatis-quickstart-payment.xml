@@ -14,18 +14,18 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		PAYMENT_ID,
-		TOTAL_AMOUNT,
-		STATUS_ID,
-		PAYMENT_NO,
-		ORDER_ID,
-		CREATE_TIME,
-		LAST_UPDATE_TIME,
-		VERSION
-		FROM
-		CQRS_QCK_PAYMENT
-	</sql>
+        SELECT
+        PAYMENT_ID,
+        TOTAL_AMOUNT,
+        STATUS_ID,
+        PAYMENT_NO,
+        ORDER_ID,
+        CREATE_TIME,
+        LAST_UPDATE_TIME,
+        VERSION
+        FROM
+        CQRS_QCK_PAYMENT
+    </sql>
 
     <select id="findAll" resultMap="result">
         <include refid="sql_select"/>

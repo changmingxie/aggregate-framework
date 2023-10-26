@@ -53,13 +53,6 @@ public class FixedBackOffPolicy implements SleepingBackOffPolicy<FixedBackOffPol
     }
 
     /**
-     * Set the back off period in milliseconds. Cannot be &lt; 1. Default value is 1000ms.
-     */
-    public void setBackOffPeriod(long backOffPeriod) {
-        this.backOffPeriod = (backOffPeriod > 0 ? backOffPeriod : 1);
-    }
-
-    /**
      * The backoff period in milliseconds.
      *
      * @return the backoff period
@@ -68,6 +61,12 @@ public class FixedBackOffPolicy implements SleepingBackOffPolicy<FixedBackOffPol
         return backOffPeriod;
     }
 
+    /**
+     * Set the back off period in milliseconds. Cannot be &lt; 1. Default value is 1000ms.
+     */
+    public void setBackOffPeriod(long backOffPeriod) {
+        this.backOffPeriod = (backOffPeriod > 0 ? backOffPeriod : 1);
+    }
 
     @Override
     public BackOffContext start(RetryContext context) {

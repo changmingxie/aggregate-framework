@@ -20,17 +20,17 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		ORDER_INFO_ID,
-		NAME,
-		DELIVERY_INFO,
-		JOB_INFO,
-		DTYPE,
-		CREATE_TIME,
-		LAST_UPDATE_TIME
-		FROM
-		CQRS_HIE_ORDER_INFO
-	</sql>
+        SELECT
+        ORDER_INFO_ID,
+        NAME,
+        DELIVERY_INFO,
+        JOB_INFO,
+        DTYPE,
+        CREATE_TIME,
+        LAST_UPDATE_TIME
+        FROM
+        CQRS_HIE_ORDER_INFO
+    </sql>
 
     <select id="findAll" resultMap="result">
         <include refid="sql_select"/>

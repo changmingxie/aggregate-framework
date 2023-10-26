@@ -2,8 +2,8 @@ package org.aggregateframework.cache;
 
 import io.codis.jodis.JedisResourcePool;
 import org.aggregateframework.entity.AggregateRoot;
-import org.aggregateframework.transaction.repository.helper.JedisCommands;
-import org.aggregateframework.transaction.repository.helper.RedisCommands;
+import org.aggregateframework.persistent.redis.JedisCommands;
+import org.aggregateframework.persistent.redis.RedisCommands;
 
 import java.io.Serializable;
 

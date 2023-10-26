@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by changming.xie on 4/8/16.
  */
-public interface OrderLineDao extends CollectiveDomainObjectDao<OrderLine,Long> {
+public interface OrderLineDao extends CollectiveDomainObjectDao<OrderLine, Long> {
 
     public List<OrderLine> findByOrderId(Long orderId);
 

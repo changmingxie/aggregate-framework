@@ -17,8 +17,8 @@ public class OrderService {
     OrderRepository orderRepository;
 
     @Transactional
-    public PricedOrder placeOrder(int productId, int price,int i) {
-        PricedOrder pricedOrder = OrderFactory.buildOrder(productId, price,i);
+    public PricedOrder placeOrder(int productId, int price, int i) {
+        PricedOrder pricedOrder = OrderFactory.buildOrder(productId, price, i);
         return orderRepository.save(pricedOrder);
     }
 

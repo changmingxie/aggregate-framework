@@ -1,0 +1,64 @@
+# dashbaord embedded模式专项配置
+server:
+  servlet:
+    context-path: /aggregate-framework-dashboard
+  port: 22332
+
+logging:
+  level:
+    root: info
+spring:
+  application:
+    name: aggregate-framework-dashboard
+  resources:
+    static-locations: classpath:templates/
+    chain:
+      cache: false
+  freemarker:
+    enabled: true
+    cache: false
+    charset: UTF-8
+    suffix: .html
+    check-template-location: true
+    template-loader-path: classpath:/templates/
+  agg:
+    dashboard:
+      connection-mode: embedded
+    registry:
+      registry-role: dashboard
+    storage:
+      storage-type: redis
+      #      storageType: jdbc
+      #      storage-type: redis
+      #      storageType: redis_cluster
+      #      storageType: shard_redis
+      jdbc:
+        password: welcome1
+      redis:
+        host: 127.0.0.1
+        port: 6379
+        database: 0
+        pool-config:
+          max-total: 100
+          max-idle: 100
+          min-idle: 10
+          max-wait-millis: 300
+      redis-cluster:
+        max-attempts: 5
+        so-timeout: 300
+        connection-timeout: 1000
+        nodes:
+          - host: 127.0.0.1
+            port: 6379
+          - host: 127.0.0.1
+            port: 6380
+          - host: 127.0.0.1
+            port: 6381
+      shard-redis:
+        nodes:
+          - host: 127.0.0.1
+            port: 6379
+          - host: 127.0.0.1
+            port: 6380
+          - host: 127.0.0.1
+            port: 6381

@@ -2,7 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.aggregateframework.sample.hierarchicalmodel.command.infrastructure.dao.HierarchicalOrderDao">
 
-    <resultMap id="result" type="org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.HierarchicalOrder">
+    <resultMap id="result"
+               type="org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.HierarchicalOrder">
         <id property="id" column="ORDER_ID"/>
         <result property="content" column="CONTENT"/>
         <result property="version" column="VERSION"/>
@@ -22,19 +23,19 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		ORDER_ID,
-		CONTENT,
-		DELIVER,
-		JOB,
-		ORDER_INFO_ID,
-		DTYPE,
-		VERSION,
-		CREATE_TIME,
-		LAST_UPDATE_TIME
-		FROM
-		CQRS_HIE_ORDER
-	</sql>
+        SELECT
+        ORDER_ID,
+        CONTENT,
+        DELIVER,
+        JOB,
+        ORDER_INFO_ID,
+        DTYPE,
+        VERSION,
+        CREATE_TIME,
+        LAST_UPDATE_TIME
+        FROM
+        CQRS_HIE_ORDER
+    </sql>
 
     <select id="findAll" resultMap="result">
         <include refid="sql_select"/>
@@ -58,10 +59,12 @@
                  separator=",">
             <choose>
                 <when test="item.dtype=='DeliveryOrder'">
-                    (#{item.content}, #{item.deliver},NULL,#{item.orderInfo.id},#{item.dtype},#{item.createTime},#{item.version})
+                    (#{item.content},
+                    #{item.deliver},NULL,#{item.orderInfo.id},#{item.dtype},#{item.createTime},#{item.version})
                 </when>
                 <when test="item.dtype=='JobOrder'">
-                    (#{item.content}, NULL,#{item.job},#{item.orderInfo.id},#{item.dtype},#{item.createTime},#{item.version})
+                    (#{item.content},
+                    NULL,#{item.job},#{item.orderInfo.id},#{item.dtype},#{item.createTime},#{item.version})
                 </when>
             </choose>
         </foreach>

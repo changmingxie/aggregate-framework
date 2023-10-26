@@ -62,14 +62,6 @@ public class UniformRandomBackOffPolicy implements SleepingBackOffPolicy<Uniform
     }
 
     /**
-     * Set the minimum back off period in milliseconds. Cannot be &lt; 1. Default value
-     * is 500ms.
-     */
-    public void setMinBackOffPeriod(long backOffPeriod) {
-        this.minBackOffPeriod = (backOffPeriod > 0 ? backOffPeriod : 1);
-    }
-
-    /**
      * The minimum backoff period in milliseconds.
      *
      * @return the backoff period
@@ -79,11 +71,11 @@ public class UniformRandomBackOffPolicy implements SleepingBackOffPolicy<Uniform
     }
 
     /**
-     * Set the maximum back off period in milliseconds. Cannot be &lt; 1. Default value
-     * is 1500ms.
+     * Set the minimum back off period in milliseconds. Cannot be &lt; 1. Default value
+     * is 500ms.
      */
-    public void setMaxBackOffPeriod(long backOffPeriod) {
-        this.maxBackOffPeriod = (backOffPeriod > 0 ? backOffPeriod : 1);
+    public void setMinBackOffPeriod(long backOffPeriod) {
+        this.minBackOffPeriod = (backOffPeriod > 0 ? backOffPeriod : 1);
     }
 
     /**
@@ -93,6 +85,14 @@ public class UniformRandomBackOffPolicy implements SleepingBackOffPolicy<Uniform
      */
     public long getMaxBackOffPeriod() {
         return maxBackOffPeriod;
+    }
+
+    /**
+     * Set the maximum back off period in milliseconds. Cannot be &lt; 1. Default value
+     * is 1500ms.
+     */
+    public void setMaxBackOffPeriod(long backOffPeriod) {
+        this.maxBackOffPeriod = (backOffPeriod > 0 ? backOffPeriod : 1);
     }
 
     public String toString() {

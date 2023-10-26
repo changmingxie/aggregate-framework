@@ -19,17 +19,17 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		ORDER_ID,
-		USER_ID,
-		CONTENT,
-		PAYMENT_ID,
-		VERSION,
-		CREATE_TIME,
-		LAST_UPDATE_TIME
-		FROM
-		CQRS_CPL_ORDER
-	</sql>
+        SELECT
+        ORDER_ID,
+        USER_ID,
+        CONTENT,
+        PAYMENT_ID,
+        VERSION,
+        CREATE_TIME,
+        LAST_UPDATE_TIME
+        FROM
+        CQRS_CPL_ORDER
+    </sql>
 
     <select id="findAll" resultMap="result">
         <include refid="sql_select"/>
@@ -53,7 +53,7 @@
 
     <insert id="insert"
             useGeneratedKeys="true" keyProperty="id.id" keyColumn="ORDER_ID"
-            >
+    >
         INSERT INTO CQRS_CPL_ORDER
         (USER_ID,PAYMENT_ID,CONTENT,VERSION)
         VALUES
@@ -71,16 +71,16 @@
     </insert>
 
     <update id="update">
-		UPDATE
-		CQRS_CPL_ORDER
-		SET
-		CONTENT=#{content},
-		PAYMENT_ID=#{payment.id},
-		VERSION=#{version}
-		WHERE
-		ORDER_ID=#{id.id} and VERSION = #{version}-1
-		AND USER_ID=#{id.userId}
-	</update>
+        UPDATE
+        CQRS_CPL_ORDER
+        SET
+        CONTENT=#{content},
+        PAYMENT_ID=#{payment.id},
+        VERSION=#{version}
+        WHERE
+        ORDER_ID=#{id.id} and VERSION = #{version}-1
+        AND USER_ID=#{id.userId}
+    </update>
 
     <update id="updateAll">
 
@@ -90,14 +90,14 @@
         CONTENT=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN ORDER_ID=#{item.id.id} AND USER_ID=#{item.id.userId} AND VERSION = #{item.version}-1
-            THEN  #{item.content}
+            THEN #{item.content}
         </foreach>
         ELSE CONTENT END,
 
         PAYMENT_ID=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN ORDER_ID=#{item.id.id} AND USER_ID=#{item.id.userId} AND VERSION = #{item.version}-1
-            THEN  #{item.bookingPayment.id}
+            THEN #{item.bookingPayment.id}
         </foreach>
         ELSE PAYMENT_ID END,
 

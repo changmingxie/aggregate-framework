@@ -1,7 +1,7 @@
 package org.aggregateframework.utils;
 
-import org.aggregateframework.SystemException;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
+import org.aggregateframework.exception.SystemException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;

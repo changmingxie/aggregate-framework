@@ -1,10 +1,10 @@
 package org.aggregateframework.sample.quickstart.command.infrastructure.cache;
 
 import org.aggregateframework.cache.JedisL2Cache;
+import org.aggregateframework.persistent.redis.RedisCommands;
 import org.aggregateframework.retry.RetryCallback;
 import org.aggregateframework.retry.RetryContext;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
-import org.aggregateframework.transaction.repository.helper.RedisCommands;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -34,7 +34,7 @@ public class PricedOrderL2Cache extends JedisL2Cache<PricedOrder, Long> {
 
     public PricedOrder findByNo(String orderNo) {
 
-        final String cacheKey = orderNo+"n0000";
+        final String cacheKey = orderNo + "n0000";
 
         byte[] id = execute(new RetryCallback<byte[]>() {
             @Override
@@ -52,8 +52,8 @@ public class PricedOrderL2Cache extends JedisL2Cache<PricedOrder, Long> {
         });
 
         if (id != null && id.length > 0) {
-             String idStr = new String(id);
-             return findOne(PricedOrder.class,Long.valueOf(idStr));
+            String idStr = new String(id);
+            return findOne(PricedOrder.class, Long.valueOf(idStr));
         }
 
         return null;

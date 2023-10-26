@@ -12,16 +12,16 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		ORDER_LINE_ID,
-		PRODUCT_ID,
-		ORDER_ID,
-		PRICE,
-		CREATE_TIME,
-		LAST_UPDATE_TIME
-		FROM
-		CQRS_QCK_ORDER_LINE
-	</sql>
+        SELECT
+        ORDER_LINE_ID,
+        PRODUCT_ID,
+        ORDER_ID,
+        PRICE,
+        CREATE_TIME,
+        LAST_UPDATE_TIME
+        FROM
+        CQRS_QCK_ORDER_LINE
+    </sql>
 
     <select id="findAll" resultMap="result">
         <include refid="sql_select"/>

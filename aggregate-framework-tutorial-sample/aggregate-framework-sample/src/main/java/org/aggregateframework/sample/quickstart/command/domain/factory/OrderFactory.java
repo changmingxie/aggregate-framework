@@ -4,13 +4,12 @@ import org.aggregateframework.sample.quickstart.command.domain.entity.OrderLine;
 import org.aggregateframework.sample.quickstart.command.domain.entity.PricedOrder;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by changming.xie on 4/7/16.
  */
 public class OrderFactory {
-
-    static Random random = new Random();
 
     public static PricedOrder buildOrder(int productId, int price, int i) {
 
@@ -21,7 +20,7 @@ public class OrderFactory {
 
     private static String getNewMerchantOrderNo(int i) {
 
-        return String.format("OR%s-%d", System.currentTimeMillis(), random.nextLong());
+        return String.format("OR%s-%d", System.currentTimeMillis(), ThreadLocalRandom.current().nextLong());
 //        return String.format("OR%s-%d", String.valueOf(System.currentTimeMillis() / 1000 / 60), i);
     }
 }

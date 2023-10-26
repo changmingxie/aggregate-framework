@@ -1,20 +1,22 @@
 package org.aggregateframework.repository;
 
-import org.aggregateframework.SystemException;
 import org.aggregateframework.cache.L2Cache;
 import org.aggregateframework.cache.NoL2Cache;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.eventbus.EventBus;
 import org.aggregateframework.eventbus.SimpleEventBus;
-import org.aggregateframework.serializer.KryoPoolSerializer;
+import org.aggregateframework.exception.SystemException;
 import org.aggregateframework.serializer.ObjectSerializer;
+import org.aggregateframework.serializer.RegisterableKryoSerializer;
 import org.aggregateframework.session.AggregateEntry;
 import org.aggregateframework.session.SessionFactoryHelper;
 import org.aggregateframework.utils.Assert;
 import org.aggregateframework.utils.CollectionUtils;
 import org.aggregateframework.utils.DomainObjectUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.Serializable;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,16 +31,22 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
     protected final Class<T> aggregateType;
     protected SessionFactoryHelper sessionFactoryHelper = SessionFactoryHelper.INSTANCE;
+    protected L2Cache<T, ID> l2Cache = NoL2Cache.INSTANCE;
+    protected ObjectSerializer<T> objectSerializer = new RegisterableKryoSerializer<>();
     private EventBus eventBus = SimpleEventBus.INSTANCE;
+
     private SaveAggregateCallback<T> saveAggregateCallback = new SimpleSaveAggregateCallback();
 
-    protected L2Cache<T, ID> l2Cache = NoL2Cache.INSTANCE;
-
-    protected ObjectSerializer<T> objectSerializer = new KryoPoolSerializer<T>();
+    private List<Class<? extends Exception>> unknownStatusExceptions = Arrays.asList(SocketTimeoutException.class);
 
     protected AbstractAggregateRepository(Class<T> aggregateType) {
         this.aggregateType = aggregateType;
     }
+
+    public void setUnknownStatusExceptions(List<Class<? extends Exception>> unknownStatusExceptions) {
+        this.unknownStatusExceptions = unknownStatusExceptions;
+    }
+
 
     public void setEventBus(EventBus eventBus) {
         this.eventBus = eventBus;
@@ -256,6 +264,71 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
 
     protected abstract long doCount();
 
+    private <E> E execute(Callback<E> callback) {
+
+        //try to register a new ClientSession, if not success, it means there exist a ClientSession with TransactionManager,
+        //if success, then no existed ClientSession exists before, need manage the ClientSession lifecycle manually.
+        boolean success = sessionFactoryHelper.hasActiveClientSession();
+
+        if (success) {
+            return callback.execute();
+        } else {
+            return executeWithNewClientSession(callback);
+        }
+    }
+
+    private <E> E executeWithNewClientSession(Callback<E> callback) {
+
+        sessionFactoryHelper.registerClientSessionIfAbsent();
+        try {
+
+            E result = null;
+            try {
+                result = callback.execute();
+                sessionFactoryHelper.requireClientSession().commit();
+            } catch (Exception e) {
+                //the commit status maybe committed or rollback,
+                //need check the exception e's type
+                if (!isUnknownStatusException(e)) {
+                    sessionFactoryHelper.requireClientSession().rollback();
+                }
+
+                throw e;
+            }
+
+            sessionFactoryHelper.requireClientSession().flushToL2Cache();
+            sessionFactoryHelper.requireClientSession().postHandle();
+            return result;
+
+        } finally {
+            sessionFactoryHelper.requireClientSession().clear();
+            sessionFactoryHelper.closeClientSession();
+        }
+    }
+
+
+    private boolean isUnknownStatusException(Throwable throwable) {
+
+        Throwable rootCause = ExceptionUtils.getRootCause(throwable);
+
+        if (unknownStatusExceptions != null) {
+
+            for (Class unknownStatusException : unknownStatusExceptions) {
+
+                if (unknownStatusException.isAssignableFrom(throwable.getClass())
+                        || (rootCause != null && unknownStatusException.isAssignableFrom(rootCause.getClass()))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public interface Callback<E> {
+        E execute();
+    }
+
     private class SimpleSaveAggregateCallback implements SaveAggregateCallback<T> {
         @Override
         public void save(final Collection<T> aggregateRoots) {
@@ -305,37 +378,5 @@ public abstract class AbstractAggregateRepository<T extends AggregateRoot<ID>, I
             }
         }
 
-    }
-
-    private <E> E execute(Callback<E> callback) {
-
-        boolean success = sessionFactoryHelper.registerClientSessionIfAbsent();
-
-        try {
-
-            E result = callback.execute();
-
-            if (success) {
-                sessionFactoryHelper.requireClientSession().commit();
-                sessionFactoryHelper.requireClientSession().flushToL2Cache();
-                sessionFactoryHelper.requireClientSession().postHandle();
-            }
-
-            return result;
-
-        } catch (Exception e) {
-            if (success) {
-                sessionFactoryHelper.requireClientSession().rollback();
-            }
-            throw e;
-        } finally {
-            if (success) {
-                sessionFactoryHelper.closeClientSession();
-            }
-        }
-    }
-
-    public interface Callback<E> {
-        E execute();
     }
 }

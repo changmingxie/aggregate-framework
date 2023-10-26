@@ -36,7 +36,7 @@ public class RetryTemplate implements RetryOperations {
     }
 
     protected <T> T doExecute(RetryContext context, RetryCallback<T> retryCallback,
-                                                   RecoveryCallback<T> recoveryCallback) {
+                              RecoveryCallback<T> recoveryCallback) {
 
         RetryPolicy retryPolicy = this.retryPolicy;
         BackOffPolicy backOffPolicy = this.backOffPolicy;

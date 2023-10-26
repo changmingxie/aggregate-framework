@@ -58,21 +58,17 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
         return target.getClass();
     }
 
+    @Override
     public List<EventInvokerEntry> matchHandler(List<EventMessage> events) {
 
-        Map<Class, List<Object>> eventMap = new LinkedHashMap<Class, List<Object>>();
+        Map<Class, List<Object>> eventMap = new LinkedHashMap<>();
 
 
         for (EventMessage event : events) {
-
-            if (!eventMap.containsKey(event.getPayloadType())) {
-                eventMap.put(event.getPayloadType(), new ArrayList<Object>());
-            }
-
-            eventMap.get(event.getPayloadType()).add(event.getPayload());
+            eventMap.computeIfAbsent(event.getPayloadType(), key -> new ArrayList<>()).add(event.getPayload());
         }
 
-        List<EventInvokerEntry> eventInvokerEntries = new ArrayList<EventInvokerEntry>();
+        List<EventInvokerEntry> eventInvokerEntries = new ArrayList<>();
 
         for (Method method : methods) {
 
@@ -113,6 +109,7 @@ public class AnnotationEventListenerAdapter implements SimpleEventListenerProxy 
         return hashCode;
     }
 
+    @Override
     public boolean equals(Object other) {
 
         if (null == other) {

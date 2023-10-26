@@ -13,12 +13,15 @@ public class HierarchicalOrder extends AbstractSimpleAggregateRoot<Integer> {
     private String content;
 
     private OrderInfo orderInfo;
+    private Integer id;
 
     public OrderInfo getOrderInfo() {
         return orderInfo;
     }
 
-    private Integer id;
+    public void setOrderInfo(OrderInfo orderInfo) {
+        this.orderInfo = orderInfo;
+    }
 
     @Override
     public Integer getId() {
@@ -36,9 +39,5 @@ public class HierarchicalOrder extends AbstractSimpleAggregateRoot<Integer> {
 
     public void setDtype(String dtype) {
         this.dtype = dtype;
-    }
-
-    public void setOrderInfo(OrderInfo orderInfo) {
-        this.orderInfo = orderInfo;
     }
 }

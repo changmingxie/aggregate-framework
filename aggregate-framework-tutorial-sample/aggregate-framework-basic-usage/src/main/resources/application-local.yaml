@@ -1,0 +1,23 @@
+spring:
+  agg:
+    storage:
+      storage-type: redis
+      domain: "AGG:TEST:CLIENT:"
+      serializer-type: kryo
+      redis:
+        host: 127.0.0.1
+        port: 6379
+        database: 0
+        pool-config:
+          max-total: 100
+          max-idle: 100
+          min-idle: 10
+          max-wait-millis: 300
+    recovery:
+      recovery-enabled: true
+      update-job-forcibly: false
+      quartz-clustered: false
+      recover-duration: 30
+      max-retry-count: 3
+      fetch-page-size: 200
+      cron-expression: "0/30 * * * * ? "

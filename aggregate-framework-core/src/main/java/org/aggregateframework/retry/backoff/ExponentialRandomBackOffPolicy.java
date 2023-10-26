@@ -23,21 +23,21 @@ import java.util.Random;
 /**
  * Created by changming.xie on 2/1/16.
  * part of the source code come from open source:spring-retry.
- *
+ * <p>
  * This has shown to at least be useful in testing scenarios where excessive contention is generated
  * by the test needing many retries.  In test, usually threads are started at the same time, and thus
  * stomp together onto the next interval.  Using this {@link BackOffPolicy} can help avoid that scenario.
- *
+ * <p>
  * Example:
- *   initialInterval = 50
- *   multiplier      = 2.0
- *   maxInterval     = 3000
- *   numRetries      = 5
- *
+ * initialInterval = 50
+ * multiplier      = 2.0
+ * maxInterval     = 3000
+ * numRetries      = 5
+ * <p>
  * {@link ExponentialBackOffPolicy} yields:           [50, 100, 200, 400, 800]
- *
+ * <p>
  * {@link ExponentialRandomBackOffPolicy} may yield   [50, 100, 100, 100, 600]
- *                                               or   [50, 100, 150, 400, 800]
+ * or   [50, 100, 150, 400, 800]
  */
 public class ExponentialRandomBackOffPolicy extends ExponentialBackOffPolicy {
 
@@ -58,9 +58,9 @@ public class ExponentialRandomBackOffPolicy extends ExponentialBackOffPolicy {
 
         @Override
         public synchronized long getSleepAndIncrement() {
-        	long next = super.getSleepAndIncrement();
-        	next = (long)(next*(1 + r.nextFloat()*(getMultiplier()-1)));
-        	return next;
+            long next = super.getSleepAndIncrement();
+            next = (long) (next * (1 + r.nextFloat() * (getMultiplier() - 1)));
+            return next;
         }
 
     }

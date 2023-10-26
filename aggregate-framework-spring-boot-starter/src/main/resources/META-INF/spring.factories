@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.aggregateframework.spring.AggFrameworkAutoConfiguration
+org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=\
+org.aggregateframework.spring.AggFrameworkConfigurationFilter

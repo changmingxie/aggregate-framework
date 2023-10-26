@@ -24,11 +24,16 @@ public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
 
 //    private String newField = "2020";
 
-    @DaoAwareQuery(mappedBy = "pricedOrder",select = "findByOrderId")
+    @DaoAwareQuery(mappedBy = "pricedOrder", select = "findByOrderId")
     private List<OrderLine> orderLines = new ArrayList<OrderLine>();
 
     public PricedOrder() {
 
+    }
+
+    public PricedOrder(String merchantOrderNo) {
+        this.merchantOrderNo = merchantOrderNo;
+        this.apply(new OrderPlacedEvent(this));
     }
 
     @Override
@@ -39,11 +44,6 @@ public class PricedOrder extends AbstractSimpleAggregateRoot<Long> {
     @Override
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public PricedOrder(String merchantOrderNo) {
-        this.merchantOrderNo = merchantOrderNo;
-        this.apply(new OrderPlacedEvent(this));
     }
 
     public List<OrderLine> getOrderLines() {

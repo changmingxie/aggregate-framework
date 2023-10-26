@@ -13,6 +13,7 @@ public class BookingPayment extends AbstractSimpleDomainObject<Integer> {
 
     private static final long serialVersionUID = 6555609853935658453L;
     private BigDecimal amount;
+    private Integer id;
 
     public BigDecimal getAmount() {
         return amount;
@@ -21,8 +22,6 @@ public class BookingPayment extends AbstractSimpleDomainObject<Integer> {
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
-
-    private Integer id;
 
     @Override
     public Integer getId() {

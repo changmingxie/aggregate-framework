@@ -14,18 +14,18 @@ public class BookingOrder extends AbstractSimpleAggregateRoot<UserShardingId> {
     private static final long serialVersionUID = -1431035454011931259L;
     private String content;
 
-    @DaoAwareQuery(mappedBy = "bookingOrder",select = "findByOrderId")
+    @DaoAwareQuery(mappedBy = "bookingOrder", select = "findByOrderId")
     private List<SeatAvailability> seatAvailabilities = new ArrayList<SeatAvailability>();
 
     private BookingPayment bookingPayment;
 
     private boolean recovered;
+    private UserShardingId id;
 
     public BookingOrder() {
         apply(new OrderCreatedEvent(this));
     }
 
-    private UserShardingId id;
     @Override
     public UserShardingId getId() {
         return id;

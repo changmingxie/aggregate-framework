@@ -1,0 +1,13 @@
+spring:
+  agg:
+    storage:
+      storage-type: remoting
+      domain: "AGG:TEST:CLIENT:"
+      serializer-type: kryo
+      request-timeout-millis: 10000
+    registry:
+      cluster-name: default
+      registry-type: direct
+      direct:
+        addresses-for-client: 127.0.0.1:2332
+

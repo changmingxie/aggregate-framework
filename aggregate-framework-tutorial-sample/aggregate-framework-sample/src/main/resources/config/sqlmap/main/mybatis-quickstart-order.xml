@@ -12,15 +12,15 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		ORDER_ID,
-		STATUS_ID,
-		MERCHANT_ORDER_NO,
-		CREATE_TIME,
-		LAST_UPDATE_TIME
-		FROM
-		CQRS_QCK_ORDER
-	</sql>
+        SELECT
+        ORDER_ID,
+        STATUS_ID,
+        MERCHANT_ORDER_NO,
+        CREATE_TIME,
+        LAST_UPDATE_TIME
+        FROM
+        CQRS_QCK_ORDER
+    </sql>
 
     <select id="findAll" resultMap="result">
         <include refid="sql_select"/>
@@ -43,6 +43,7 @@
 
 
     <insert id="insertAll" useGeneratedKeys="true" keyProperty="id">
+
         INSERT INTO CQRS_QCK_ORDER
         (STATUS_ID,MERCHANT_ORDER_NO,CREATE_TIME,LAST_UPDATE_TIME,VERSION)
         VALUES

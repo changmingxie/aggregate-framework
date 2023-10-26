@@ -19,15 +19,14 @@ package org.aggregateframework.retry.backoff;
 /**
  * Created by changming.xie on 2/1/16.
  * part of the source code come from open source:spring-retry.
- *
  */
 public interface SleepingBackOffPolicy<T extends SleepingBackOffPolicy<T>> extends BackOffPolicy {
     /**
      * Clone the policy and return a new policy which uses the passed sleeper.
      *
-     * @param sleeper  Target to be invoked any time the backoff policy sleeps
+     * @param sleeper Target to be invoked any time the backoff policy sleeps
      * @return a clone of this policy which will have all of its backoff sleeps
-     *         routed into the passed sleeper
+     * routed into the passed sleeper
      */
     T withSleeper(Sleeper sleeper);
 }

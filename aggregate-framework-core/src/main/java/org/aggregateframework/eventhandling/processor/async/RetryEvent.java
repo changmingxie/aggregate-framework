@@ -1,7 +1,6 @@
 package org.aggregateframework.eventhandling.processor.async;
 
 
-
 import org.aggregateframework.transaction.Transaction;
 
 import java.lang.reflect.Method;

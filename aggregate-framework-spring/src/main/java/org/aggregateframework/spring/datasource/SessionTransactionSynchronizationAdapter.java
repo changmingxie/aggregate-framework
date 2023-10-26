@@ -20,15 +20,33 @@ public class SessionTransactionSynchronizationAdapter extends TransactionSynchro
 
     @Override
     public void beforeCommit(boolean readOnly) {
-        clientSession.commit();
+        if (!readOnly) {
+            clientSession.commit();
+        }
+    }
+
+    @Override
+    public void afterCommit() {
+        clientSession.flushToL2Cache();
+        clientSession.postHandle();
     }
 
     @Override
     public void afterCompletion(int status) {
-        switch (status) {
-            case TransactionSynchronization.STATUS_ROLLED_BACK:
-                clientSession.rollback();
-                break;
+        try {
+            switch (status) {
+                case TransactionSynchronization.STATUS_COMMITTED:
+                    //do nothing
+                    break;
+                case TransactionSynchronization.STATUS_ROLLED_BACK:
+                    clientSession.rollback();
+                    break;
+                case TransactionSynchronization.STATUS_UNKNOWN:
+                    //do nothing
+                    break;
+            }
+        }finally {
+            clientSession.clear();
         }
     }
 }

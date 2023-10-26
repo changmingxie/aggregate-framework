@@ -1,6 +1,5 @@
 package org.aggregateframework.repository;
 
-import org.aggregateframework.SystemException;
 import org.aggregateframework.dao.AggregateDao;
 import org.aggregateframework.dao.AggregateRootDao;
 import org.aggregateframework.dao.CollectiveDomainObjectDao;
@@ -8,7 +7,7 @@ import org.aggregateframework.dao.DomainObjectDao;
 import org.aggregateframework.entity.AggregateRoot;
 import org.aggregateframework.entity.DaoAwareQuery;
 import org.aggregateframework.entity.DomainObject;
-import org.aggregateframework.repository.helper.AggreateDaoFactory;
+import org.aggregateframework.exception.SystemException;
 import org.aggregateframework.utils.CollectionUtils;
 import org.aggregateframework.utils.DomainObjectUtils;
 import org.aggregateframework.utils.ReflectionUtils;
@@ -40,7 +39,7 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
 
     @Override
     protected <E extends DomainObject<I>, I extends Serializable> int doUpdate(Collection<E> entities) {
-        DomainObjectDao<E, I> dao = AggreateDaoFactory.getDao((Class) entities.iterator().next().getClass());
+        DomainObjectDao<E, I> dao = AggreateDaoFactory.getDao((Class)entities.iterator().next().getClass());
 
         if (dao instanceof CollectiveDomainObjectDao) {
             CollectiveDomainObjectDao<E, I> collectiveDao = (CollectiveDomainObjectDao<E, I>) dao;
@@ -57,7 +56,7 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
     @Override
     protected <E extends DomainObject<I>, I extends Serializable> int doInsert(Collection<E> entities) {
 
-        DomainObjectDao<E, I> dao = AggreateDaoFactory.getDao((Class) entities.iterator().next().getClass());
+        DomainObjectDao<E, I> dao = AggreateDaoFactory.getDao((Class)entities.iterator().next().getClass());
 
         if (dao instanceof CollectiveDomainObjectDao) {
             CollectiveDomainObjectDao<E, I> collectiveDao = (CollectiveDomainObjectDao<E, I>) dao;
@@ -212,10 +211,9 @@ public class DaoAwareAggregateRepository<T extends AggregateRoot<ID>, ID extends
 
         DaoAwareQuery daoAwareQuery = oneToManyField.getAnnotation(DaoAwareQuery.class);
 
-        if (daoAwareQuery != null) {
+        if (daoAwareQuery != null && domainObjectDaoClass != null) {
 
             Method[] methods = domainObjectDaoClass.getDeclaredMethods();
-
             for (Method method : methods) {
                 if (method.getName().equals(daoAwareQuery.select())) {
                     return method;

@@ -3,11 +3,14 @@ package org.aggregateframework.eventhandling.processor.async;
 import com.lmax.disruptor.EventHandler;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.processor.EventMethodInvoker;
+import org.aggregateframework.threadcontext.ThreadContextSynchronizationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AsyncBatchEventHandler implements EventHandler<AsyncEvent> {
 
@@ -29,64 +32,50 @@ public class AsyncBatchEventHandler implements EventHandler<AsyncEvent> {
 
             logger.debug("batch done, seq:" + sequence + ", total events:" + asyncEvents.size());
 
-            List<EventInvokerEntry> eventInvokerEntries = new ArrayList<>();
+
+            Map<String, List<AsyncEvent>> threadContextGroupedEventsMap = new LinkedHashMap<>();
 
             for (AsyncEvent asyncEvent : asyncEvents) {
-                eventInvokerEntries.add(asyncEvent.getEventInvokerEntry());
+
+                if (!threadContextGroupedEventsMap.containsKey(asyncEvent.getThreadContext())) {
+                    threadContextGroupedEventsMap.put(asyncEvent.getThreadContext(), new ArrayList<>());
+                }
+
+                threadContextGroupedEventsMap.get(asyncEvent.getThreadContext()).add(asyncEvent);
             }
 
             try {
-                EventMethodInvoker.getInstance().invoke(eventInvokerEntries);
-            } finally {
-                for (AsyncEvent asyncEvent : asyncEvents) {
-                    asyncEvent.clear();
+                for (Map.Entry<String, List<AsyncEvent>> entry : threadContextGroupedEventsMap.entrySet()) {
+
+                    List<AsyncEvent> groupedAsyncEvents = entry.getValue();
+
+                    List<EventInvokerEntry> eventInvokerEntries = new ArrayList<>();
+
+                    for (AsyncEvent asyncEvent : groupedAsyncEvents) {
+                        eventInvokerEntries.add(asyncEvent.getEventInvokerEntry());
+                    }
+
+                    try {
+                        ThreadContextSynchronizationManager threadContextSynchronizationManager = new ThreadContextSynchronizationManager(entry.getKey());
+
+                        threadContextSynchronizationManager.executeWithBindThreadContext(new Runnable() {
+                            @Override
+                            public void run() {
+                                EventMethodInvoker.getInstance().invoke(eventInvokerEntries);
+                            }
+                        });
+
+                    } finally {
+                        for (AsyncEvent asyncEvent : groupedAsyncEvents) {
+                            asyncEvent.clear();
+                        }
+                    }
                 }
+            } finally {
                 asyncEvents.clear();
             }
         } else {
             logger.debug("batch doing, seq:" + sequence + ", total events:" + asyncEvents.size());
         }
     }
-
-
-//    @Override
-//    public void onEvent(AsyncEvent event, long sequence, boolean endOfBatch) throws Exception {
-//
-//        asyncEvents.add(event);
-//
-//        org.aggregateframework.eventhandling.annotation.EventHandler eventHandler = event.getEventInvokerEntry().getMethod().getAnnotation(org.aggregateframework.eventhandling.annotation.EventHandler.class);
-//
-//        int maxBatchSize = eventHandler.asyncConfig().maxBatchSize();
-//
-//        if (asyncEvents.size() >= maxBatchSize || endOfBatch) {
-//
-//            logger.debug("batch done, seq:" + sequence + ", total events:" + asyncEvents.size());
-//
-//            Collection aggregateParams = (Collection) asyncEvents.get(0).getEventInvokerEntry().getParams()[0];
-//
-//            for (int i = 1; i < asyncEvents.size(); i++) {
-//                aggregateParams.addAll((Collection) asyncEvents.get(i).getEventInvokerEntry().getParams()[0]);
-//            }
-//
-//            EventInvokerEntry currentEventInvokerEntry = event.getEventInvokerEntry();
-//            EventInvokerEntry batchEventInvokerEntry = new EventInvokerEntry(
-//                    currentEventInvokerEntry.getPayloadType(),
-//                    currentEventInvokerEntry.getMethod(),
-//                    currentEventInvokerEntry.getTarget(),
-//                    currentEventInvokerEntry.getOrder(),
-//                    aggregateParams
-//            );
-//
-//            try {
-//                EventMethodInvoker.getInstance().invoke(batchEventInvokerEntry);
-//            } finally {
-//                for (AsyncEvent asyncEvent : asyncEvents) {
-//                    asyncEvent.clear();
-//                }
-//                asyncEvents.clear();
-//            }
-//        } else {
-//            logger.debug("batch doing, seq:" + sequence + ", total events:" + asyncEvents.size());
-//        }
-//    }
 }

@@ -22,39 +22,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Creates {@link EventProcessThread}s.
- * 
+ *
  * @since 2.7
  */
 public class EventProcessThreadFactory implements ThreadFactory {
 
     private static final String PREFIX = "TF-";
-
-    /**
-     * Creates a new daemon thread factory.
-     * 
-     * @param threadFactoryName
-     *            The thread factory name.
-     * @return a new daemon thread factory.
-     */
-    public static EventProcessThreadFactory createDaemonThreadFactory(final String threadFactoryName) {
-        return new EventProcessThreadFactory(threadFactoryName, true, Thread.NORM_PRIORITY);
-    }
-
-    /**
-     * Creates a new thread factory.
-     *
-     * This is mainly used for tests. Production code should be very careful with creating
-     * non-daemon threads since those will block application shutdown
-     * (see https://issues.apache.org/jira/browse/LOG4J2-1748).
-     *
-     * @param threadFactoryName
-     *            The thread factory name.
-     * @return a new daemon thread factory.
-     */
-    public static EventProcessThreadFactory createThreadFactory(final String threadFactoryName) {
-        return new EventProcessThreadFactory(threadFactoryName, false, Thread.NORM_PRIORITY);
-    }
-
     private static final AtomicInteger FACTORY_NUMBER = new AtomicInteger(1);
     private static final AtomicInteger THREAD_NUMBER = new AtomicInteger(1);
     private final boolean daemon;
@@ -64,13 +37,10 @@ public class EventProcessThreadFactory implements ThreadFactory {
 
     /**
      * Constructs an initialized thread factory.
-     * 
-     * @param threadFactoryName
-     *            The thread factory name.
-     * @param daemon
-     *            Whether to create daemon threads.
-     * @param priority
-     *            The thread priority.
+     *
+     * @param threadFactoryName The thread factory name.
+     * @param daemon            Whether to create daemon threads.
+     * @param priority          The thread priority.
      */
     public EventProcessThreadFactory(final String threadFactoryName, final boolean daemon, final int priority) {
         this.threadNamePrefix = PREFIX + FACTORY_NUMBER.getAndIncrement() + "-" + threadFactoryName + "-";
@@ -79,6 +49,30 @@ public class EventProcessThreadFactory implements ThreadFactory {
         final SecurityManager securityManager = System.getSecurityManager();
         this.group = securityManager != null ? securityManager.getThreadGroup()
                 : Thread.currentThread().getThreadGroup();
+    }
+
+    /**
+     * Creates a new daemon thread factory.
+     *
+     * @param threadFactoryName The thread factory name.
+     * @return a new daemon thread factory.
+     */
+    public static EventProcessThreadFactory createDaemonThreadFactory(final String threadFactoryName) {
+        return new EventProcessThreadFactory(threadFactoryName, true, Thread.NORM_PRIORITY);
+    }
+
+    /**
+     * Creates a new thread factory.
+     * <p>
+     * This is mainly used for tests. Production code should be very careful with creating
+     * non-daemon threads since those will block application shutdown
+     * (see https://issues.apache.org/jira/browse/LOG4J2-1748).
+     *
+     * @param threadFactoryName The thread factory name.
+     * @return a new daemon thread factory.
+     */
+    public static EventProcessThreadFactory createThreadFactory(final String threadFactoryName) {
+        return new EventProcessThreadFactory(threadFactoryName, false, Thread.NORM_PRIORITY);
     }
 
     @Override

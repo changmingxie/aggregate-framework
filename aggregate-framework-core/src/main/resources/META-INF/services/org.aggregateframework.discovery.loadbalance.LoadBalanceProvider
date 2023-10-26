@@ -1,0 +1,2 @@
+org.aggregateframework.discovery.loadbalance.RandomLoadBalanceProvider
+org.aggregateframework.discovery.loadbalance.RoundRobinLoadBalanceProvider

@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  agg:
+    storage:
+      domain: AGG:UT
+      storage-type: remoting
+    registry:
+      registry-type: direct
+      direct:
+        addresses-for-client: 127.0.0.1:2332

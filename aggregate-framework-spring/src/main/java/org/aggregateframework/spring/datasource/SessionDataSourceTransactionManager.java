@@ -12,22 +12,17 @@ import org.springframework.transaction.support.DefaultTransactionStatus;
  * Date: 14-7-29
  * Time: 下午1:15
  * deprecated, use DataSourceTransactionManager directly. TransactionManagerAutoProxyCreator will proxy the PlatformTransactionManager and interceptor the methods.
- *
  */
 @Deprecated
 public class SessionDataSourceTransactionManager extends DataSourceTransactionManager {
 
     private static final String TRANSACTIONAL_TEST_DEFINITION_CLASS_NAME = "1org.springframework.test.context.transaction.TransactionalTestExecutionListener$1";
     private static final long serialVersionUID = -6436694485382392463L;
-
+    private static final ThreadLocal<Integer> TRANSACTION_STATUS = new ThreadLocal<Integer>();
     private static int TRANSACTION_STATUS_UNKNOWN = 0;
     private static int TRANSACTION_STATUS_COMMIT = 1;
     private static int TRANSACTION_STATUS_ROLLBACK = 2;
-
     private SessionFactoryHelper sessionFactoryHelper = SessionFactoryHelper.INSTANCE;
-
-
-    private static final ThreadLocal<Integer> TRANSACTION_STATUS = new ThreadLocal<Integer>();
 
     public SessionDataSourceTransactionManager() {
 

@@ -21,6 +21,17 @@ public class Payment extends AbstractSimpleAggregateRoot<Long> {
 
     private Long id;
 
+    public Payment() {
+
+    }
+
+    public Payment(Long orderId, String paymentNo, BigDecimal totalAmount) {
+        this.orderId = orderId;
+        this.paymentNo = paymentNo;
+        this.totalAmount = totalAmount;
+        this.apply(new PaymentConfirmedEvent(paymentNo));
+    }
+
     public int getStatusId() {
         return statusId;
     }
@@ -43,18 +54,6 @@ public class Payment extends AbstractSimpleAggregateRoot<Long> {
 
     public Long getOrderId() {
         return orderId;
-    }
-
-
-    public Payment() {
-
-    }
-
-    public Payment(Long orderId, String paymentNo, BigDecimal totalAmount) {
-        this.orderId = orderId;
-        this.paymentNo = paymentNo;
-        this.totalAmount = totalAmount;
-        this.apply(new PaymentConfirmedEvent(paymentNo));
     }
 
     @Override

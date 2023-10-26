@@ -1,6 +1,6 @@
 package org.aggregateframework.utils;
 
-import org.aggregateframework.SystemException;
+import org.aggregateframework.exception.SystemException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;

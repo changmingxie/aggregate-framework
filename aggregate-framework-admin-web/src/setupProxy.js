@@ -1,16 +1,27 @@
-const proxy = require('http-proxy-middleware');
+/* eslint-disable */
+const {createProxyMiddleware} = require('http-proxy-middleware');
 
 module.exports = function (app) {
-    app.use(
-        proxy(
-            [
-                '/bgupload/dtres/backend/picture/upload',
-                "/business-aggregate-admin"
-            ],
-            {
-                target: 'http://localhost:8888/',
-                changeOrigin: true,
-            }
-        )
-    );
+  let env = '';
+
+  switch (process.env.REACT_APP_ENV) {
+    case 'test':
+    case 'uat':
+      env = process.env.REACT_APP_ENV;
+      break;
+    default:
+      break;
+  }
+
+  // app.use(
+  //   createProxyMiddleware(
+  //     [
+  //       '/aggregate-framework-dashboard',
+  //     ],
+  //     {
+  //       target: 'http://localhost:8888/',
+  //       changeOrigin: true,
+  //     }
+  //   )
+  // );
 };

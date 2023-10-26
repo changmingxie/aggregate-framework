@@ -8,12 +8,12 @@
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		PAYMENT_ID,
-		AMOUNT
-		FROM
-		CQRS_CPL_PAYMENT
-	</sql>
+        SELECT
+        PAYMENT_ID,
+        AMOUNT
+        FROM
+        CQRS_CPL_PAYMENT
+    </sql>
 
     <select id="findById" resultMap="result">
         <include refid="sql_select"/>
@@ -32,7 +32,7 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id"
-            >
+    >
         <![CDATA[
 
 
@@ -60,13 +60,13 @@
 
 
     <update id="update">
-		UPDATE
-		CQRS_CPL_PAYMENT
-		SET
-		AMOUNT=#{amount}
-		WHERE
-		PAYMENT_ID=#{id}
-	</update>
+        UPDATE
+        CQRS_CPL_PAYMENT
+        SET
+        AMOUNT=#{amount}
+        WHERE
+        PAYMENT_ID=#{id}
+    </update>
 
     <update id="updateAll">
 
@@ -76,12 +76,12 @@
         AMOUNT=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN PAYMENT_ID=#{item.id}
-            THEN  #{item.amount}
+            THEN #{item.amount}
         </foreach>
         ELSE AMOUNT END
 
         WHERE PAYMENT_ID IN
-        <foreach item="item" index="index" collection="list" separator="," open="("  close=")">
+        <foreach item="item" index="index" collection="list" separator="," open="(" close=")">
             #{item.id}
         </foreach>
 

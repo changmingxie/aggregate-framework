@@ -19,6 +19,7 @@ package org.aggregateframework.eventhandling.processor.async;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.WorkHandler;
 import org.aggregateframework.eventhandling.processor.EventMethodInvoker;
+import org.aggregateframework.threadcontext.ThreadContextSynchronizationManager;
 
 /**
  * This event handler gets passed messages from the RingBuffer as they become
@@ -44,7 +45,7 @@ public class AsyncEventHandler implements
         if ((sequence % workPoolSize) == ordinal) {
 
             try {
-                EventMethodInvoker.getInstance().invoke(event.getEventInvokerEntry());
+                doInvoke(event);
             } finally {
                 event.clear();
             }
@@ -54,9 +55,20 @@ public class AsyncEventHandler implements
     @Override
     public void onEvent(AsyncEvent event) throws Exception {
         try {
-            EventMethodInvoker.getInstance().invoke(event.getEventInvokerEntry());
+            doInvoke(event);
         } finally {
             event.clear();
         }
+    }
+
+    protected void doInvoke(AsyncEvent event) {
+        ThreadContextSynchronizationManager threadContextSynchronizationManager = new ThreadContextSynchronizationManager(event.getThreadContext());
+
+        threadContextSynchronizationManager.executeWithBindThreadContext(new Runnable() {
+            @Override
+            public void run() {
+                EventMethodInvoker.getInstance().invoke(event.getEventInvokerEntry());
+            }
+        });
     }
 }

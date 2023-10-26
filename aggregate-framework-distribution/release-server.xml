@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<assembly>
+    <id>server-${project.version}</id>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <formats>
+        <format>dir</format>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>server/conf</directory>
+            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+
+        <fileSet>
+            <directory>server/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <source>../aggregate-framework-server/target/classes/application.yaml</source>
+            <outputDirectory>conf</outputDirectory>
+        </file>
+        <file>
+            <source>../aggregate-framework-server/target/aggregate-framework-server-exec.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>aggregate-framework-server.jar</destName>
+        </file>
+    </files>
+</assembly>
