@@ -356,7 +356,7 @@ const Page = (props) => {
           </Form.Item>
           <Form.Item
             label="最大重试次数"
-            initialValue={waitModifyDomain.maxRetryCount}
+            initialValue={String(waitModifyDomain.maxRetryCount)}
             name="maxRetryCount"
             rules={[{pattern: "[0-9]+", message: '必须为整数'}]}
           >
