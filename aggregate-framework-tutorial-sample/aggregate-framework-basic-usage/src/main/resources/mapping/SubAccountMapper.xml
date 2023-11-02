@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.aggregateframework.basic.usage.dao.SubAccountDao" >
+    <resultMap id="baseResultMap" type="org.aggregateframework.basic.usage.entity.SubAccount">
+        <result property="id" column="ID"/>
+        <result property="accountId" column="ACCOUNT_ID"/>
+        <result property="account.id" column="PARENT_ID"/>
+        <result property="eventStatus" column="EVENT_STATUS"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+    </resultMap>
+
+    <sql id="sql_select">
+        SELECT ID,
+               ACCOUNT_ID,
+               PARENT_ID,
+               EVENT_STATUS,
+               CREATE_TIME,
+               LAST_UPDATE_TIME
+        FROM SUB_ACCOUNT
+    </sql>
+
+    <select id="findById" resultMap="baseResultMap">
+        <include refid="sql_select"/>
+        WHERE ID=#{id}
+    </select>
+
+    <select id="findByParentId" resultMap="baseResultMap">
+        <include refid="sql_select"/>
+        WHERE PARENT_ID = #{parentId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID" parameterType="org.aggregateframework.basic.usage.entity.SubAccount">
+        INSERT INTO SUB_ACCOUNT
+            (ACCOUNT_ID,PARENT_ID,EVENT_STATUS,CREATE_TIME,LAST_UPDATE_TIME)
+        VALUES
+        (#{accountId},#{account.id},#{eventStatus},#{createTime},#{lastUpdateTime})
+    </insert>
+
+    <update id="update" parameterType="org.aggregateframework.basic.usage.entity.SubAccount">
+        UPDATE
+            `SUB_ACCOUNT`
+        SET
+            ACCOUNT_ID=#{accountId},
+            PARENT_ID=#{account.id},
+            EVENT_STATUS=#{eventStatus},
+            LAST_UPDATE_TIME=#{lastUpdateTime}
+        WHERE ID=#{id}
+    </update>
+
+
+    <delete id="delete">
+        DELETE FROM
+            SUB_ACCOUNT WHERE ID=#{id}
+    </delete>
+</mapper>

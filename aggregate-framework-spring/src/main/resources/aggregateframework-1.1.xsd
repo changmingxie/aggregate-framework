@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.aggregateframework.org/schema/agg"
+            targetNamespace="http://www.aggregateframework.org/schema/agg" elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+>
+
+    <xsd:import namespace="http://www.springframework.org/schema/beans"/>
+
+    <xsd:element name="integration">
+        <xsd:complexType>
+            <xsd:attribute name="client-config" type="xsd:string"/>
+            <!--            <xsd:complexContent>-->
+            <!--                <xsd:extension base="beans:identifiedType">-->
+            <!--                </xsd:extension>-->
+            <!--            </xsd:complexContent>-->
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

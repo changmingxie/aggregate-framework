@@ -1,4 +1,3 @@
-
 package org.aggregateframework.retry;
 
 import java.io.Serializable;

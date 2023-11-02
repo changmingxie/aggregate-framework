@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
     <properties>
 
         <java.version>1.8</java.version>
-        <revision>3.3.17-SNAPSHOT</revision>
+        <revision>4.0.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -20,8 +20,8 @@
         <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
         <maven-source-plugin.version>3.1.0</maven-source-plugin.version>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+        <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
         <flatten-maven-plugin.version>1.1.0</flatten-maven-plugin.version>
-
     </properties>
 
     <modules>
@@ -30,11 +30,11 @@
         <module>aggregate-framework-spring</module>
         <module>aggregate-framework-bom</module>
         <module>aggregate-framework-dependencies</module>
-        <module>aggregate-framework-test</module>
         <module>aggregate-framework-tutorial-sample</module>
-        <module>aggregate-framework-transaction-server</module>
-        <module>aggregate-framework-ha</module>
-
+        <module>aggregate-framework-server</module>
+        <module>aggregate-framework-spring-boot-starter</module>
+        <module>aggregate-framework-dashboard</module>
+        <module>aggregate-framework-distribution</module>
     </modules>
 
     <build>
@@ -67,6 +67,11 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>flatten-maven-plugin</artifactId>
                     <version>${flatten-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven-assembly-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

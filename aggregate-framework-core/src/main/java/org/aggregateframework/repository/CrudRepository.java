@@ -8,7 +8,7 @@ import java.util.Collection;
  * Date: 14-6-25
  * Time: 上午10:14
  */
-public interface CrudRepository<T,ID extends Serializable> extends Repository<T,ID> {
+public interface CrudRepository<T, ID extends Serializable> extends Repository<T, ID> {
 
     T save(T entity);
 

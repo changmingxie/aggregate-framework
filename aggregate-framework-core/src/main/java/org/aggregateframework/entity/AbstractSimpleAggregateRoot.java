@@ -15,7 +15,7 @@ public abstract class AbstractSimpleAggregateRoot<ID extends Serializable> exten
     private Date createTime;
 
     private Date lastUpdateTime;
-    
+
     @Override
     public long getVersion() {
         return version;

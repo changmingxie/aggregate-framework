@@ -1,0 +1,4 @@
+org.aggregateframework.discovery.registry.nacos.NacosRegistryServiceProvider
+org.aggregateframework.discovery.registry.zookeeper.ZookeeperRegistryProvider
+org.aggregateframework.discovery.registry.direct.DirectRegistryProvider
+org.aggregateframework.discovery.registry.custom.CustomRegistryProvider

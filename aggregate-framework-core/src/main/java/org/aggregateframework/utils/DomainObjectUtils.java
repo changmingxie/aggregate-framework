@@ -4,9 +4,9 @@
 package org.aggregateframework.utils;
 
 
-import org.aggregateframework.SystemException;
 import org.aggregateframework.entity.DomainObject;
 import org.aggregateframework.entity.Transient;
+import org.aggregateframework.exception.SystemException;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -84,7 +84,7 @@ public class DomainObjectUtils {
     public static Object getFieldValue(DomainObject entity, String fieldName) {
         Field field = ReflectionUtils.findField(entity.getClass(), fieldName);
         ReflectionUtils.makeAccessible(field);
-        return ReflectionUtils.getField(field,entity);
+        return ReflectionUtils.getField(field, entity);
     }
 
     public static <E extends DomainObject<I>, I extends Serializable> Map<Field, List<DomainObject<Serializable>>> getOneToOneValues(Collection<E> entities) {
@@ -129,7 +129,7 @@ public class DomainObjectUtils {
                     if (!CollectionUtils.isEmpty(values)) {
                         attributeValues.get(field).addAll(values);
                     }
-                    
+
                 } catch (Exception e) {
                     throw new SystemException(e);
                 }

@@ -1,0 +1,44 @@
+#SERVER模式
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  agg:
+    storage:
+      domain: AGG:UT
+      storage-type: remoting
+#      dledger:
+#        configs:
+#          - group: aaa
+    registry:
+      registry-type: nacos
+
+#EMBEDDED模式
+#spring:
+#  main:
+#    allow-bean-definition-overriding: true
+#  agg:
+#    storage:
+#      domain: AGG:UT
+#      storage-type: REDIS_CLUSTER
+#      redis-cluster:
+#        max-attempts: 5
+#        so-timeout: 300
+#        connection-timeout: 1000
+#        nodes:
+#          - host: 192.168.75.140
+#            port: 6379
+#          - host: 192.168.75.140
+#            port: 6380
+#          - host: 192.168.75.140
+#            port: 6381
+#          - host: 192.168.75.140
+#            port: 6382
+#          - host: 192.168.75.140
+#            port: 6383
+#          - host: 192.168.75.140
+#            port: 6384
+#    recovery:
+#      fetch-page-size: 200
+#      cron-expression: "0/30 * * * * ? "
+#      max-retry-count: 5
+#      recover-duration: 30

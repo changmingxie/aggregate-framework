@@ -6,5 +6,5 @@ import org.aggregateframework.sample.hierarchicalmodel.command.domain.entity.Hie
 /**
  * Created by changming.xie on 3/30/16.
  */
-public interface HierarchicalOrderDao extends CollectiveAggregateRootDao<HierarchicalOrder,Integer> {
+public interface HierarchicalOrderDao extends CollectiveAggregateRootDao<HierarchicalOrder, Integer> {
 }

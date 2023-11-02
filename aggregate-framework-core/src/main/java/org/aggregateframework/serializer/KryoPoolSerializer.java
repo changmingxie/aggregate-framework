@@ -35,7 +35,7 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
 
     protected void init() {
 
-        kryoPool = new Pool<Kryo>(true,true,initPoolSize) {
+        kryoPool = new Pool<Kryo>(true, true, initPoolSize) {
             @Override
             protected Kryo create() {
                 Kryo kryo = new Kryo();
@@ -44,7 +44,6 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
 
                 ((DefaultInstantiatorStrategy) kryo.getInstantiatorStrategy())
                         .setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
-
 
 
                 initHook(kryo);
@@ -77,7 +76,7 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
             return byteArrayOutputStream.toByteArray();
 
         } finally {
-            if(kryo != null) {
+            if (kryo != null) {
                 kryoPool.free(kryo);
             }
         }
@@ -95,7 +94,7 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
             return (T) kryo.readClassAndObject(input);
 
         } finally {
-            if(kryo != null) {
+            if (kryo != null) {
                 kryoPool.free(kryo);
             }
         }
@@ -110,7 +109,7 @@ public class KryoPoolSerializer<T> implements ObjectSerializer<T> {
             return kryo.copy(object);
 
         } finally {
-            if(kryo != null) {
+            if (kryo != null) {
                 kryoPool.free(kryo);
             }
         }

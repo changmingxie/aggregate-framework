@@ -87,6 +87,15 @@ public class ExponentialBackOffPolicy implements SleepingBackOffPolicy<Exponenti
     }
 
     /**
+     * The initial period to sleep on the first backoff.
+     *
+     * @return the initial interval
+     */
+    public long getInitialInterval() {
+        return initialInterval;
+    }
+
+    /**
      * Set the initial sleep interval value. Default is <code>100</code>
      * millisecond. Cannot be set to a value less than one.
      */
@@ -95,12 +104,12 @@ public class ExponentialBackOffPolicy implements SleepingBackOffPolicy<Exponenti
     }
 
     /**
-     * Set the multiplier value. Default is '<code>2.0</code>'. Hint: do not use
-     * values much in excess of 1.0 (or the backoff will get very long very
-     * fast).
+     * The maximum interval to sleep for. Defaults to 30 seconds.
+     *
+     * @return the maximum interval.
      */
-    public void setMultiplier(double multiplier) {
-        this.multiplier = (multiplier > 1.0 ? multiplier : 1.0);
+    public long getMaxInterval() {
+        return maxInterval;
     }
 
     /**
@@ -116,24 +125,6 @@ public class ExponentialBackOffPolicy implements SleepingBackOffPolicy<Exponenti
     }
 
     /**
-     * The initial period to sleep on the first backoff.
-     *
-     * @return the initial interval
-     */
-    public long getInitialInterval() {
-        return initialInterval;
-    }
-
-    /**
-     * The maximum interval to sleep for. Defaults to 30 seconds.
-     *
-     * @return the maximum interval.
-     */
-    public long getMaxInterval() {
-        return maxInterval;
-    }
-
-    /**
      * The multiplier to use to generate the next backoff interval from the
      * last.
      *
@@ -141,6 +132,15 @@ public class ExponentialBackOffPolicy implements SleepingBackOffPolicy<Exponenti
      */
     public double getMultiplier() {
         return multiplier;
+    }
+
+    /**
+     * Set the multiplier value. Default is '<code>2.0</code>'. Hint: do not use
+     * values much in excess of 1.0 (or the backoff will get very long very
+     * fast).
+     */
+    public void setMultiplier(double multiplier) {
+        this.multiplier = (multiplier > 1.0 ? multiplier : 1.0);
     }
 
     /**

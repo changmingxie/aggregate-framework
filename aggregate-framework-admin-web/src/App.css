@@ -1,51 +1,32 @@
-.ant-form .ant-col.ant-form-item-label {
-    width: 100px;
+.search-box {
+  display: flex;
+  flex-direction: row;
 }
 
-.search-panel .ant-form .ant-col.ant-form-item-label {
-    width: auto;
-}
-
-.page-loading {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 3;
-}
-
-.page-loading .ant-spin-spinning {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: 200px auto 0;
-}
-
-.ant-table.ant-table-bordered tbody > tr > td .content, .ant-table.ant-table-bordered tfoot > tr > td .content {
-    word-break: break-word;
-    height: 130px;
-    width: 250px;
-    overflow: hidden;
-}
-
-.ant-table.ant-table-bordered tbody > tr > td .content .text, .ant-table.ant-table-bordered tfoot > tr > td .content .text {
-    word-break: break-word;
-    height: 100px;
-    overflow: hidden;
-}
-
-.ant-modal-confirm-body .anticon svg {
-    display: none;
+.search-box .ant-btn {
+  margin-left: 8px;
 }
 
 .site-layout-content {
-  padding: 20px;
-  height: 100%;
+  padding: 12px;
+  overflow: scroll;
+  max-height: 48rem;
+}
+
+.tab-3-body {
   background-color: #fff;
+  padding-top: 20px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 1px;
+}
+
+.tab-3-row {
+  padding: 6px;
+}
+
+.tab-3-switch-label {
+  padding-left: 12px;
 }
 
 #root {
@@ -54,4 +35,11 @@
 
 .layout {
   height: 100%;
+}
+
+.login-container {
+  min-height: 100%;
+  width: 100%;
+  background-color: #2d3a4b;
+  overflow: hidden;
 }

@@ -11,10 +11,12 @@ import org.aggregateframework.sample.quickstart.command.domain.event.OrderPlaced
 import org.aggregateframework.sample.quickstart.command.domain.factory.PaymentFactory;
 import org.aggregateframework.sample.quickstart.command.domain.repository.OrderRepository;
 import org.aggregateframework.sample.quickstart.command.domain.repository.PaymentRepository;
+import org.aggregateframework.threadcontext.ThreadContextSynchronizationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by changming.xie on 4/7/16.
@@ -53,6 +55,10 @@ public class OrderHandler {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("&&&&&& begin sync single handle &&&&&&");
+        stringBuilder.append("\r\n");
+
+        System.out.println("current thread context: " + ThreadContextSynchronizationManager.getThreadContextSynchronization().getCurrentThreadContext());
+
         stringBuilder.append("\r\n");
 
         stringBuilder.append("sync single call order no:" + event.getPricedOrder().getMerchantOrderNo());

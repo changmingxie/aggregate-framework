@@ -1,0 +1,82 @@
+#server模式
+server:
+  servlet:
+    context-path: /aggregate-framework-dashboard
+  port: 22332
+
+logging:
+  level:
+    root: info
+spring:
+  application:
+    name: aggregate-framework-dashboard
+  resources:
+    static-locations: classpath:templates/
+    chain:
+      cache: false
+  freemarker:
+    enabled: true
+    cache: false
+    charset: UTF-8
+    suffix: .html
+    check-template-location: true
+    template-loader-path: classpath:/templates/
+  agg:
+    dashboard:
+      userName: admin
+      password: 123456
+      connection-mode: server
+    registry:
+      registry-type: direct  # 切换agg-server注册中心
+      registry-role: dashboard
+      direct:
+        addresses-for-dashboard: localhost:12332
+      nacos:
+        server-addr: localhost:8848
+      zookeeper:
+        connect-string: localhost:2181
+    recovery:
+      recovery-enabled: false
+      quartz-clustered: true
+      quartz-data-source-url: jdbc:mysql://localhost:3306/AGG_SERVER?useSSL=false&allowPublicKeyRetrieval=true
+      quartz-data-source-driver: com.mysql.jdbc.Driver
+      quartz-data-source-user: root
+      quartz-data-source-password: 123456
+
+feign:
+  path: /aggregate-framework-server
+
+#embedded模式
+#server:
+#  servlet:
+#    context-path: /aggregate-framework-dashboard
+#  port: 22332
+#
+#logging:
+#  level:
+#    root: info
+#spring:
+#  application:
+#    name: aggregate-framework-dashboard
+#  agg:
+#    dashboard:
+#      connection-mode: embedded
+#    storage:
+#      storage-type: redis_cluster
+#      redis-cluster: # 待测试
+#        max-attempts: 5
+#        so-timeout: 300
+#        connection-timeout: 1000
+#        nodes:
+#          - host: 192.168.75.140
+#            port: 6379
+#          - host: 192.168.75.140
+#            port: 6380
+#          - host: 192.168.75.140
+#            port: 6381
+#          - host: 192.168.75.140
+#            port: 6382
+#          - host: 192.168.75.140
+#            port: 6383
+#          - host: 192.168.75.140
+#            port: 6384

@@ -5,6 +5,8 @@ import org.aggregateframework.eventhandling.annotation.EventHandler;
 import org.aggregateframework.eventhandling.annotation.QueueFullPolicy;
 import org.aggregateframework.eventhandling.processor.async.AsyncDisruptor;
 import org.aggregateframework.eventhandling.processor.async.AsyncEventTranslator;
+import org.aggregateframework.exception.SystemException;
+import org.aggregateframework.threadcontext.ThreadContextSynchronizationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,10 @@ public class AsyncMethodInvoker {
 
     private final ThreadLocal<AsyncEventTranslator> threadLocalTranslator = new ThreadLocal<AsyncEventTranslator>();
 
+
+    private AsyncMethodInvoker() {
+
+    }
 
     public static AsyncMethodInvoker getInstance() {
 
@@ -41,20 +47,24 @@ public class AsyncMethodInvoker {
 
         AsyncDisruptor.ensureStart(eventInvokerEntry.getMethod());
 
-        AsyncEventTranslator eventTranslator = getCachedTranslator();
+        try (AsyncEventTranslator eventTranslator = getCachedTranslator()) {
 
-        eventTranslator.reset(eventInvokerEntry);
+            eventTranslator.reset(eventInvokerEntry,
+                    ThreadContextSynchronizationManager.getThreadContextSynchronization().getCurrentThreadContext());
 
-        if (!AsyncDisruptor.tryPublish(eventTranslator)) {
-            logger.info(String.format("agg ring buffer is full, eventHandler will be executed according your QueueFullPolicy, %s.%s",
-                    eventInvokerEntry.getTarget().getClass().getSimpleName(),
-                    eventInvokerEntry.getMethod().getName()));
-            handleRingBufferFull(eventTranslator);
+            if (!AsyncDisruptor.tryPublish(eventTranslator)) {
+                logger.info(String.format("agg ring buffer is full, eventHandler will be executed according your QueueFullPolicy, %s.%s",
+                        eventInvokerEntry.getTarget().getClass().getSimpleName(),
+                        eventInvokerEntry.getMethod().getName()));
+                handleRingBufferFull(eventTranslator);
+            }
+
+        } catch (Exception e) {
+            throw new SystemException(e);
         }
 
         return;
     }
-
 
     private void handleRingBufferFull(AsyncEventTranslator eventTranslator) {
 
@@ -87,12 +97,7 @@ public class AsyncMethodInvoker {
         return result;
     }
 
-
     public void shutdown() {
         AsyncDisruptor.stop(60, TimeUnit.SECONDS);
-    }
-
-    private AsyncMethodInvoker() {
-
     }
 }

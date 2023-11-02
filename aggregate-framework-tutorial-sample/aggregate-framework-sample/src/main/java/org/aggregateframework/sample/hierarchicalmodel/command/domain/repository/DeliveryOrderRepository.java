@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
  * Created by changming.xie on 3/30/16.
  */
 @Repository
-public class DeliveryOrderRepository extends DaoAwareAggregateRepository<DeliveryOrder,Integer> {
+public class DeliveryOrderRepository extends DaoAwareAggregateRepository<DeliveryOrder, Integer> {
     protected DeliveryOrderRepository(Class<DeliveryOrder> aggregateType) {
         super(aggregateType);
     }

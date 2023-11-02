@@ -42,16 +42,19 @@ public class SimpleRetryPolicy implements RetryPolicy {
     }
 
 
+    @Override
     public boolean canRetry(RetryContext context) {
         Throwable t = context.getLastThrowable();
         return (t == null || retryForException(t)) && context.getRetryCount() < maxAttempts;
     }
 
+    @Override
     public void registerThrowable(RetryContext context, Throwable throwable) {
         SimpleRetryContext simpleContext = ((SimpleRetryContext) context);
         simpleContext.registerThrowable(throwable);
     }
 
+    @Override
     public RetryContext requireRetryContext() {
         return new SimpleRetryContext();
     }

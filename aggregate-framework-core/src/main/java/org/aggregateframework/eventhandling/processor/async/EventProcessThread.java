@@ -28,14 +28,6 @@ public class EventProcessThread extends Thread {
 
     private static final AtomicLong threadInitNumber = new AtomicLong();
 
-    private static long nextThreadNum() {
-        return threadInitNumber.getAndIncrement();
-    }
-
-    private static String toThreadName(final Object name) {
-        return PREFIX + name;
-    }
-
     public EventProcessThread() {
         super(toThreadName(nextThreadNum()));
     }
@@ -66,6 +58,14 @@ public class EventProcessThread extends Thread {
 
     public EventProcessThread(final ThreadGroup group, final String name) {
         super(group, toThreadName(name));
+    }
+
+    private static long nextThreadNum() {
+        return threadInitNumber.getAndIncrement();
+    }
+
+    private static String toThreadName(final Object name) {
+        return PREFIX + name;
     }
 
 }

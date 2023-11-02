@@ -1,11 +1,11 @@
 package org.aggregateframework.cache;
 
 import org.aggregateframework.entity.AggregateRoot;
+import org.aggregateframework.persistent.redis.CommandCallback;
+import org.aggregateframework.persistent.redis.RedisCommands;
 import org.aggregateframework.retry.*;
 import org.aggregateframework.serializer.ObjectSerializer;
 import org.aggregateframework.serializer.RegisterableKryoSerializer;
-import org.aggregateframework.transaction.repository.helper.CommandCallback;
-import org.aggregateframework.transaction.repository.helper.RedisCommands;
 import org.aggregateframework.utils.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public abstract class AbstractRedisL2Cache<T extends AggregateRoot<ID>, ID exten
 
         String keyPrefix = getKeyPrefix();
 
-        if(StringUtils.isEmpty(keyPrefix)) {
+        if (StringUtils.isEmpty(keyPrefix)) {
             return DEFAULT_KEY_PREFIX + aggregateType.getName() + ":";
         } else {
             return keyPrefix;

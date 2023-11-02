@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.aggregateframework.basic.usage.dao.AccountDao" >
+    
+    <resultMap id="baseResultMap" type="org.aggregateframework.basic.usage.entity.Account">
+        <result property="id" column="ID"/>
+        <result property="accountId" column="ACCOUNT_ID"/>
+        <result property="eventStatus" column="EVENT_STATUS"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="lastUpdateTime" column="LAST_UPDATE_TIME"/>
+        <result property="version" column="VERSION"/>
+    </resultMap>
+
+    <sql id="sql_select">
+        SELECT ID,
+               ACCOUNT_ID,
+               EVENT_STATUS,
+               VERSION,
+               CREATE_TIME,
+               LAST_UPDATE_TIME
+        FROM ACCOUNT
+    </sql>
+
+    <select id="findAll" resultMap="baseResultMap">
+        <include refid="sql_select"/>
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        <include refid="sql_select"/>
+		WHERE ID=#{id}
+    </select>
+
+    <select id="findByAccountId" resultMap="baseResultMap">
+        <include refid="sql_select"/>
+        WHERE ACCOUNT_ID=#{accountId}
+    </select>
+
+    <select id="findByAccountIds" resultMap="baseResultMap">
+        <include refid="sql_select"/>
+        WHERE ACCOUNT_ID in 
+        <foreach item="item" index="index" collection="list" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID" parameterType="org.aggregateframework.basic.usage.entity.Account">
+        INSERT INTO ACCOUNT
+            (ACCOUNT_ID,EVENT_STATUS,VERSION,CREATE_TIME,LAST_UPDATE_TIME)
+        VALUES
+            (#{accountId},#{eventStatus},#{version},#{createTime},#{lastUpdateTime})
+    </insert>
+
+    <update id="update" parameterType="org.aggregateframework.basic.usage.entity.Account">
+        UPDATE
+        `ACCOUNT`
+        SET
+        ACCOUNT_ID=#{accountId},
+        EVENT_STATUS=#{eventStatus},
+        VERSION=#{version},
+        LAST_UPDATE_TIME=#{lastUpdateTime}
+        WHERE ID=#{id}
+        AND VERSION=#{version}-1
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ACCOUNT WHERE ID=#{id}
+    </delete>
+</mapper>

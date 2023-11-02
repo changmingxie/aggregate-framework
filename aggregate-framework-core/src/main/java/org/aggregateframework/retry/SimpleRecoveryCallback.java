@@ -1,6 +1,6 @@
 package org.aggregateframework.retry;
 
-import org.aggregateframework.SystemException;
+import org.aggregateframework.exception.SystemException;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public class SimpleRecoveryCallback implements RecoveryCallback<Object> {
             } catch (NoSuchMethodException e) {
                 recoverMethod = null;
             }
-            
+
             if (recoverMethod == null) {
                 recoverParamTypes.add(Throwable.class);
                 recoverParams.add(context.getLastThrowable());

@@ -24,62 +24,12 @@
         <property name="maximumSize" value="10000"/>
     </bean>
 
-    <!--    <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.spring.cache.ShardJedisL2Cache">-->
-    <!--        <property name="shardedJedisPool" ref="shardedJedisPool"/>-->
-    <!--    </bean>-->
-
-    <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.sample.quickstart.command.infrastructure.cache.PricedOrderL2Cache">
-        <property name="jedisPool" ref="jedisPool"/>
-        <property name="keyPrefix" value="AGGSAMPLE:PRICEDORDER:"/>
-    </bean>
-
-<!--    <bean id="pricedOrderJodisL2Cache"-->
-<!--          class="org.aggregateframework.cache.JodisL2Cache">-->
-<!--        <property name="jedisPool" ref="jodisRedisPool"/>-->
-<!--    </bean>-->
-
-    <!--    <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.spring.cache.RedisTemplateL2Cache">-->
-    <!--        <property name="redisTemplate" ref="redisTemplate"/>-->
-    <!--    </bean>-->
-
-<!--        <bean id="pricedOrderRedisL2Cache" class="org.aggregateframework.spring.cache.JedisClusterL2Cache">-->
-<!--            <property name="jedisCluster" ref="jedisCluster"/>-->
-<!--        </bean>-->
-
     <bean id="pricedOrderMultiLevelL2Cache" class="org.aggregateframework.cache.MultiLevelL2Cache">
         <property name="cachingProviders">
             <list>
                 <ref bean="pricedOrderLocalL2Cache"/>
-<!--                <ref bean="pricedOrderRedisL2Cache"/>-->
-<!--                <ref bean="pricedOrderJodisL2Cache"/>-->
             </list>
         </property>
-    </bean>
-
-
-    <!-- 工厂类配置 -->
-    <bean id="jedisConnectionFactory"
-          class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
-        <property name="hostName" value="#{redis['singleredis.host']}"/>
-        <property name="port" value="#{redis['singleredis.port']}"/>
-        <property name="password" value=""/>
-        <property name="poolConfig" ref="poolConfig"/>
-        <property name="timeout" value="#{redis['redis.connectionTimeout']}"></property>
-        <property name="usePool" value="true"></property>
-    </bean>
-
-    <!-- redisTemplate配置 -->
-    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
-        <property name="connectionFactory" ref="jedisConnectionFactory"/>
-        <property name="enableDefaultSerializer" value="true"/>
-    </bean>
-
-
-    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
-        <constructor-arg name="poolConfig" ref="poolConfig"/>
-        <constructor-arg name="host" value="#{redis['singleredis.host']}"/>
-        <constructor-arg name="port" value="#{redis['singleredis.port']}"/>
-        <constructor-arg name="timeout" value="#{redis['redis.connectionTimeout']}"/>
     </bean>
 
 </beans>

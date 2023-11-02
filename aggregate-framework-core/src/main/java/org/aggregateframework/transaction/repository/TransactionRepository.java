@@ -1,9 +1,8 @@
 package org.aggregateframework.transaction.repository;
 
-
 import org.aggregateframework.transaction.Transaction;
-import org.aggregateframework.transaction.TransactionXid;
-import org.rocksdb.RocksDBException;
+import org.aggregateframework.storage.Page;
+import org.aggregateframework.xid.Xid;
 
 import java.io.Closeable;
 import java.util.Date;
@@ -21,16 +20,14 @@ public interface TransactionRepository extends Closeable {
 
     int delete(Transaction transaction);
 
-    Transaction findByXid(TransactionXid xid);
+    Transaction findByXid(Xid xid);
+
+    boolean supportRecovery();
 
     Page<Transaction> findAllUnmodifiedSince(Date date, String offset, int pageSize);
-    
+
     @Override
     default void close() {
 
-    }
-    
-    default void init() throws RocksDBException {
-    
     }
 }

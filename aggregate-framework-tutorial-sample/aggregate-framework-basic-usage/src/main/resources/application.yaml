@@ -1,0 +1,28 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /${spring.application.name}
+spring:
+  application:
+    name: aggregate-framework-basic-usage
+  profiles:
+    active: server  # Possible values: local, server
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:AGG_TEST
+    username: root
+    password: welcome1
+    initialization-mode: always
+    schema: classpath:schema.sql
+# http://localhost:8080/aggregate-framework-basic-usage/h2-console
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+mybatis:
+  mapper-locations: classpath:mapping/*.xml
+
+logging:
+  level:
+    root: info

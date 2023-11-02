@@ -32,11 +32,6 @@ public class OrderLine extends AbstractSimpleDomainObject<Long> {
         this.quantity = quantity;
     }
 
-    protected void setPricedOrder(PricedOrder pricedOrder) {
-        this.pricedOrder = pricedOrder;
-        this.pricedOrderId = pricedOrder.getId();
-    }
-
     public void setPrice(int price) {
         this.price = price;
     }
@@ -62,6 +57,11 @@ public class OrderLine extends AbstractSimpleDomainObject<Long> {
 
     public PricedOrder getPricedOrder() {
         return pricedOrder;
+    }
+
+    protected void setPricedOrder(PricedOrder pricedOrder) {
+        this.pricedOrder = pricedOrder;
+        this.pricedOrderId = pricedOrder.getId();
     }
 
 }

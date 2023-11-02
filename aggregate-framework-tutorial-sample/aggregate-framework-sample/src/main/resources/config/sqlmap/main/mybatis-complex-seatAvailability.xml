@@ -9,23 +9,23 @@
         <result property="quantity" column="QUANTITY"/>
         <result property="bookingPayment.id" column="PAYMENT_ID"/>
         <!--<association property="order.id" javaType="UserShardingId">-->
-            <!--<constructor>-->
-                <!--<arg column="ORDER_ID" javaType="java.lang.Integer"/>-->
-                <!--<arg column="USER_ID" javaType="java.lang.Integer"/>-->
-            <!--</constructor>-->
+        <!--<constructor>-->
+        <!--<arg column="ORDER_ID" javaType="java.lang.Integer"/>-->
+        <!--<arg column="USER_ID" javaType="java.lang.Integer"/>-->
+        <!--</constructor>-->
         <!--</association>-->
     </resultMap>
 
     <sql id="sql_select">
-		SELECT
-		SEAT_AVAILABILITY_ID,
-		ORDER_ID,
-		USER_ID,
-		QUANTITY,
-		PAYMENT_ID
-		FROM
-		CQRS_CPL_SEAT_AVAILABILITY
-	</sql>
+        SELECT
+        SEAT_AVAILABILITY_ID,
+        ORDER_ID,
+        USER_ID,
+        QUANTITY,
+        PAYMENT_ID
+        FROM
+        CQRS_CPL_SEAT_AVAILABILITY
+    </sql>
 
     <select id="findById" resultMap="result">
         <include refid="sql_select"/>
@@ -100,33 +100,33 @@
         USER_ID=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN SEAT_AVAILABILITY_ID=#{item.id}
-            THEN  #{item.bookingOrder.id.userId}
+            THEN #{item.bookingOrder.id.userId}
         </foreach>
         ELSE USER_ID END,
 
         ORDER_ID=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN SEAT_AVAILABILITY_ID=#{item.id}
-            THEN  #{item.bookingOrder.id.id}
+            THEN #{item.bookingOrder.id.id}
         </foreach>
         ELSE ORDER_ID END,
 
         QUANTITY=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN SEAT_AVAILABILITY_ID=#{item.id}
-            THEN  #{item.quantity}
+            THEN #{item.quantity}
         </foreach>
         ELSE QUANTITY END,
 
         PAYMENT_ID=CASE
         <foreach item="item" index="index" collection="list" separator="">
             WHEN SEAT_AVAILABILITY_ID=#{item.id}
-            THEN  #{item.bookingPayment.id}
+            THEN #{item.bookingPayment.id}
         </foreach>
         ELSE PAYMENT_ID END
 
         WHERE SEAT_AVAILABILITY_ID IN
-        <foreach item="item" index="index" collection="list" separator="," open="("  close=")">
+        <foreach item="item" index="index" collection="list" separator="," open="(" close=")">
             #{item.id}
         </foreach>
 
@@ -134,9 +134,9 @@
 
 
     <delete id="delete">
-		DELETE FROM
-		CQRS_CPL_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID=#{id}
-	</delete>
+        DELETE FROM
+        CQRS_CPL_SEAT_AVAILABILITY WHERE SEAT_AVAILABILITY_ID=#{id}
+    </delete>
 
     <delete id="deleteAll">
         DELETE FROM

@@ -38,6 +38,7 @@ public class RingBufferLogEventHandler implements
     /**
      * Returns the thread ID of the background consumer thread, or {@code -1} if the background thread has not started
      * yet.
+     *
      * @return the thread ID of the background consumer thread, or {@code -1}
      */
     public long getThreadId() {

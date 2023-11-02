@@ -35,6 +35,15 @@ public abstract class ReflectionUtils {
      * The string used to separator packages
      */
     public static final String PACKAGE_SEPARATOR = ".";
+    /**
+     * Pre-built FieldFilter that matches all non-static, non-final fields.
+     */
+    public static FieldFilter COPYABLE_FIELDS = new FieldFilter() {
+        public boolean matches(Field field) {
+            return !(Modifier.isStatic(field.getModifiers()) ||
+                    Modifier.isFinal(field.getModifiers()));
+        }
+    };
 
     /**
      * Get the short name of the specified class by striping off the package name.
@@ -49,7 +58,6 @@ public abstract class ReflectionUtils {
             return className.substring(idx + 1, className.length());
         return className;
     }
-
 
     public static boolean isJdkPrimitiveType(Class requiredType) {
         if (String.class.equals(requiredType)) {
@@ -398,7 +406,6 @@ public abstract class ReflectionUtils {
         return false;
     }
 
-
     /**
      * Determine whether the given field is a "public static final" constant.
      *
@@ -432,16 +439,6 @@ public abstract class ReflectionUtils {
                 method.getParameterTypes().length == 0);
     }
 
-    /**
-     * Determine whether the given method is a "toString" method.
-     *
-     * @see Object#toString()
-     */
-    public static boolean isToStringMethod(Method method) {
-        return (method != null && method.getName().equals("toString") &&
-                method.getParameterTypes().length == 0);
-    }
-
 //    public static Class getParamClass(Method method) {
 //
 //        method.getParameterTypes();
@@ -461,6 +458,16 @@ public abstract class ReflectionUtils {
 //
 //        return false;
 //    }
+
+    /**
+     * Determine whether the given method is a "toString" method.
+     *
+     * @see Object#toString()
+     */
+    public static boolean isToStringMethod(Method method) {
+        return (method != null && method.getName().equals("toString") &&
+                method.getParameterTypes().length == 0);
+    }
 
     /**
      * Make the given field accessible, explicitly setting it accessible if necessary.
@@ -506,7 +513,6 @@ public abstract class ReflectionUtils {
             ctor.setAccessible(true);
         }
     }
-
 
     /**
      * Perform the given callback operation on all matching methods of the
@@ -567,7 +573,6 @@ public abstract class ReflectionUtils {
         });
         return (Method[]) list.toArray(new Method[list.size()]);
     }
-
 
     /**
      * Invoke the given callback on all fields in the target class,
@@ -639,6 +644,32 @@ public abstract class ReflectionUtils {
         }, COPYABLE_FIELDS);
     }
 
+    public static <T extends Annotation> T getAnnotation(Method method, Class<T> annotationType) {
+        T annotation = (T) method.getAnnotation(annotationType);
+
+        if (annotation != null) {
+            return annotation;
+        }
+
+
+        Class declaringClass = method.getDeclaringClass().getSuperclass();
+
+        while (annotation == null && !declaringClass.equals(Object.class)) {
+            Method superMethod = null;
+            try {
+                superMethod = declaringClass.getMethod(method.getName(), method.getParameterTypes());
+                annotation = superMethod.getAnnotation(annotationType);
+            } catch (NoSuchMethodException e) {
+
+            }
+
+            declaringClass = declaringClass.getSuperclass();
+        }
+
+
+        return annotation;
+    }
+
 
     /**
      * Action to take on each method.
@@ -681,7 +712,6 @@ public abstract class ReflectionUtils {
         void doWith(Field field) throws IllegalArgumentException, IllegalAccessException;
     }
 
-
     /**
      * Callback optionally used to filter fields to be operated on by a field callback.
      */
@@ -693,43 +723,6 @@ public abstract class ReflectionUtils {
          * @param field the field to check
          */
         boolean matches(Field field);
-    }
-
-
-    /**
-     * Pre-built FieldFilter that matches all non-static, non-final fields.
-     */
-    public static FieldFilter COPYABLE_FIELDS = new FieldFilter() {
-        public boolean matches(Field field) {
-            return !(Modifier.isStatic(field.getModifiers()) ||
-                    Modifier.isFinal(field.getModifiers()));
-        }
-    };
-
-    public static <T extends Annotation> T getAnnotation(Method method, Class<T> annotationType) {
-        T annotation = (T) method.getAnnotation(annotationType);
-
-        if (annotation != null) {
-            return annotation;
-        }
-
-
-        Class declaringClass = method.getDeclaringClass().getSuperclass();
-
-        while (annotation == null && !declaringClass.equals(Object.class)) {
-            Method superMethod = null;
-            try {
-                superMethod = declaringClass.getMethod(method.getName(), method.getParameterTypes());
-                annotation = superMethod.getAnnotation(annotationType);
-            } catch (NoSuchMethodException e) {
-
-            }
-
-            declaringClass = declaringClass.getSuperclass();
-        }
-
-
-        return annotation;
     }
 
 }

@@ -1,19 +1,19 @@
 package org.aggregateframework.eventhandling.processor;
 
-import org.aggregateframework.SystemException;
+import org.aggregateframework.AggClient;
 import org.aggregateframework.eventhandling.EventHandlerHook;
 import org.aggregateframework.eventhandling.EventInvokerEntry;
 import org.aggregateframework.eventhandling.annotation.EventHandler;
-import org.aggregateframework.eventhandling.transaction.EventParticipant;
-import org.aggregateframework.eventhandling.transaction.EventTransaction;
-import org.aggregateframework.eventhandling.transaction.TransactionMethodInvocation;
-import org.aggregateframework.factory.FactoryBuilder;
+import org.aggregateframework.exception.SystemException;
+import org.aggregateframework.support.BeanFactory;
+import org.aggregateframework.support.FactoryBuilder;
+import org.aggregateframework.threadcontext.ThreadContextSynchronizationManager;
 import org.aggregateframework.transaction.Invocation;
+import org.aggregateframework.transaction.Participant;
 import org.aggregateframework.transaction.Transaction;
-import org.aggregateframework.transaction.TransactionType;
 import org.aggregateframework.transaction.repository.TransactionRepository;
-import org.aggregateframework.transaction.support.TransactionConfigurator;
 import org.aggregateframework.utils.ReflectionUtils;
+import org.aggregateframework.xid.TransactionXid;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,16 +57,21 @@ public class EventMethodInvoker {
                 throw new SystemException("checkTransactionStatusMethod cannot be empty when isTransactionMessage is true");
             }
 
-            if (FactoryBuilder.factoryOf(TransactionConfigurator.class) == null) {
+            if (FactoryBuilder.factoryOf(AggClient.class) == null) {
                 throw new SystemException("TransactionConfigurator cannot be found. Seems TransactionConfigurator(or its subclass RecoverConfiguration) instance is not correctly injected.");
             }
 
-            TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionConfigurator.class).getInstance().getTransactionRepository();
+            TransactionRepository transactionRepository = FactoryBuilder.factoryOf(AggClient.class).getInstance().getTransactionRepository();
 
-            Transaction transaction = new EventTransaction(TransactionType.ROOT);
+            Transaction transaction = new Transaction(TransactionXid.withUniqueIdentity(null));
 
-            Invocation invocation = new TransactionMethodInvocation(entry.getTarget().getClass(), entry.getMethod().getName(), eventHandler.transactionCheck().checkTransactionStatusMethod(), entry.getMethod().getParameterTypes(), entry.getParams());
-            EventParticipant participant = new EventParticipant(invocation);
+            transaction.getAttachments().put(ThreadContextSynchronizationManager.THREAD_CONTEXT_SYNCHRONIZATION_KEY,
+                    ThreadContextSynchronizationManager.getThreadContextSynchronization().getCurrentThreadContext());
+
+            BeanFactory beanFactory = FactoryBuilder.getFactory(BeanFactory.class);
+
+            Invocation invocation = new Invocation(beanFactory.getTargetClass(entry.getTarget()), entry.getMethod().getName(), eventHandler.transactionCheck().checkTransactionStatusMethod(), entry.getMethod().getParameterTypes(), entry.getParams());
+            Participant participant = new Participant(invocation);
 
             transaction.enlistParticipant(participant);
 
@@ -159,7 +164,7 @@ public class EventMethodInvoker {
 
             if (entry.getTransaction() != null) {
 
-                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionConfigurator.class).getInstance().getTransactionRepository();
+                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(AggClient.class).getInstance().getTransactionRepository();
 
                 transactionRepository.delete(entry.getTransaction());
             }
@@ -176,7 +181,7 @@ public class EventMethodInvoker {
     private void completeInvoke(EventInvokerEntry entry) {
         try {
             if (entry.getTransaction() != null) {
-                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(TransactionConfigurator.class).getInstance().getTransactionRepository();
+                TransactionRepository transactionRepository = FactoryBuilder.factoryOf(AggClient.class).getInstance().getTransactionRepository();
 
                 transactionRepository.delete(entry.getTransaction());
             }

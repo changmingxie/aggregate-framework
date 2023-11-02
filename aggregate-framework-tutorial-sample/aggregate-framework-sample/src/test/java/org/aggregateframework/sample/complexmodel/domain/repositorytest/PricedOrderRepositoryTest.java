@@ -26,6 +26,14 @@ public class PricedOrderRepositoryTest extends OrderTestCase {
     JpaOrderRepository orderRepository;
 
 
+    public void given_then_xdcs() {
+
+//        XdcsTool.getPeakRequestVal();
+//        XdcsTool.setPeakRequestVal("aaa");
+//        XdcsTool.clearPeakRequestVal();
+    }
+
+
     @Test
     public void given_a_new_order_with_multiple_component_when_save_then_order_persisted_with_few_sqls() throws InterruptedException {
 
@@ -444,7 +452,6 @@ public class PricedOrderRepositoryTest extends OrderTestCase {
 
         Assert.assertEquals(foundBookingOrder.getBookingPayment(), foundBookingOrder.getSeatAvailabilities().get(0).getBookingPayment());
     }
-
 
 
 }

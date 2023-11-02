@@ -19,6 +19,6 @@ package org.aggregateframework.retry;
 
 public interface Classifier<C, T> {
 
-	T classify(C classifiable);
+    T classify(C classifiable);
 
 }

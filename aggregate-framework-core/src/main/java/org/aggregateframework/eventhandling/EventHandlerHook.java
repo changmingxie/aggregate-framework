@@ -1,7 +1,7 @@
 package org.aggregateframework.eventhandling;
 
 
-import org.aggregateframework.factory.FactoryBuilder;
+import org.aggregateframework.support.FactoryBuilder;
 import org.aggregateframework.transaction.Invocation;
 
 import java.lang.reflect.Method;

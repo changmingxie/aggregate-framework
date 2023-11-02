@@ -18,18 +18,18 @@ public class PaymentRepository extends DaoAwareAggregateRepository<Payment, Long
     @Autowired
     PaymentDao paymentDao;
 
-    @Autowired(required = false)
-    @Qualifier("paymentL2Cache")
-    public void setL2Cacher(L2Cache<Payment, Long> l2Cache) {
-        this.l2Cache = l2Cache;
-    }
-
     public PaymentRepository() {
         this(Payment.class);
     }
 
     protected PaymentRepository(Class<Payment> aggregateType) {
         super(aggregateType);
+    }
+
+    @Autowired(required = false)
+    @Qualifier("paymentL2Cache")
+    public void setL2Cacher(L2Cache<Payment, Long> l2Cache) {
+        this.l2Cache = l2Cache;
     }
 
     public Payment findByPaymentNo(String paymentNo) {

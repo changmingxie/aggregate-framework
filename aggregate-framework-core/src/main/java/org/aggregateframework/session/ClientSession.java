@@ -25,6 +25,8 @@ public interface ClientSession {
 
     void postHandle();
 
+    void clear();
+
     <T extends AggregateRoot<ID>, ID extends Serializable> T registerToLocalCache(T entity);
 
     <T extends AggregateRoot<ID>, ID extends Serializable> T removeFromLocalCache(T entity);
@@ -46,6 +48,5 @@ public interface ClientSession {
     void addTransactionalInvoker(EventInvokerEntry eventInvokerEntry);
 
     <T extends AggregateRoot<ID>, ID extends Serializable> void attachL2Cache(Class<T> aggregateType, L2Cache<T, ID> l2Cache);
-
 
 }

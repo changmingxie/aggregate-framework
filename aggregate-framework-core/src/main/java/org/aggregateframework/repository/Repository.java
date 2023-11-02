@@ -7,5 +7,5 @@ import java.io.Serializable;
  * Date: 14-6-25
  * Time: 上午10:12
  */
-public interface Repository<T,ID extends Serializable> {
+public interface Repository<T, ID extends Serializable> {
 }

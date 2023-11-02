@@ -23,15 +23,12 @@ import java.util.concurrent.Future;
 public class RepositoryCacheTest extends AbstractTestCase implements Serializable {
 
     private static final long serialVersionUID = -5804819777997595926L;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
-
     @Autowired
     OrderService orderService;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     @Before
     public void before() {
@@ -52,7 +49,7 @@ public class RepositoryCacheTest extends AbstractTestCase implements Serializabl
                 @Override
                 public void run() {
                     for (int j = 0; j < 1; j++) {
-                        PricedOrder pricedOrder = orderService.placeOrder(1, 10,j);
+                        PricedOrder pricedOrder = orderService.placeOrder(1, 10, j);
                     }
                 }
             });

@@ -9,11 +9,8 @@ import java.util.Deque;
 public class SessionFactoryHelper {
 
     static final Logger logger = LoggerFactory.getLogger(SessionFactoryHelper.class.getSimpleName());
-
-    public static SessionFactoryHelper INSTANCE = new SessionFactoryHelper();
-
     private static final ThreadLocal<Deque<SessionFactory>> CURRENT = new ThreadLocal<Deque<SessionFactory>>();
-
+    public static SessionFactoryHelper INSTANCE = new SessionFactoryHelper();
 
     public void registerNewClientSession() {
         startSessionFactoryIfAbsent();
@@ -45,6 +42,15 @@ public class SessionFactoryHelper {
         if (CURRENT.get() == null || CURRENT.get().peek() == null) {
             startNewSessionFactory();
         }
+    }
+
+    public boolean hasActiveClientSession() {
+
+        if (CURRENT.get() == null || CURRENT.get().peek() == null) {
+            return false;
+        }
+
+        return CURRENT.get().peek().hasClientSessions();
     }
 
 
